@@ -34,86 +34,117 @@ struct LiveShotView: View {
     }
 
     private var content: some View {
-        GeometryReader { geometry in
-            let wide = geometry.size.width >= 820
-            let usedHeight = (sectionHeights[.header] ?? 52)
-                + (sectionHeights[.metrics] ?? 110)
-                + (sectionHeights[.stages] ?? 56)
-                + (sectionHeights[.actions] ?? 102)
-                + 136 // content padding, three gaps, and chart legend/padding
-            let chartHeight = max(210, geometry.size.height - usedHeight)
-            ScrollView {
-                VStack(spacing: 16) {
-                    header
-                        .cremaMeasureHeight(.header)
-                    chart(height: chartHeight)
-                    MetricHUD(pressure: playback.currentSample?.pressureBar ?? 0,
-                              flow: playback.currentSample?.flowMlPerSec ?? 0,
-                              volume: playback.currentSample?.volumeMl ?? 0,
-                              elapsed: playback.t,
-                              hasReading: playback.currentSample != nil)
-                        .cremaMeasureHeight(.metrics)
-                    StageTimeline(profile: playback.profile, playhead: playback.t)
-                        .frame(height: 56)
-                        .cremaMeasureHeight(.stages)
+        synchronizedContent
+            .foregroundStyle(CremaColor.cream)
+            .tint(CremaColor.crema)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: CremaAppearance.shared.snapshot)
+            .onAppear {
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.22)) { appeared = true }
+            }
+            .onPreferenceChange(CremaMainHeightsKey.self) { heights in
+                Task { @MainActor in
+                    if sectionHeights != heights { sectionHeights = heights }
                 }
-                .padding(.horizontal, wide ? 24 : 16)
-                .padding(.top, 16)
-                .padding(.bottom, 16)
-                .frame(maxWidth: 1400)
-                .frame(maxWidth: .infinity)
-                .opacity(appeared ? 1 : 0)
-                .offset(y: appeared ? 0 : 5)
             }
-            .scrollIndicators(.hidden)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                BrewActionZone(mode: $mode, liveDriver: liveDriver, replayPlayback: replayPlayback,
-                               library: library, history: history, tipPreferences: tipPreferences,
-                               onAutoTune: { startAutoTune() })
-                    .padding(.top, 8)
-                    .frame(maxWidth: 1400)
-                    .frame(maxWidth: .infinity)
-                    .background(CremaColor.bg.opacity(0.98))
-                    .cremaMeasureHeight(.actions)
+    }
+
+    private var synchronizedContent: some View {
+        autoTunePresentation
+            .onChange(of: library.active) { _, profile in
+                if liveDriver.brewState == .ready && liveDriver.tempProfileOverride == nil {
+                    liveDriver.playback.profile = profile
+                }
             }
-            .background(CremaColor.bg.ignoresSafeArea())
-        }
-        .foregroundStyle(CremaColor.cream)
-        .onPreferenceChange(CremaMainHeightsKey.self) { heights in
-            Task { @MainActor in
-                if sectionHeights != heights { sectionHeights = heights }
+            .onChange(of: liveDriver.brewState) { _, state in
+                if state == .ready && liveDriver.tempProfileOverride == nil {
+                    liveDriver.playback.profile = library.active
+                }
             }
-        }
-        .tint(CremaColor.crema)
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: CremaAppearance.shared.snapshot)
-        .onAppear {
-            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.22)) { appeared = true }
-        }
-        .onChange(of: library.active) { _, profile in
-            if liveDriver.brewState == .ready && liveDriver.tempProfileOverride == nil {
-                liveDriver.playback.profile = profile
-            }
-        }
-        .onChange(of: liveDriver.brewState) { _, state in
-            if state == .ready && liveDriver.tempProfileOverride == nil {
-                liveDriver.playback.profile = library.active
-            }
-        }
-        .onChange(of: replayPlayback.isPlaying) { _, _ in lastTick = .now }
-        .onChange(of: mode) { _, _ in lastTick = .now }
-        .sheet(isPresented: $showLibrary) { ProfilesView(library: library, session: session) }
-        .sheet(isPresented: $showHistory) { ShotHistoryView(history: history) }
-        .sheet(isPresented: $showMachines) { MachinesView(driver: liveDriver) }
+            .onChange(of: replayPlayback.isPlaying) { _, _ in lastTick = .now }
+            .onChange(of: mode) { _, _ in lastTick = .now }
+    }
+
+    private var autoTunePresentation: some View {
         #if os(iOS)
-        .fullScreenCover(item: $autoTuneSession) { tune in
-            AutoTuneSheet(session: tune, onClose: { autoTuneSession = nil })
-        }
+        libraryPresentations
+            .fullScreenCover(item: $autoTuneSession) { tune in
+                AutoTuneSheet(session: tune, onClose: { autoTuneSession = nil })
+            }
         #else
-        .sheet(item: $autoTuneSession) { tune in
-            AutoTuneSheet(session: tune, onClose: { autoTuneSession = nil })
-                .frame(minWidth: 700, minHeight: 720)
-        }
+        libraryPresentations
+            .sheet(item: $autoTuneSession) { tune in
+                AutoTuneSheet(session: tune, onClose: { autoTuneSession = nil })
+                    .frame(minWidth: 700, minHeight: 720)
+            }
         #endif
+    }
+
+    private var libraryPresentations: some View {
+        responsiveLayout
+            .sheet(isPresented: $showLibrary) { ProfilesView(library: library, session: session) }
+            .sheet(isPresented: $showHistory) { ShotHistoryView(history: history) }
+            .sheet(isPresented: $showMachines) { MachinesView(driver: liveDriver) }
+    }
+
+    private var responsiveLayout: some View {
+        GeometryReader { geometry in
+            shotScrollView(size: geometry.size)
+        }
+    }
+
+    private func shotScrollView(size: CGSize) -> some View {
+        ScrollView {
+            shotSections(size: size)
+        }
+        .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .bottom, spacing: 0) { actions }
+        .background(CremaColor.bg.ignoresSafeArea())
+    }
+
+    private func shotSections(size: CGSize) -> some View {
+        VStack(spacing: 16) {
+            header.cremaMeasureHeight(.header)
+            chart(height: chartHeight(in: size))
+            measurements.cremaMeasureHeight(.metrics)
+            StageTimeline(profile: playback.profile, playhead: playback.t)
+                .frame(height: 56)
+                .cremaMeasureHeight(.stages)
+        }
+        .padding(.horizontal, size.width >= 820 ? 24 : 16)
+        .padding(.vertical, 16)
+        .frame(maxWidth: 1400)
+        .frame(maxWidth: .infinity)
+        .opacity(appeared ? 1 : 0)
+        .offset(y: appeared ? 0 : 5)
+    }
+
+    private var measurements: some View {
+        MetricHUD(pressure: playback.currentSample?.pressureBar ?? 0,
+                  flow: playback.currentSample?.flowMlPerSec ?? 0,
+                  volume: playback.currentSample?.volumeMl ?? 0,
+                  elapsed: playback.t,
+                  hasReading: playback.currentSample != nil)
+    }
+
+    private var actions: some View {
+        BrewActionZone(mode: $mode, liveDriver: liveDriver, replayPlayback: replayPlayback,
+                       library: library, history: history, tipPreferences: tipPreferences,
+                       onAutoTune: { startAutoTune() })
+            .padding(.top, 8)
+            .frame(maxWidth: 1400)
+            .frame(maxWidth: .infinity)
+            .background(CremaColor.bg.opacity(0.98))
+            .cremaMeasureHeight(.actions)
+    }
+
+    private func chartHeight(in size: CGSize) -> CGFloat {
+        let headerHeight: CGFloat = sectionHeights[.header] ?? 52
+        let metricHeight: CGFloat = sectionHeights[.metrics] ?? 110
+        let stageHeight: CGFloat = sectionHeights[.stages] ?? 56
+        let actionHeight: CGFloat = sectionHeights[.actions] ?? 102
+        // Content padding, three gaps, and chart legend/padding.
+        let usedHeight: CGFloat = headerHeight + metricHeight + stageHeight + actionHeight + 136
+        return max(210, size.height - usedHeight)
     }
 
     private var header: some View {
