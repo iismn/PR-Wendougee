@@ -23,7 +23,7 @@ The interface keeps Crema's original screen composition and content flows. The c
 
 ## Data and behavior
 
-Files under `Sources/CremaKit` and `Sources/CremaApp/Data` are unchanged. Chart ranges, coordinate transforms, smoothing, targets, waits, transport commands, and persistence stay in their existing paths. Pumped water remains in mL; weight targets remain in g; absent telemetry is an em dash. Demo remains anchored to the bundled recording.
+BLE/Modbus transport, extraction, telemetry and persistence paths are unchanged. Chart ranges, coordinate transforms, smoothing, targets and waits are retained. Apple CI exposed an existing sharing-API date decoder failure; the decoder now accepts ISO8601 dates with or without fractional seconds, with focused timestamp tests. Pumped water remains in mL; weight targets remain in g; absent telemetry is an em dash. Demo remains anchored to the bundled recording.
 
 Parent-owned playback/driver objects are observed without retaining stale child-owned state. Ready-state recipe updates preserve the connection; completed telemetry keeps its original recipe until cleared. Profile/history viewing remains available while brewing, as in the original app.
 

@@ -233,7 +233,21 @@ public actor ShareAPIClient {
                                  message: String(data: data, encoding: .utf8))
         }
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let value = try container.decode(String.self)
+            // JavaScript's Date.toISOString() includes milliseconds; the
+            // built-in .iso8601 strategy rejects them on older Foundation.
+            for fractional in [true, false] {
+                for separator in [Date.ISO8601FormatStyle.TimeZoneSeparator.colon, .omitted] {
+                    let style = Date.ISO8601FormatStyle(timeZoneSeparator: separator,
+                                                      includingFractionalSeconds: fractional)
+                    if let date = try? style.parse(value) { return date }
+                }
+            }
+            throw DecodingError.dataCorruptedError(in: container,
+                debugDescription: "Expected an ISO-8601 date with optional fractional seconds.")
+        }
         return try decoder.decode(R.self, from: data)
     }
 

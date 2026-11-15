@@ -62,3 +62,5 @@ xcodebuild build -project Crema.xcodeproj -scheme Crema-macOS \
 Windows에서는 Xcode/SwiftUI 네이티브 실행을 검증하지 못했습니다. HTML 미리보기는 네이티브 렌더링 결과가 아닙니다. Mac에서는 Actions 빌드 결과와 별개로 앱을 실행해 창·시트·작은 화면·폰트·접근성을 확인해야 합니다.
 
 실제 LITA의 BLE 검색·연결·프로필 전송·추출·중단·추출 후 기록 저장은 실기기 확인이 남아 있습니다. 자동 튜닝의 실제 BLE 저울 연동은 기존 코드에도 없으며, 시뮬레이터는 StubScale, 실제 기기는 ManualScale을 사용합니다. UI 작업에서 `Data/`와 `CremaKit/`의 전송·추출 로직은 바꾸지 않았습니다.
+
+Apple CI에서 기존 공유 API의 ISO8601 날짜 처리 실패를 발견해 소수 초가 있는 날짜와 없는 날짜를 모두 읽도록 보완했습니다. 관련 회귀 테스트를 추가했고, 실제 CI 결과는 저장소 Actions에서 확인할 수 있습니다.

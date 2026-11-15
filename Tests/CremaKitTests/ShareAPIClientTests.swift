@@ -85,6 +85,41 @@ struct ShareAPIClientTests {
         #expect(p.author.displayName == "Dave")
     }
 
+    @Test("fetch accepts ISO-8601 dates with optional fractions and offsets", arguments: [
+        "2026-05-27T10:30:00Z",
+        "2026-05-27T10:30:00.000Z",
+        "2026-05-27T10:30:00.125Z",
+        "2026-05-27T19:30:00+09:00",
+        "2026-05-27T19:30:00.125+09:00",
+        "2026-05-27T06:30:00.125-04:00",
+        "2026-05-27T19:30:00.125+0900",
+    ])
+    func fetchProfileDateVariants(createdAt: String) async throws {
+        let response = sampleProfileResponse.replacingOccurrences(
+            of: "2026-05-27T10:30:00.000Z", with: createdAt)
+        MockProtocol.respond(to: "/profiles/k7Fp2nLm") { _ in
+            (200, Data(response.utf8))
+        }
+        let profile = try await makeClient().fetch(id: "k7Fp2nLm")
+        let expected = 1_779_877_800.0 + (createdAt.contains(".125") ? 0.125 : 0)
+        #expect(abs(profile.createdAt.timeIntervalSince1970 - expected) < 0.000_001)
+    }
+
+    @Test("fetch rejects malformed profile dates at createdAt")
+    func fetchProfileInvalidDate() async throws {
+        let response = sampleProfileResponse.replacingOccurrences(
+            of: "2026-05-27T10:30:00.000Z", with: "not-a-date")
+        MockProtocol.respond(to: "/profiles/k7Fp2nLm") { _ in
+            (200, Data(response.utf8))
+        }
+        do {
+            _ = try await makeClient().fetch(id: "k7Fp2nLm")
+            Issue.record("Expected malformed createdAt to fail decoding")
+        } catch DecodingError.dataCorrupted(let context) {
+            #expect(context.codingPath.last?.stringValue == "createdAt")
+        }
+    }
+
     @Test("browse paginates by cursor")
     func browseDecodes() async throws {
         MockProtocol.respond(to: "/profiles") { _ in

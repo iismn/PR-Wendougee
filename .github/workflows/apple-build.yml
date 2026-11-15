@@ -30,6 +30,7 @@ jobs:
         run: swift test
 
       - name: Build iOS simulator app
+        if: ${{ !cancelled() }}
         run: |
           xcodebuild build \
             -project Crema.xcodeproj \
@@ -40,6 +41,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO
 
       - name: Build macOS app
+        if: ${{ !cancelled() }}
         run: |
           xcodebuild build \
             -project Crema.xcodeproj \
