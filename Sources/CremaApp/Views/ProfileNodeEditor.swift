@@ -424,12 +424,12 @@ struct SelectedStageBar: View {
 
 
 private struct CremaRulerScale: View, Animatable {
-    var value: Double
+    nonisolated var value: Double
     let range: ClosedRange<Double>
     let step: Double
     let pitch: CGFloat
 
-    var animatableData: Double {
+    nonisolated var animatableData: Double {
         get { value }
         set { value = newValue }
     }
@@ -491,6 +491,7 @@ struct CremaRulerControl: View {
     private var stepIndex: Int { Int(((value - range.lowerBound) / step).rounded()) }
 
     var body: some View {
+        let readoutSize: CGFloat = compact ? 18 : 22
         VStack(alignment: .leading, spacing: compact ? 4 : 6) {
             HStack(alignment: .firstTextBaseline) {
                 Text(label)
@@ -498,10 +499,10 @@ struct CremaRulerControl: View {
                     .foregroundStyle(CremaColor.secondary)
                 Spacer()
                 CremaDotReadout(text: InstrumentMath.formatted(value, step: step),
-                                color: CremaColor.cream, size: compact ? 18 : 22)
+                                color: CremaColor.cream, size: readoutSize)
                     .fixedSize()
                     .alignmentGuide(.firstTextBaseline) { dimensions in
-                        dimensions.height - (compact ? 18 : 22) * 0.039
+                        dimensions.height - readoutSize * 0.039
                     }
                     .accessibilityHidden(true)
                 Text(unit)
@@ -595,6 +596,7 @@ struct CremaDialControl: View {
     private var stepIndex: Int { Int(((value - range.lowerBound) / step).rounded()) }
 
     var body: some View {
+        let readoutSize: CGFloat = compact ? 28 : 32
         VStack(spacing: compact ? 6 : 8) {
             Text(label.uppercased())
                 .font(CremaTypography.font(size: compact ? 9 : 10, weight: .semibold))
@@ -628,10 +630,10 @@ struct CremaDialControl: View {
 
                     HStack(alignment: .lastTextBaseline, spacing: 4) {
                         CremaDotReadout(text: InstrumentMath.formatted(value, step: step),
-                                        color: CremaColor.cream, size: compact ? 28 : 32)
+                                        color: CremaColor.cream, size: readoutSize)
                             .fixedSize()
                             .alignmentGuide(.lastTextBaseline) { dimensions in
-                                dimensions.height - (compact ? 28 : 32) * 0.039
+                                dimensions.height - readoutSize * 0.039
                             }
                             .accessibilityHidden(true)
                         Text(unit)
