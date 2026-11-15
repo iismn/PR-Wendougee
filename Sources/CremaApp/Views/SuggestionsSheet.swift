@@ -246,7 +246,7 @@ private struct SuggestionCard: View {
 
 private enum HeaderButtonRole { case primary, secondary }
 
-@ViewBuilder
+@MainActor @ViewBuilder
 private func tappableHeaderButton(_ label: String, role: HeaderButtonRole, action: @escaping () -> Void) -> some View {
     Button(action: action) {
         Text(label)
