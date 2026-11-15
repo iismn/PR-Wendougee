@@ -28,7 +28,6 @@ struct BrowseCommunitySheet: View {
             }
         }
         .background(CremaColor.bg.ignoresSafeArea())
-        .preferredColorScheme(.dark)
         .task {
             if session.isSignedIn { setupStore() }
         }
@@ -43,10 +42,10 @@ struct BrowseCommunitySheet: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Community")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(CremaTypography.font(size: 20, weight: .bold, design: .rounded))
                     .foregroundStyle(CremaColor.cream)
                 Text("Recipes shared by other coffee nerds")
-                    .font(.system(size: 12, design: .rounded))
+                    .font(CremaTypography.font(size: 12, design: .rounded))
                     .foregroundStyle(CremaColor.secondary)
             }
             Spacer()
@@ -54,8 +53,8 @@ struct BrowseCommunitySheet: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(CremaColor.secondary)
-                    .frame(width: 32, height: 32)
-                    .background(Circle().fill(CremaColor.surface.opacity(0.6)))
+                    .frame(width: 44, height: 44)
+                    .background(Circle().fill(CremaColor.surface))
             }
             .buttonStyle(.plain)
         }
@@ -122,10 +121,10 @@ struct BrowseCommunitySheet: View {
                 .font(.system(size: 36, weight: .light))
                 .foregroundStyle(CremaColor.secondary)
             Text("No profiles yet")
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .font(CremaTypography.font(size: 15, weight: .semibold, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             Text("Be the first to share. Tap a profile in your library → Share → Upload.")
-                .font(.system(size: 12, design: .rounded))
+                .font(CremaTypography.font(size: 12, design: .rounded))
                 .foregroundStyle(CremaColor.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
@@ -151,17 +150,17 @@ private struct ProfileRow: View {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(profile.name)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(CremaTypography.font(size: 15, weight: .semibold, design: .rounded))
                         .foregroundStyle(CremaColor.cream)
                         .lineLimit(1)
                     HStack(spacing: 6) {
                         Text(profile.author.displayName)
-                            .font(.system(size: 11, design: .rounded))
+                            .font(CremaTypography.font(size: 11, design: .rounded))
                             .foregroundStyle(CremaColor.secondary)
                         if let bean = profile.beanName {
                             Text("·").foregroundStyle(CremaColor.secondary)
                             Text(bean)
-                                .font(.system(size: 11, design: .rounded))
+                                .font(CremaTypography.font(size: 11, design: .rounded))
                                 .foregroundStyle(CremaColor.secondary)
                         }
                     }
@@ -170,11 +169,11 @@ private struct ProfileRow: View {
                             .font(.system(size: 9))
                             .foregroundStyle(CremaColor.crema)
                         Text("\(profile.profileJson.stages.count) stage\(profile.profileJson.stages.count == 1 ? "" : "s")")
-                            .font(.system(size: 10, design: .rounded).monospacedDigit())
+                            .font(CremaTypography.font(size: 10, design: .rounded).monospacedDigit())
                             .foregroundStyle(CremaColor.secondary)
                         Text("·").foregroundStyle(CremaColor.secondary)
                         Text("\(Int(profile.profileJson.totalDuration)) s")
-                            .font(.system(size: 10, design: .rounded).monospacedDigit())
+                            .font(CremaTypography.font(size: 10, design: .rounded).monospacedDigit())
                             .foregroundStyle(CremaColor.secondary)
                     }
                 }
@@ -185,10 +184,11 @@ private struct ProfileRow: View {
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(liked ? CremaColor.crema : CremaColor.secondary)
                         Text("\(profile.likesCount)")
-                            .font(.system(size: 11, weight: .medium, design: .rounded).monospacedDigit())
+                            .font(CremaTypography.font(size: 11, weight: .medium, design: .rounded).monospacedDigit())
                             .foregroundStyle(CremaColor.secondary)
                     }
                     .padding(.horizontal, 10).padding(.vertical, 6)
+                    .frame(minHeight: 44)
                 }
                 .buttonStyle(.plain)
                 // App Store Guideline 1.2 — Report + Block menu per row.
@@ -201,7 +201,7 @@ private struct ProfileRow: View {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(CremaColor.secondary)
-                        .frame(width: 28, height: 28)
+                        .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
                 .menuStyle(.borderlessButton)
@@ -211,9 +211,9 @@ private struct ProfileRow: View {
             .padding(.horizontal, 12).padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(.ultraThinMaterial)
+                    .fill(CremaColor.surface)
                     .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(CremaColor.hairline.opacity(0.4), lineWidth: 0.5))
+                        .strokeBorder(CremaColor.hairline.opacity(0.8), lineWidth: 1))
             )
         }
         .buttonStyle(.plain)

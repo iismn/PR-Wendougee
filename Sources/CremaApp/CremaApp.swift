@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 import CremaKit
 
 /// Two operating modes for the prototype:
@@ -8,6 +9,8 @@ enum AppMode: Hashable, Sendable { case replay, live }
 
 @main
 struct CremaApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+    private let appearanceTimer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
     // Live is the default for first-run users — they see the empty-state
     // "Set up your machine" CTA rather than a confusing auto-playing chart.
     // Demo/Replay is opt-in for showing off the visualization.
@@ -39,6 +42,7 @@ struct CremaApp: App {
     }
 
     init() {
+        CremaTypography.registerFonts()
         let reg = MachineRegistry()
         let lib = ProfileLibrary()
         let hist = ShotHistory()
@@ -63,12 +67,31 @@ struct CremaApp: App {
                 tipPreferences: tipPreferences,
                 session: session
             )
+            .preferredColorScheme(CremaAppearance.shared.snapshot.colorScheme)
+            .font(CremaTypography.font(.body))
+            .tint(CremaColor.crema)
             #if os(macOS)
             .frame(minWidth: 1180, minHeight: 760)
             #endif
             .onAppear {
+                CremaAppearance.shared.refresh()
                 replayPlayback.play()
                 liveDriver.bootstrap()
+            }
+            .onReceive(appearanceTimer) { date in
+                CremaAppearance.shared.refresh(at: date)
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { CremaAppearance.shared.refresh() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange).receive(on: RunLoop.main)) { _ in
+                CremaAppearance.shared.refresh()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: RunLoop.main)) { _ in
+                CremaAppearance.shared.refresh()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification).receive(on: RunLoop.main)) { _ in
+                CremaAppearance.shared.refresh()
             }
             // crema://profile/<id> deep links → fetch + present import preview
             .onOpenURL { url in handleIncoming(url: url) }
@@ -87,16 +110,8 @@ struct CremaApp: App {
             } message: {
                 Text(importError ?? "")
             }
-            // When the user picks a different profile, rebuild LIVE only.
-            // Demo/replay stays anchored to the profile the CSV was recorded
-            // against (TestyT) — overlaying that captured trace on a different
-            // profile's ghost lines was visually misleading and made the demo
-            // look broken.
-            .onChange(of: library.activeProfileID) { _, _ in
-                let newProfile = library.active
-                liveDriver = Self.makeLiveDriver(registry: registry, profile: newProfile)
-                liveDriver.bootstrap()
-            }
+            // LiveShotView updates the ready driver's profile in place. Keep
+            // its connection and any completed-shot telemetry intact.
         }
         #if os(macOS)
         .windowStyle(.hiddenTitleBar)

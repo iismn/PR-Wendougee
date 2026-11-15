@@ -15,3 +15,8 @@ backend/cloudflared/config.yml
 # macOS built app artifact (lives at repo root from `cp -R …`)
 Crema.app/
 .build/
+
+# Local design-research checkpoints are not part of the Mac source handoff.
+outputs/design-audit/
+# The standalone preview already embeds this font; retain its license only.
+outputs/ui-preview/fonts/PretendardVariable.woff2

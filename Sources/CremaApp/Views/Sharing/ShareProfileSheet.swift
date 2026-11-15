@@ -45,7 +45,6 @@ struct ShareProfileSheet: View {
             }
         }
         .background(CremaColor.bg.ignoresSafeArea())
-        .preferredColorScheme(.dark)
         .task { prepareLocalShares() }
     }
 
@@ -53,10 +52,10 @@ struct ShareProfileSheet: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Share profile")
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    .font(CremaTypography.font(size: 18, weight: .semibold, design: .rounded))
                     .foregroundStyle(CremaColor.cream)
                 Text(profile.name)
-                    .font(.system(size: 12, design: .rounded))
+                    .font(CremaTypography.font(size: 12, design: .rounded))
                     .foregroundStyle(CremaColor.secondary)
             }
             Spacer()
@@ -64,8 +63,8 @@ struct ShareProfileSheet: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(CremaColor.secondary)
-                    .frame(width: 32, height: 32)
-                    .background(Circle().fill(CremaColor.surface.opacity(0.6)))
+                    .frame(width: 44, height: 44)
+                    .background(Circle().fill(CremaColor.surface))
             }
             .buttonStyle(.plain)
         }
@@ -77,32 +76,32 @@ struct ShareProfileSheet: View {
     private var uploadCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("Community link", systemImage: "globe")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             Text("Upload to the Crema community and get a shareable URL anyone can open in the app.")
-                .font(.system(size: 11, design: .rounded))
+                .font(CremaTypography.font(size: 11, design: .rounded))
                 .foregroundStyle(CremaColor.secondary)
             Button(action: upload) {
                 HStack(spacing: 6) {
                     if uploading {
-                        ProgressView().controlSize(.small).tint(CremaColor.bg)
+                        ProgressView().controlSize(.small).tint(CremaColor.onPrimary)
                     } else {
                         Image(systemName: "icloud.and.arrow.up.fill")
                             .font(.system(size: 12, weight: .semibold))
                     }
                     Text(uploading ? "Uploading…" : "Upload & get link")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
                 }
-                .foregroundStyle(CremaColor.bg)
+                .foregroundStyle(CremaColor.onPrimary)
                 .padding(.horizontal, 16)
-                .frame(minHeight: 38)
-                .background(Capsule().fill(CremaColor.crema))
+                .frame(minHeight: 44)
+                .background(Capsule().fill(CremaColor.primarySurface))
             }
             .buttonStyle(.plain)
             .disabled(uploading)
             if let uploadError {
                 Text(uploadError)
-                    .font(.system(size: 11, design: .rounded))
+                    .font(CremaTypography.font(size: 11, design: .rounded))
                     .foregroundStyle(CremaColor.danger)
             }
         }
@@ -114,31 +113,31 @@ struct ShareProfileSheet: View {
     private func linkCard(url: URL) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("LINK")
-                .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                 .tracking(0.7)
                 .foregroundStyle(CremaColor.secondary)
             Text(url.absoluteString)
-                .font(.system(size: 13, design: .rounded).monospacedDigit())
+                .font(CremaTypography.font(size: 13, design: .rounded).monospacedDigit())
                 .foregroundStyle(CremaColor.cream)
                 .lineLimit(1)
                 .truncationMode(.middle)
                 .padding(.horizontal, 10).padding(.vertical, 8)
                 .background(RoundedRectangle(cornerRadius: 8)
-                    .fill(CremaColor.surface.opacity(0.6)))
+                    .fill(CremaColor.surface))
             HStack(spacing: 8) {
                 Button(action: { copyToClipboard(url.absoluteString) }) {
                     Label("Copy", systemImage: "doc.on.doc")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .font(CremaTypography.font(size: 12, weight: .semibold, design: .rounded))
                         .foregroundStyle(CremaColor.cream)
-                        .padding(.horizontal, 12).frame(minHeight: 32)
-                        .background(Capsule().fill(CremaColor.surface.opacity(0.6)))
+                        .padding(.horizontal, 12).frame(minHeight: 44)
+                        .background(Capsule().fill(CremaColor.bg))
                 }.buttonStyle(.plain)
                 Button(action: { systemShare(url.absoluteString) }) {
                     Label("Share", systemImage: "square.and.arrow.up")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .font(CremaTypography.font(size: 12, weight: .semibold, design: .rounded))
                         .foregroundStyle(CremaColor.cream)
-                        .padding(.horizontal, 12).frame(minHeight: 32)
-                        .background(Capsule().fill(CremaColor.surface.opacity(0.6)))
+                        .padding(.horizontal, 12).frame(minHeight: 44)
+                        .background(Capsule().fill(CremaColor.bg))
                 }.buttonStyle(.plain)
             }
         }
@@ -150,7 +149,7 @@ struct ShareProfileSheet: View {
     private var qrCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("QR code", systemImage: "qrcode")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             if let img = qrImage {
                 img.interpolation(.none)
@@ -163,7 +162,7 @@ struct ShareProfileSheet: View {
             Text(uploadedDeepLink == nil
                  ? "Upload to community first, then scan with another iPhone or iPad to install this profile instantly."
                  : "Point another Crema device's camera at this code to install.")
-                .font(.system(size: 11, design: .rounded))
+                .font(CremaTypography.font(size: 11, design: .rounded))
                 .foregroundStyle(CremaColor.secondary)
         }
         .padding(14)
@@ -174,27 +173,27 @@ struct ShareProfileSheet: View {
     private var fileCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("Export as file", systemImage: "doc.fill")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             Text("AirDrop, message, or save the profile as a `.crema` file. The other device opens it in Crema directly.")
-                .font(.system(size: 11, design: .rounded))
+                .font(CremaTypography.font(size: 11, design: .rounded))
                 .foregroundStyle(CremaColor.secondary)
             if let url = fileURL {
                 #if os(iOS)
                 ShareLink(item: url) {
                     Label("AirDrop / share file", systemImage: "square.and.arrow.up")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
                         .foregroundStyle(CremaColor.cream)
-                        .padding(.horizontal, 14).frame(minHeight: 38)
-                        .background(Capsule().fill(CremaColor.surface.opacity(0.6)))
+                        .padding(.horizontal, 14).frame(minHeight: 44)
+                        .background(Capsule().fill(CremaColor.bg))
                 }
                 #else
                 Button(action: { systemShareFile(url) }) {
                     Label("Save .crema file", systemImage: "square.and.arrow.down")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
                         .foregroundStyle(CremaColor.cream)
-                        .padding(.horizontal, 14).frame(minHeight: 38)
-                        .background(Capsule().fill(CremaColor.surface.opacity(0.6)))
+                        .padding(.horizontal, 14).frame(minHeight: 44)
+                        .background(Capsule().fill(CremaColor.bg))
                 }.buttonStyle(.plain)
                 #endif
             }
@@ -206,9 +205,9 @@ struct ShareProfileSheet: View {
 
     private var card: some View {
         RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .fill(.ultraThinMaterial)
+            .fill(CremaColor.surface)
             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(CremaColor.hairline.opacity(0.4), lineWidth: 0.5))
+                .strokeBorder(CremaColor.hairline.opacity(0.8), lineWidth: 1))
     }
 
     // MARK: - Actions

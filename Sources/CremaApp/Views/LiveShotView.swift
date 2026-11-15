@@ -1,378 +1,317 @@
 import SwiftUI
 import CremaKit
 
-/// Hero composition: header → chart → metric HUD → stage timeline → playback bar.
-/// The chart auto-advances using a `TimelineView(.animation)` so the playhead glides
-/// at display refresh (60/120Hz) even though the underlying data is 3.4Hz.
+/// Crema's original order: profile header, shot chart, measurements, stages, actions.
+/// Recipe authoring and the content lists remain in their original presentations.
 struct LiveShotView: View {
     @Binding var mode: AppMode
-    @State var replayPlayback: ShotPlayback
-    @State var liveDriver: LiveDriver
+    @Bindable var replayPlayback: ShotPlayback
+    @Bindable var liveDriver: LiveDriver
     @Bindable var library: ProfileLibrary
     @Bindable var history: ShotHistory
     @Bindable var tipPreferences: TipPreferences
     @Bindable var session: SignedInUser
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var showLibrary = false
     @State private var showHistory = false
+    @State private var showMachines = false
     @State private var autoTuneSession: AutoTuneSession?
+    @State private var lastTick: Date = .now
+    @State private var appeared = false
+    @State private var sectionHeights: [CremaMainSection: CGFloat] = [:]
 
-    /// Whichever engine is currently driving the chart.
-    private var playback: ShotPlayback {
-        switch mode {
-        case .replay: return replayPlayback
-        case .live:   return liveDriver.playback
-        }
-    }
+    private var playback: ShotPlayback { mode == .replay ? replayPlayback : liveDriver.playback }
+    private var isBrewing: Bool { liveDriver.brewState == .brewing }
+    private var profileName: String { mode == .replay ? "Demo" : playback.profile.name }
 
     var body: some View {
-        // `.animation` schedule only fires WHILE animations are active, which
-        // makes it unreliable here — we need a continuous tick. `.periodic`
-        // is guaranteed to fire at the requested cadence.
-        //
-        // CRITICAL: the advance() call MUST be deferred outside the view
-        // builder. Mutating @State (lastTick) or @Observable state
-        // (playback.t) during view evaluation is a hard SwiftUI rule
-        // violation — the mutations were being dropped silently, which is
-        // why the chart never moved despite isPlaying=true. Dispatching
-        // back to the main queue puts the mutation after the current view
-        // update completes.
-        TimelineView(.periodic(from: .now, by: 1.0 / 60.0)) { timeline in
-            // Multiple statements + content view → use explicit return so the
-            // ViewBuilder can infer the result type.
+        TimelineView(.periodic(from: .now, by: mode == .replay && replayPlayback.isPlaying ? 1.0 / 60.0 : 30)) { timeline in
             let date = timeline.date
             DispatchQueue.main.async { advance(to: date) }
             return content
         }
     }
 
-    @State private var lastTick: Date = .now
-
-    /// Spin up a fresh AutoTuneSession with a scale-of-the-day. Today that's
-    /// `StubScale` everywhere (simulated weight ramp) — a real Bookoo / Acaia
-    /// BLE transport will plug in here later. The user can also fall back to
-    /// `ManualScale()` if they explicitly want manual-only entry.
-    @MainActor
-    private func startAutoTune() {
-        #if targetEnvironment(simulator)
-        let scale: ScaleTransport = StubScale(
-            targetG: 36, durationS: 28
-        )
-        #else
-        // No real BLE scale wired up yet — manual entry only on device.
-        let scale: ScaleTransport = ManualScale()
-        #endif
-        autoTuneSession = AutoTuneSession(
-            liveDriver: liveDriver,
-            library: library,
-            scale: scale
-        )
-    }
-
-    @MainActor
-    private func advance(to date: Date) {
-        let dt = date.timeIntervalSince(lastTick)
-        lastTick = date
-        if playback.isPlaying, dt > 0, dt < 0.5 {
-            playback.advance(by: dt)
-        }
-    }
-
     private var content: some View {
-        ZStack {
-            // Background: warm radial glow upper-right fading into near-black.
-            // Feels like crema crowning at the top of a freshly-pulled cup.
-            CremaColor.bg.ignoresSafeArea()
-            CremaGradient.appBackground.ignoresSafeArea()
-
-            VStack(spacing: 0) {
-                header
-                    .padding(.horizontal, 28)
-                    .padding(.top, 22)
-                    .padding(.bottom, 14)
-                    .opacity(playback.isPlaying ? 0.4 : 1.0)
-                    .animation(.easeInOut(duration: 0.6), value: playback.isPlaying)
-
-                ShotChart(
-                    samples: playback.emitted,
-                    profile: playback.profile,
-                    playhead: playback.t,
-                    totalDuration: playback.totalDuration
-                )
-                .padding(.horizontal, 22)
-                .frame(maxHeight: .infinity)
-
-                MetricHUD(
-                    pressure: playback.currentSample?.pressureBar ?? 0,
-                    flow:     playback.currentSample?.flowMlPerSec ?? 0,
-                    volume:   playback.currentSample?.volumeMl ?? 0,
-                    elapsed:  playback.t
-                )
-                .padding(.horizontal, 22)
-                .padding(.top, 12)
-
-                StageTimeline(profile: playback.profile, playhead: playback.t)
-                    .frame(height: 56)
-                    .padding(.horizontal, 22)
-                    .padding(.top, 16)
-
-                BrewActionZone(
-                    mode: $mode,
-                    liveDriver: liveDriver,
-                    replayPlayback: replayPlayback,
-                    library: library,
-                    history: history,
-                    tipPreferences: tipPreferences,
-                    onAutoTune: { startAutoTune() }
-                )
-                .padding(.horizontal, 10)
-                .padding(.top, 14)
-                .padding(.bottom, 12)
+        GeometryReader { geometry in
+            let wide = geometry.size.width >= 820
+            let usedHeight = (sectionHeights[.header] ?? 52)
+                + (sectionHeights[.metrics] ?? 110)
+                + (sectionHeights[.stages] ?? 56)
+                + (sectionHeights[.actions] ?? 102)
+                + 136 // content padding, three gaps, and chart legend/padding
+            let chartHeight = max(210, geometry.size.height - usedHeight)
+            ScrollView {
+                VStack(spacing: 16) {
+                    header
+                        .cremaMeasureHeight(.header)
+                    chart(height: chartHeight)
+                    MetricHUD(pressure: playback.currentSample?.pressureBar ?? 0,
+                              flow: playback.currentSample?.flowMlPerSec ?? 0,
+                              volume: playback.currentSample?.volumeMl ?? 0,
+                              elapsed: playback.t,
+                              hasReading: playback.currentSample != nil)
+                        .cremaMeasureHeight(.metrics)
+                    StageTimeline(profile: playback.profile, playhead: playback.t)
+                        .frame(height: 56)
+                        .cremaMeasureHeight(.stages)
+                }
+                .padding(.horizontal, wide ? 24 : 16)
+                .padding(.top, 16)
+                .padding(.bottom, 16)
+                .frame(maxWidth: 1400)
+                .frame(maxWidth: .infinity)
+                .opacity(appeared ? 1 : 0)
+                .offset(y: appeared ? 0 : 5)
             }
-
-            // Subtle vignette to focus the eye on the chart
-            CremaGradient.vignette
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
-
-            // Dim scrim when a modal sheet is up. iPad form-sheet presentation
-            // applies a very faint system dim; this adds enough additional
-            // darkness to clearly focus attention on the modal. On iPhone the
-            // sheet covers the screen anyway, so the scrim has no visible
-            // effect there. On macOS dialogs sit over a single window — this
-            // scrim makes the focus shift obvious.
-            Color.black
-                .opacity(showLibrary ? 0.45 : 0)
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
-                .animation(.easeInOut(duration: 0.25), value: showLibrary)
+            .scrollIndicators(.hidden)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                BrewActionZone(mode: $mode, liveDriver: liveDriver, replayPlayback: replayPlayback,
+                               library: library, history: history, tipPreferences: tipPreferences,
+                               onAutoTune: { startAutoTune() })
+                    .padding(.top, 8)
+                    .frame(maxWidth: 1400)
+                    .frame(maxWidth: .infinity)
+                    .background(CremaColor.bg.opacity(0.98))
+                    .cremaMeasureHeight(.actions)
+            }
+            .background(CremaColor.bg.ignoresSafeArea())
         }
-        .preferredColorScheme(.dark)
-        .sheet(isPresented: $showLibrary) {
-            ProfilesView(library: library, session: session)
+        .foregroundStyle(CremaColor.cream)
+        .onPreferenceChange(CremaMainHeightsKey.self) { heights in
+            Task { @MainActor in
+                if sectionHeights != heights { sectionHeights = heights }
+            }
         }
+        .tint(CremaColor.crema)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: CremaAppearance.shared.snapshot)
+        .onAppear {
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.22)) { appeared = true }
+        }
+        .onChange(of: library.active) { _, profile in
+            if liveDriver.brewState == .ready && liveDriver.tempProfileOverride == nil {
+                liveDriver.playback.profile = profile
+            }
+        }
+        .onChange(of: liveDriver.brewState) { _, state in
+            if state == .ready && liveDriver.tempProfileOverride == nil {
+                liveDriver.playback.profile = library.active
+            }
+        }
+        .onChange(of: replayPlayback.isPlaying) { _, _ in lastTick = .now }
+        .onChange(of: mode) { _, _ in lastTick = .now }
+        .sheet(isPresented: $showLibrary) { ProfilesView(library: library, session: session) }
+        .sheet(isPresented: $showHistory) { ShotHistoryView(history: history) }
+        .sheet(isPresented: $showMachines) { MachinesView(driver: liveDriver) }
         #if os(iOS)
-        .fullScreenCover(item: $autoTuneSession) { session in
-            AutoTuneSheet(session: session, onClose: { autoTuneSession = nil })
+        .fullScreenCover(item: $autoTuneSession) { tune in
+            AutoTuneSheet(session: tune, onClose: { autoTuneSession = nil })
         }
         #else
-        .sheet(item: $autoTuneSession) { session in
-            AutoTuneSheet(session: session, onClose: { autoTuneSession = nil })
+        .sheet(item: $autoTuneSession) { tune in
+            AutoTuneSheet(session: tune, onClose: { autoTuneSession = nil })
                 .frame(minWidth: 700, minHeight: 720)
         }
-        #endif
-        .sheet(isPresented: $showHistory) {
-            ShotHistoryView(history: history)
-        }
-    }
-
-    // MARK: - Header
-
-    #if os(iOS)
-    @Environment(\.horizontalSizeClass) private var headerSizeClass
-    #endif
-
-    private var isCompactHeader: Bool {
-        #if os(iOS)
-        return headerSizeClass == .compact
-        #else
-        return false
         #endif
     }
 
     private var header: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(CremaColor.crema.opacity(0.25))
-                    .frame(width: 16, height: 16)
-                Circle()
-                    .fill(CremaColor.crema)
-                    .frame(width: 8, height: 8)
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 18) {
+                profileSelector.fixedSize(horizontal: true, vertical: false)
+                Spacer(minLength: 12)
+                headerTools
             }
-            Button(action: { showLibrary = true }) {
-                HStack(spacing: 4) {
-                    Text(playback.profile.name)
-                        .font(CremaFont.headerTitle)
-                        .foregroundStyle(CremaColor.cream)
-                        .lineLimit(1)
-                        .fixedSize()
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(CremaColor.secondary)
+            VStack(alignment: .leading, spacing: 8) {
+                profileSelector
+                HStack { Spacer(minLength: 0); headerTools }
+            }
+        }
+    }
+
+    private var profileSelector: some View {
+        Button { showLibrary = true } label: {
+            HStack(spacing: 10) {
+                Circle().fill(connectionColor).frame(width: 6, height: 6)
+                Text(profileName)
+                    .font(CremaTypography.font(size: 23, weight: .medium))
+                    .tracking(-0.5).lineLimit(1)
+                Image(systemName: "chevron.down").font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(CremaColor.secondary)
+            }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(CremaHeaderPressStyle())
+        .accessibilityLabel("Recipes, \(profileName)").help("Recipes")
+    }
+
+    private var headerTools: some View {
+        HStack(spacing: 7) {
+            utility("clock.arrow.circlepath", label: "Journal", availableWhileBrewing: true) { showHistory = true }
+            utility("antenna.radiowaves.left.and.right", label: statusLabel) { showMachines = true }
+            appearanceMenu
+            modePill
+        }
+    }
+
+    private func utility(_ symbol: String, label: String, availableWhileBrewing: Bool = false,
+                         action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol).font(.system(size: 16))
+                .foregroundStyle(CremaColor.secondary)
+                .frame(width: 44, height: 44)
+                .contentShape(Circle())
+        }
+        .buttonStyle(CremaHeaderPressStyle()).disabled(isBrewing && !availableWhileBrewing)
+        .accessibilityLabel(label).help(label)
+    }
+
+    private var appearanceMenu: some View {
+        let appearance = CremaAppearance.shared.snapshot
+        return Menu {
+            ForEach(CremaAppearanceMode.allCases, id: \.self) { choice in
+                Button { CremaAppearance.shared.setMode(choice) } label: {
+                    Label(choice.title, systemImage: choice.symbol)
                 }
             }
-            .buttonStyle(.plain)
-            // iPhone portrait drops the dose / ratio meta — there's no room.
-            if !isCompactHeader {
-                Text("·")
-                    .foregroundStyle(CremaColor.secondary)
-                Text("18.0 g → 36.0 g")
-                    .font(CremaFont.headerMeta)
-                    .foregroundStyle(CremaColor.secondary)
-                Text("·")
-                    .foregroundStyle(CremaColor.secondary)
-                Text("ratio 1 : 2.0")
-                    .font(CremaFont.headerMeta)
-                    .foregroundStyle(CremaColor.secondary)
-            }
-            Spacer()
-            historyButton
-            modePill
-            Text(String(format: "%05.2f s", playback.t))
-                .font(.system(size: 13, weight: .regular, design: .rounded).monospacedDigit())
+        } label: {
+            Image(systemName: appearance.phase.symbol).font(.system(size: 16))
                 .foregroundStyle(CremaColor.secondary)
-                .fixedSize()
+                .frame(width: 44, height: 44)
         }
+        .menuStyle(.borderlessButton)
+        .accessibilityLabel("Time appearance, \(appearance.phase.title)")
+        .help(appearance.mode == .automatic ? "Auto · \(appearance.phase.title)" : appearance.phase.title)
     }
 
-    private var historyButton: some View {
-        Button(action: { showHistory = true }) {
-            Image(systemName: "clock.arrow.circlepath")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(CremaColor.secondary)
-                .frame(width: 44, height: 44)   // proper hit target
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-
-    /// Tiny mode switcher in the header — a dev affordance, NOT a primary
-    /// control. The primary actions (connect, brew) live in `BrewActionZone`.
-    /// Just flips the data source; doesn't auto-connect or auto-brew, those
-    /// are explicit user actions in their own zone.
     private var modePill: some View {
-        HStack(spacing: 0) {
-            modeChip(label: "Live", active: mode == .live) {
+        HStack(spacing: 2) {
+            modeChip("Live", symbol: "waveform.path.ecg", active: mode == .live) {
                 mode = .live
                 replayPlayback.pause()
+                liveDriver.bootstrap()
             }
-            modeChip(label: "Demo", active: mode == .replay) {
+            modeChip("Demo", symbol: "play", active: mode == .replay) {
                 mode = .replay
                 liveDriver.stop()
                 replayPlayback.reset()
                 replayPlayback.play()
             }
         }
-        .padding(2)
-        .background(
-            Capsule().fill(CremaColor.surface.opacity(0.5))
-                .overlay(Capsule().strokeBorder(CremaColor.hairline.opacity(0.5), lineWidth: 0.5))
-        )
-        .opacity(0.7)
+        .padding(3)
+        .background(CremaColor.surface, in: Capsule())
+        .disabled(isBrewing)
     }
 
-    private func modeChip(label: String, active: Bool, action: @escaping () -> Void) -> some View {
+    private func modeChip(_ title: String, symbol: String, active: Bool,
+                          action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(label)
-                .font(.system(size: 9, weight: .medium, design: .rounded))
-                .foregroundStyle(active ? CremaColor.cream : CremaColor.secondary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(active ? CremaColor.hairline.opacity(0.8) : Color.clear, in: Capsule())
+            Image(systemName: symbol).font(.system(size: 13, weight: .medium))
+                .foregroundStyle(active ? CremaColor.onPrimary : CremaColor.secondary)
+                .frame(width: 44, height: 44)
+                .background(active ? CremaColor.primarySurface : .clear, in: Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(CremaHeaderPressStyle())
+        .accessibilityLabel(title).help(title)
+        .accessibilityAddTraits(active ? .isSelected : [])
     }
 
-    // MARK: - Playback bar (prototype-only — replaced by physical brew controls later)
-
-    private var playbackBar: some View {
-        HStack(spacing: 22) {
-            Button(action: {
-                playback.reset()
-                if mode == .live { liveDriver.brew() }
-            }) {
-                Image(systemName: "arrow.counterclockwise")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(CremaColor.secondary)
-                    .frame(width: 36, height: 36)
-                    .cremaGlass(in: Circle())
+    private func chart(height: CGFloat) -> some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 16) {
+                chartKey("gauge.with.needle", unit: "bar", color: CremaColor.crema)
+                chartKey("drop", unit: "mL/s", color: CremaColor.matcha)
+                chartKey("waterbottle", unit: "mL", color: CremaColor.cream)
+                Spacer(minLength: 0)
             }
-            .buttonStyle(.plain)
+            ShotChart(samples: playback.emitted, profile: playback.profile,
+                      playhead: playback.t, totalDuration: playback.totalDuration)
+                .frame(height: height)
+        }
+        .padding(16)
+        .background(CremaColor.surface, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
 
-            Button(action: {
-                if mode == .live {
-                    if !playback.isPlaying { liveDriver.brew() }
-                } else {
-                    playback.toggle()
-                }
-            }) {
-                ZStack {
-                    // Soft halo behind the play button
-                    Circle()
-                        .fill(CremaColor.crema.opacity(0.25))
-                        .frame(width: 64, height: 64)
-                        .blur(radius: 14)
-                    Circle()
-                        .fill(LinearGradient(
-                            colors: [CremaColor.cremaBright, CremaColor.crema],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        ))
-                        .frame(width: 52, height: 52)
-                        .overlay(
-                            Circle().strokeBorder(CremaColor.cream.opacity(0.25), lineWidth: 0.5)
-                        )
-                    Image(systemName: playback.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(CremaColor.bg)
-                        .contentTransition(.symbolEffect(.replace))
-                        .offset(x: playback.isPlaying ? 0 : 2)  // optical center for play triangle
-                }
-            }
-            .buttonStyle(.plain)
+    private func chartKey(_ symbol: String, unit: String, color: Color) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: symbol).font(.system(size: 11))
+            Text(unit).font(CremaTypography.font(size: 10))
+        }
+        .foregroundStyle(color)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(unit == "bar" ? "Pressure, bar" : unit == "mL/s" ? "Pump flow, milliliters per second" : "Pumped water, milliliters")
+    }
 
-            // Scrubber
-            GeometryReader { geo in
-                let frac = playback.t / max(0.001, playback.totalDuration)
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(CremaColor.hairline)
-                        .frame(height: 3)
-                    Capsule()
-                        .fill(LinearGradient(
-                            colors: [CremaColor.crema, CremaColor.cremaBright],
-                            startPoint: .leading, endPoint: .trailing))
-                        .frame(width: geo.size.width * CGFloat(frac), height: 3)
-                    Circle()
-                        .fill(CremaColor.cream)
-                        .frame(width: 14, height: 14)
-                        .shadow(color: CremaColor.crema.opacity(0.55), radius: 6)
-                        .offset(x: geo.size.width * CGFloat(frac) - 7)
-                }
-                .frame(height: 14)
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { v in
-                            let f = max(0, min(1, v.location.x / geo.size.width))
-                            playback.scrub(to: f * playback.totalDuration)
-                        }
-                )
-            }
-            .frame(height: 14)
-
-            // Speed
-            Menu {
-                ForEach([0.5, 1.0, 1.5, 2.0, 4.0], id: \.self) { s in
-                    Button(speedString(s)) {
-                        playback.speed = s
-                    }
-                }
-            } label: {
-                Text(speedLabel)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded).monospacedDigit())
-                    .foregroundStyle(CremaColor.cream)
-                    .frame(width: 40, height: 28)
-                    .cremaGlass(in: Capsule())
-            }
-            .menuStyle(.borderlessButton)
+    private var connectionColor: Color {
+        if mode == .replay { return CremaColor.crema }
+        switch liveDriver.state {
+        case .connected: return CremaColor.connected
+        case .failed: return CremaColor.danger
+        default: return CremaColor.secondary
         }
     }
 
-    private func speedString(_ s: Double) -> String {
-        if s == 1.0 { return "1×" }
-        if s.truncatingRemainder(dividingBy: 1) == 0 { return "\(Int(s))×" }
-        return String(format: "%.1f×", s)
+    private var statusLabel: String {
+        switch liveDriver.state {
+        case .connected(let name):
+            return liveDriver.registry.machines.first(where: {
+                $0.advertisedName == name || $0.id == name
+            })?.displayName ?? PairedMachine.prettify(name)
+        case .connecting: return "Connecting…"
+        case .scanning, .discovered: return "Finding machine…"
+        case .disconnecting: return "Disconnecting…"
+        case .failed: return "Connection needs attention"
+        case .idle: return "Pair your machine"
+        }
     }
-    private var speedLabel: String { speedString(playback.speed) }
+
+    @MainActor private func advance(to date: Date) {
+        let dt = date.timeIntervalSince(lastTick)
+        lastTick = date
+        if playback.isPlaying, dt > 0, dt < 0.5 { playback.advance(by: dt) }
+    }
+
+    @MainActor private func startAutoTune() {
+        #if targetEnvironment(simulator)
+        let scale: ScaleTransport = StubScale(targetG: 36, durationS: 28)
+        #else
+        let scale: ScaleTransport = ManualScale()
+        #endif
+        autoTuneSession = AutoTuneSession(liveDriver: liveDriver, library: library, scale: scale)
+    }
+}
+
+private enum CremaMainSection: Hashable, Sendable {
+    case header, metrics, stages, actions
+}
+
+private struct CremaMainHeightsKey: PreferenceKey {
+    static let defaultValue: [CremaMainSection: CGFloat] = [:]
+    static func reduce(value: inout [CremaMainSection: CGFloat],
+                       nextValue: () -> [CremaMainSection: CGFloat]) {
+        value.merge(nextValue(), uniquingKeysWith: { _, new in new })
+    }
+}
+
+private extension View {
+    func cremaMeasureHeight(_ section: CremaMainSection) -> some View {
+        background {
+            GeometryReader { geometry in
+                Color.clear.preference(key: CremaMainHeightsKey.self,
+                                       value: [section: geometry.size.height])
+            }
+        }
+    }
+}
+
+private struct CremaHeaderPressStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
+            .opacity(configuration.isPressed ? 0.72 : 1)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.13), value: configuration.isPressed)
+    }
 }

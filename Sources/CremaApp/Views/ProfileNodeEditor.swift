@@ -12,6 +12,7 @@ import CremaKit
 struct ProfileNodeEditor: View {
     @Bindable var editing: EditableProfile
     @Binding var selectedStageID: UUID?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var draggingStageID: UUID?
     /// Per-stage drag origin captured ONCE at gesture start. Includes the
@@ -87,11 +88,11 @@ struct ProfileNodeEditor: View {
                     ValuePill(stage: item.stage)
                         .position(x: item.point.x, y: max(28, item.point.y - 30))
                         .allowsHitTesting(false)
-                        .transition(.opacity.combined(with: .scale(scale: 0.85)))
+                        .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.85)))
                 }
             }
-            .animation(.smooth(duration: 0.25), value: selectedStageID)
-            .animation(.smooth(duration: 0.18), value: editing.stages.map(\.id))
+            .animation(reduceMotion ? nil : .smooth(duration: 0.25), value: selectedStageID)
+            .animation(reduceMotion ? nil : .smooth(duration: 0.18), value: editing.stages.map(\.id))
             // Clip so a stage dragged past the chart's right edge can't bleed
             // visually into the recipe pane next to us in the landscape split.
             // Matches the editor card's outer corner radius (set in
@@ -263,6 +264,7 @@ struct ProfileNodeEditor: View {
 // MARK: - Node handle
 
 private struct StageNode: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let priority: BrewStage.Priority
     let isSelected: Bool
     let isDragging: Bool
@@ -274,27 +276,27 @@ private struct StageNode: View {
 
     var body: some View {
         ZStack {
-            // Halo — bigger and brighter when selected/dragging.
+            // A quiet selection ring keeps the editing handle distinct on porcelain.
             Circle()
-                .fill(color.opacity(isSelected || isDragging ? 0.45 : 0.2))
+                .fill(color.opacity(isSelected || isDragging ? 0.16 : 0.06))
                 .frame(width: (isSelected || isDragging) ? radius * 4 : radius * 2.4,
                        height: (isSelected || isDragging) ? radius * 4 : radius * 2.4)
-                .blur(radius: isSelected || isDragging ? 8 : 3)
+                .blur(radius: isSelected || isDragging ? 3 : 0)
             // Outer ring
             Circle()
                 .stroke(color.opacity(isSelected ? 1.0 : 0.7), lineWidth: isSelected ? 2 : 1)
                 .frame(width: radius * 2.2, height: radius * 2.2)
-            // Filled center — dark to read clearly against the curve segment behind.
+            // A surface-colored center separates the handle from the curve behind it.
             Circle()
-                .fill(CremaColor.bg)
+                .fill(CremaColor.surface)
                 .frame(width: radius * 1.6, height: radius * 1.6)
             Circle()
                 .fill(color)
                 .frame(width: radius, height: radius)
         }
-        .scaleEffect(isDragging ? 1.15 : 1.0)
-        .animation(.snappy(duration: 0.18), value: isSelected)
-        .animation(.snappy(duration: 0.12), value: isDragging)
+        .scaleEffect(isDragging && !reduceMotion ? 1.15 : 1.0)
+        .animation(reduceMotion ? nil : .snappy(duration: 0.18), value: isSelected)
+        .animation(reduceMotion ? nil : .snappy(duration: 0.12), value: isDragging)
         .frame(width: radius * 4, height: radius * 4)        // tap target
         .contentShape(Circle())
     }
@@ -317,13 +319,13 @@ private struct ValuePill: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 11, weight: .semibold, design: .rounded).monospacedDigit())
-            .foregroundStyle(CremaColor.bg)
+            .font(CremaTypography.font(size: 11, weight: .semibold, design: .rounded).monospacedDigit())
+            .foregroundStyle(CremaColor.onAccent)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(Capsule().fill(accent))
             .overlay(Capsule().strokeBorder(CremaColor.cream.opacity(0.15), lineWidth: 0.5))
-            .shadow(color: accent.opacity(0.5), radius: 6)
+            .shadow(color: accent.opacity(0.15), radius: 5, x: 0, y: 2)
     }
 }
 
@@ -334,6 +336,7 @@ private struct ValuePill: View {
 /// that don't map directly to a drag gesture.
 struct SelectedStageBar: View {
     @Bindable var stage: EditableStage
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let canDelete: Bool
     let onDelete: () -> Void
     let onDeselect: () -> Void
@@ -342,7 +345,7 @@ struct SelectedStageBar: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
                 Text(stage.label.isEmpty ? "Stage" : stage.label)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(CremaColor.cream)
                 Spacer()
                 Picker("Priority", selection: $stage.priority) {
@@ -353,47 +356,423 @@ struct SelectedStageBar: View {
                 .frame(maxWidth: 200)
             }
 
-            HStack(spacing: 12) {
-                Text("Pause after")
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(CremaColor.secondary)
-                Slider(value: $stage.waitAfter, in: 0...20, step: 0.5)
-                    .tint(CremaColor.secondary)
-                Text(stage.waitAfter == 0 ? "none" : String(format: "%.1f s", stage.waitAfter))
-                    .font(.system(size: 11, design: .rounded).monospacedDigit())
-                    .foregroundStyle(CremaColor.cream)
-                    .frame(width: 56, alignment: .trailing)
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .top, spacing: 12) {
+                    setpointDial.frame(width: 190)
+                    timingRulers.frame(minWidth: 190)
+                }
+                VStack(spacing: 12) {
+                    setpointDial
+                    timingRulers
+                }
             }
 
             HStack(spacing: 10) {
                 if canDelete {
                     Button(role: .destructive, action: onDelete) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "trash")
-                            Text("Delete stage")
-                        }
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        Image(systemName: "trash")
+                            .font(.system(size: 14, weight: .medium))
+                            .frame(width: 44, height: 44)
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(CremaColor.danger)
+                    .accessibilityLabel("Delete stage")
+                    .help("Delete stage")
                 }
                 Spacer()
                 Button(action: onDeselect) {
-                    Text("Done")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(CremaColor.crema)
+                        .frame(width: 44, height: 44)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Finish editing stage")
+                .help("Finish editing stage")
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(CremaColor.hairline.opacity(0.5), lineWidth: 0.5))
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(CremaColor.surface)
+                .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .strokeBorder(CremaColor.crema.opacity(0.18), lineWidth: 0.8))
         )
-        .transition(.move(edge: .bottom).combined(with: .opacity))
+        .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+    }
+
+    @ViewBuilder private var setpointDial: some View {
+        if stage.priority == .pressure {
+            CremaDialControl(value: $stage.pressureBar, range: 0...9, step: 0.1,
+                             label: "Pressure", unit: "bar", accent: CremaColor.crema)
+        } else {
+            CremaDialControl(value: $stage.flowMlPerSec, range: 0.1...8, step: 0.1,
+                             label: "Pump flow", unit: "mL/s", accent: CremaColor.matcha)
+        }
+    }
+
+    private var timingRulers: some View {
+        VStack(spacing: 12) {
+            CremaRulerControl(value: $stage.duration, range: 1...60, step: 0.5,
+                              label: "Duration", unit: "s")
+            CremaRulerControl(value: $stage.waitAfter, range: 0...30, step: 0.5,
+                              label: "Pause after", unit: "s", accent: CremaColor.matcha)
+        }
+    }
+}
+
+
+private struct CremaRulerScale: View, Animatable {
+    var value: Double
+    let range: ClosedRange<Double>
+    let step: Double
+    let pitch: CGFloat
+
+    var animatableData: Double {
+        get { value }
+        set { value = newValue }
+    }
+
+    var body: some View {
+        Canvas { context, size in
+            let verticalScale = size.height / 68
+            let position = (value - range.lowerBound) / step
+            let center = Int(position.rounded())
+            let last = Int(((range.upperBound - range.lowerBound) / step).rounded(.down))
+            let firstTick = max(0, center - 72)
+            let lastTick = min(last, center + 72)
+            if firstTick <= lastTick {
+                for tick in firstTick...lastTick {
+                    let x = size.width / 2 + CGFloat(Double(tick) - position) * pitch
+                    guard x >= -8, x <= size.width + 8 else { continue }
+                    let major = tick % 6 == 0
+                    let distance = Double(abs(x - size.width / 2) / max(1, size.width / 2))
+                    var line = Path()
+                    line.move(to: CGPoint(x: x, y: (major ? 10 : 23) * verticalScale))
+                    line.addLine(to: CGPoint(x: x, y: 42 * verticalScale))
+                    context.stroke(line, with: .color(CremaColor.secondary.opacity(max(0.12, 0.65 - distance * 0.45))),
+                                   lineWidth: major ? 1.5 : 0.8)
+                    if major {
+                        let number = range.lowerBound + Double(tick) * step
+                        let text = Text(InstrumentMath.formatted(number, step: step))
+                            .font(CremaTypography.font(size: 8).monospacedDigit())
+                            .foregroundColor(CremaColor.secondary)
+                        context.draw(text, at: CGPoint(x: x, y: 56 * verticalScale))
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Tactile instruments
+// The scale moves beneath a fixed marker, as in the local Lofree Hub instruments.
+// Bounds and snapped values remain the editor's existing machine-profile values.
+
+struct CremaRulerControl: View {
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+    let step: Double
+    let label: String
+    let unit: String
+    var accent: Color = CremaColor.crema
+    var compact: Bool = false
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @FocusState private var isFocused: Bool
+    @State private var dragOrigin: Double?
+    @State private var rawValue: Double?
+    private let pitch: CGFloat = 8
+
+    private var displayedValue: Double {
+        InstrumentMath.magnetic(rawValue ?? value, range: range, step: step)
+    }
+    private var stepIndex: Int { Int(((value - range.lowerBound) / step).rounded()) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: compact ? 4 : 6) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(label)
+                    .font(CremaTypography.font(size: compact ? 10 : 11, weight: .medium))
+                    .foregroundStyle(CremaColor.secondary)
+                Spacer()
+                CremaDotReadout(text: InstrumentMath.formatted(value, step: step),
+                                color: CremaColor.cream, size: compact ? 18 : 22)
+                    .fixedSize()
+                    .alignmentGuide(.firstTextBaseline) { dimensions in
+                        dimensions.height - (compact ? 18 : 22) * 0.039
+                    }
+                    .accessibilityHidden(true)
+                Text(unit)
+                    .font(CremaTypography.font(size: 10))
+                    .foregroundStyle(CremaColor.secondary)
+            }
+            GeometryReader { geometry in
+                let width = geometry.size.width
+                let height: CGFloat = compact ? 60 : 68
+                let verticalScale = height / 68
+                ZStack {
+                    CremaRulerScale(value: displayedValue, range: range, step: step, pitch: pitch)
+                        .accessibilityHidden(true)
+                    Capsule().fill(accent).frame(width: 2, height: 39 * verticalScale)
+                        .position(x: width / 2, y: 24 * verticalScale)
+                        .shadow(color: accent.opacity(0.2), radius: 5)
+                        .accessibilityHidden(true)
+                    Circle().fill(CremaColor.surface).frame(width: 15, height: 15)
+                        .overlay(Circle().strokeBorder(CremaColor.hairline, lineWidth: 1))
+                        .overlay(Circle().fill(accent).frame(width: 4, height: 4))
+                        .position(x: width / 2, y: 44 * verticalScale)
+                        .accessibilityHidden(true)
+                }
+                .frame(width: width, height: height)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 2, coordinateSpace: .global)
+                        .onChanged { gesture in
+                            isFocused = true
+                            if dragOrigin == nil { dragOrigin = value }
+                            let next = (dragOrigin ?? value) - Double(gesture.translation.width / pitch) * step
+                            rawValue = InstrumentMath.clamped(next, range: range)
+                            value = InstrumentMath.snapped(next, range: range, step: step)
+                        }
+                        .onEnded { _ in dragOrigin = nil; rawValue = nil }
+                )
+            }
+            .frame(height: compact ? 60 : 68)
+        }
+        .padding(compact ? 10 : 14)
+        .background(RoundedRectangle(cornerRadius: 18).fill(compact ? Color.clear : CremaColor.bg))
+        .overlay(RoundedRectangle(cornerRadius: 18)
+            .strokeBorder(isFocused ? accent : CremaColor.hairline.opacity(0.7),
+                          lineWidth: isFocused ? 1.5 : (compact ? 0 : 0.7)))
+        .focusable()
+        .focused($isFocused)
+        .onKeyPress(phases: [.down, .repeat]) { press in
+            guard let next = InstrumentMath.keyboardValue(press, value: value, range: range, step: step) else { return .ignored }
+            dragOrigin = nil
+            rawValue = nil
+            value = next
+            return .handled
+        }
+        .simultaneousGesture(TapGesture().onEnded { isFocused = true })
+        .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 1), value: displayedValue)
+        .sensoryFeedback(.selection, trigger: stepIndex)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(label))
+        .accessibilityValue(Text("\(InstrumentMath.formatted(value, step: step)) \(unit)"))
+        .accessibilityHint("Swipe up or down, or use the arrow keys, to adjust by \(InstrumentMath.formatted(step, step: step)) \(unit)")
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: value = InstrumentMath.snapped(value + step, range: range, step: step)
+            case .decrement: value = InstrumentMath.snapped(value - step, range: range, step: step)
+            @unknown default: break
+            }
+        }
+    }
+}
+
+struct CremaDialControl: View {
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+    let step: Double
+    let label: String
+    let unit: String
+    var accent: Color = CremaColor.crema
+    var compact: Bool = false
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @FocusState private var isFocused: Bool
+    @State private var lastAngle: Double?
+    @State private var rawValue: Double?
+
+    private var displayedValue: Double {
+        InstrumentMath.magnetic(rawValue ?? value, range: range, step: step)
+    }
+    private var ratio: Double {
+        (displayedValue - range.lowerBound) / max(step, range.upperBound - range.lowerBound)
+    }
+    private var stepIndex: Int { Int(((value - range.lowerBound) / step).rounded()) }
+
+    var body: some View {
+        VStack(spacing: compact ? 6 : 8) {
+            Text(label.uppercased())
+                .font(CremaTypography.font(size: compact ? 9 : 10, weight: .semibold))
+                .tracking(1.3)
+                .foregroundStyle(CremaColor.secondary)
+            GeometryReader { geometry in
+                let size = min(geometry.size.width, geometry.size.height)
+                let center = CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                ZStack {
+                    Circle()
+                        .fill(CremaColor.surface)
+                        .shadow(color: CremaColor.espresso.opacity(0.08), radius: 12, x: 0, y: 7)
+                        .padding(size * 0.16)
+                    Canvas { context, canvasSize in
+                        let radius = min(canvasSize.width, canvasSize.height) / 2
+                        let mid = CGPoint(x: canvasSize.width / 2, y: canvasSize.height / 2)
+                        for tick in 0...80 {
+                            let angle = (-140 + 280 * Double(tick) / 80) * .pi / 180
+                            let major = tick % 5 == 0
+                            let inner = radius * (major ? 0.82 : 0.87)
+                            let outer = radius * 0.92
+                            var path = Path()
+                            path.move(to: CGPoint(x: mid.x + CGFloat(sin(angle)) * inner, y: mid.y - CGFloat(cos(angle)) * inner))
+                            path.addLine(to: CGPoint(x: mid.x + CGFloat(sin(angle)) * outer, y: mid.y - CGFloat(cos(angle)) * outer))
+                            context.stroke(path, with: .color(CremaColor.secondary.opacity(major ? 0.7 : 0.36)),
+                                           lineWidth: major ? 1.5 : 0.8)
+                        }
+                    }
+                    .rotationEffect(.degrees(140 - 280 * ratio))
+                    .accessibilityHidden(true)
+
+                    HStack(alignment: .lastTextBaseline, spacing: 4) {
+                        CremaDotReadout(text: InstrumentMath.formatted(value, step: step),
+                                        color: CremaColor.cream, size: compact ? 28 : 32)
+                            .fixedSize()
+                            .alignmentGuide(.lastTextBaseline) { dimensions in
+                                dimensions.height - (compact ? 28 : 32) * 0.039
+                            }
+                            .accessibilityHidden(true)
+                        Text(unit)
+                            .font(CremaTypography.font(size: 11))
+                            .foregroundStyle(CremaColor.secondary)
+                            .fixedSize()
+                    }
+                    .fixedSize()
+                    .position(x: size / 2, y: size / 2)
+                    .allowsHitTesting(false)
+
+                    Circle().fill(CremaColor.surface).frame(width: 21, height: 21)
+                        .overlay(Circle().strokeBorder(CremaColor.hairline, lineWidth: 1))
+                        .overlay(Circle().fill(accent).frame(width: 5, height: 5))
+                        .position(x: size / 2, y: size * 0.11)
+                        .shadow(color: accent.opacity(0.2), radius: 6)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
+                .frame(width: size, height: size)
+                .position(center)
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .contentShape(Circle())
+                .gesture(
+                    DragGesture(minimumDistance: 2)
+                        .onChanged { gesture in
+                            isFocused = true
+                            let angle = atan2(Double(gesture.location.x - center.x),
+                                              Double(center.y - gesture.location.y)) * 180 / .pi
+                            guard hypot(gesture.location.x - center.x, gesture.location.y - center.y) > size * 0.2 else { return }
+                            if let previous = lastAngle {
+                                var delta = angle - previous
+                                while delta > 180 { delta -= 360 }
+                                while delta < -180 { delta += 360 }
+                                let next = (rawValue ?? value) + delta / 280 * (range.upperBound - range.lowerBound)
+                                rawValue = InstrumentMath.clamped(next, range: range)
+                                value = InstrumentMath.snapped(next, range: range, step: step)
+                            } else {
+                                rawValue = value
+                            }
+                            lastAngle = angle
+                        }
+                        .onEnded { _ in lastAngle = nil; rawValue = nil }
+                )
+            }
+            .frame(height: compact ? 150 : 190)
+
+            HStack {
+                instrumentButton("minus", description: "Decrease \(label)", delta: -step)
+                Spacer()
+                Text("\(InstrumentMath.formatted(range.lowerBound, step: step))–\(InstrumentMath.formatted(range.upperBound, step: step)) \(unit)")
+                    .font(CremaTypography.font(size: 9).monospacedDigit())
+                    .foregroundStyle(CremaColor.secondary)
+                Spacer()
+                instrumentButton("plus", description: "Increase \(label)", delta: step)
+            }
+        }
+        .padding(compact ? 10 : 14)
+        .background(RoundedRectangle(cornerRadius: 22).fill(compact ? Color.clear : CremaColor.bg))
+        .overlay(RoundedRectangle(cornerRadius: 22)
+            .strokeBorder(isFocused ? accent : CremaColor.hairline.opacity(0.7),
+                          lineWidth: isFocused ? 1.5 : (compact ? 0 : 0.7)))
+        .focusable()
+        .focused($isFocused)
+        .onKeyPress(phases: [.down, .repeat]) { press in
+            guard let next = InstrumentMath.keyboardValue(press, value: value, range: range, step: step) else { return .ignored }
+            lastAngle = nil
+            rawValue = nil
+            value = next
+            return .handled
+        }
+        .simultaneousGesture(TapGesture().onEnded { isFocused = true })
+        .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 1), value: ratio)
+        .sensoryFeedback(.selection, trigger: stepIndex)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text(label))
+        .accessibilityValue(Text("\(InstrumentMath.formatted(value, step: step)) \(unit)"))
+        .accessibilityHint("Drag around the dial or use the arrow keys to adjust")
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: value = InstrumentMath.snapped(value + step, range: range, step: step)
+            case .decrement: value = InstrumentMath.snapped(value - step, range: range, step: step)
+            @unknown default: break
+            }
+        }
+    }
+
+    private func instrumentButton(_ symbol: String, description: String, delta: Double) -> some View {
+        Button {
+            value = InstrumentMath.snapped(value + delta, range: range, step: step)
+        } label: {
+            Image(systemName: symbol).font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(accent)
+                .frame(width: 44, height: 44)
+                .background(CremaColor.surface, in: Circle())
+        }
+        .buttonStyle(InstrumentPressStyle())
+        .accessibilityLabel(description)
+        .accessibilityValue("\(InstrumentMath.formatted(value, step: step)) \(unit)")
+    }
+}
+
+private struct InstrumentPressStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.92 : 1))
+            .opacity(configuration.isPressed ? 0.8 : 1)
+            .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.85),
+                       value: configuration.isPressed)
+    }
+}
+
+private enum InstrumentMath {
+    static func keyboardValue(_ press: KeyPress, value: Double, range: ClosedRange<Double>, step: Double) -> Double? {
+        guard press.modifiers.intersection([.command, .control, .option]).isEmpty else { return nil }
+        switch press.key {
+        case .leftArrow, .downArrow, "-": return snapped(value - step, range: range, step: step)
+        case .rightArrow, .upArrow, "+", "=": return snapped(value + step, range: range, step: step)
+        case .home: return range.lowerBound
+        case .end: return range.upperBound
+        default: return nil
+        }
+    }
+
+    static func clamped(_ value: Double, range: ClosedRange<Double>) -> Double {
+        min(range.upperBound, max(range.lowerBound, value))
+    }
+    static func snapped(_ value: Double, range: ClosedRange<Double>, step: Double) -> Double {
+        let next = range.lowerBound + ((value - range.lowerBound) / step).rounded() * step
+        return clamped((next * 1_000_000).rounded() / 1_000_000, range: range)
+    }
+    static func magnetic(_ value: Double, range: ClosedRange<Double>, step: Double) -> Double {
+        let raw = clamped(value, range: range)
+        let nearest = snapped(raw, range: range, step: step)
+        let distance = abs(raw - nearest) / step
+        let attraction = pow(1 - min(1, max(0, (distance - 0.08) / 0.42)), 2) * 0.38
+        return raw + (nearest - raw) * attraction
+    }
+    static func formatted(_ value: Double, step: Double) -> String {
+        step >= 1 ? String(format: "%.0f", value) : String(format: "%.1f", value)
     }
 }

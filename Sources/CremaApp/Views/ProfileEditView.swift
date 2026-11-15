@@ -14,6 +14,7 @@ struct ProfileEditView: View {
     let onCancel: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     enum Mode: String, Hashable { case visual, list }
     @State private var mode: Mode = .visual
@@ -27,8 +28,8 @@ struct ProfileEditView: View {
             VStack(spacing: 0) {
                 header
                     .padding(.horizontal, 24)
-                    .padding(.top, 18)
-                    .padding(.bottom, 10)
+                    .padding(.top, 16)
+                    .padding(.bottom, 8)
                     .safeAreaPadding(.top)
 
                 if isWide {
@@ -38,7 +39,6 @@ struct ProfileEditView: View {
                 }
             }
             .background(CremaColor.bg.ignoresSafeArea())
-            .preferredColorScheme(.dark)
         }
         #if os(macOS)
         .frame(minWidth: 980, idealWidth: 1180, minHeight: 640, idealHeight: 760)
@@ -48,7 +48,7 @@ struct ProfileEditView: View {
     /// Stacked vertical scroll — iPhone, iPad portrait, and List mode.
     private var stackedLayout: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 24) {
                 modePicker
                 if mode == .visual {
                     visualEditor
@@ -61,7 +61,7 @@ struct ProfileEditView: View {
                     stagesSection
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 16)
             .padding(.bottom, 24)
         }
     }
@@ -70,20 +70,22 @@ struct ProfileEditView: View {
     /// right ~40%. Only used in Visual mode where the chart is the hero.
     private var splitLayout: some View {
         HStack(alignment: .top, spacing: 24) {
-            VStack(alignment: .leading, spacing: 14) {
-                modePicker
-                visualEditor
-                Spacer(minLength: 0)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    modePicker
+                    visualEditor
+                }
+                .padding(.leading, 16)
+                .padding(.bottom, 24)
             }
             .frame(maxWidth: .infinity)
-            .padding(.leading, 20)
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 24) {
                     recipeSection
                     grinderSection
                 }
-                .padding(.trailing, 20)
+                .padding(.trailing, 16)
                 .padding(.bottom, 24)
             }
             .frame(width: 380)
@@ -92,52 +94,52 @@ struct ProfileEditView: View {
 
     private var modePicker: some View {
         Picker("Mode", selection: $mode) {
-            Label("Visual", systemImage: "chart.xyaxis.line").tag(Mode.visual)
-            Label("List", systemImage: "list.bullet").tag(Mode.list)
+            Image(systemName: "chart.xyaxis.line")
+                .accessibilityLabel("Visual editor").tag(Mode.visual)
+            Image(systemName: "list.bullet")
+                .accessibilityLabel("List editor").tag(Mode.list)
         }
         .pickerStyle(.segmented)
     }
 
     @ViewBuilder
     private var visualEditor: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Text("PROFILE")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
-                    .tracking(0.6)
-                    .foregroundStyle(CremaColor.secondary)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
                 Spacer()
-                Text(visualHint)
-                    .font(.system(size: 11, design: .rounded).monospacedDigit())
-                    .foregroundStyle(CremaColor.secondary)
                 Button(action: {
                     editing.addStage()
                     selectedStageID = editing.stages.last?.id
                 }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 11, weight: .semibold))
-                        Text("Add stage")
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    }
+                    Image(systemName: "plus")
+                        .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(CremaColor.crema)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
+                    .frame(width: 44, height: 44)
                     .background(
                         Capsule().fill(CremaColor.crema.opacity(0.16))
                             .overlay(Capsule().strokeBorder(CremaColor.crema.opacity(0.35), lineWidth: 0.5))
                     )
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Add stage")
+                .help("Add stage")
             }
             ProfileNodeEditor(editing: editing, selectedStageID: $selectedStageID)
                 .frame(height: 280)
                 .background(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(.ultraThinMaterial)
+                        .fill(CremaColor.surface)
                         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .strokeBorder(CremaColor.hairline.opacity(0.5), lineWidth: 0.5))
                 )
+
+            HStack(spacing: 14) {
+                Label("Pressure", systemImage: "circle.fill").foregroundStyle(CremaColor.crema)
+                Label("Flow", systemImage: "circle.fill").foregroundStyle(CremaColor.matcha)
+                Spacer()
+            }
+            .font(CremaTypography.font(size: 10, weight: .medium))
+            .padding(.horizontal, 6)
 
             if let selected = editing.stages.first(where: { $0.id == selectedStageID }) {
                 SelectedStageBar(
@@ -150,19 +152,9 @@ struct ProfileEditView: View {
                     },
                     onDeselect: { selectedStageID = nil }
                 )
-            } else {
-                Text("Tap a node to edit it · Drag to reshape · Tap empty space to add a stage")
-                    .font(.system(size: 11, design: .rounded))
-                    .foregroundStyle(CremaColor.secondary)
-                    .padding(.horizontal, 4)
             }
         }
-        .animation(.smooth(duration: 0.22), value: selectedStageID)
-    }
-
-    private var visualHint: String {
-        let compiled = editing.compile()
-        return "\(compiled.stages.count) stage\(compiled.stages.count == 1 ? "" : "s")  ·  \(Int(compiled.totalDuration)) s  ·  \(Int(compiled.targetVolumeMl ?? 0)) mL"
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: selectedStageID)
     }
 
     // MARK: - Header / preview / recipe
@@ -174,7 +166,7 @@ struct ProfileEditView: View {
             }
             Spacer()
             Text("Edit profile")
-                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .font(CremaTypography.font(size: 16, weight: .semibold))
                 .foregroundStyle(CremaColor.cream)
             Spacer()
             sheetHeaderButton("Save", primary: true) {
@@ -189,30 +181,28 @@ struct ProfileEditView: View {
     @ViewBuilder
     private func sheetHeaderButton(_ label: String, primary: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(label)
-                .font(.system(size: 14, weight: primary ? .semibold : .regular, design: .rounded))
-                .foregroundStyle(primary ? CremaColor.crema : CremaColor.secondary)
-                .padding(.horizontal, 12)
-                .frame(minHeight: 44)
+            Image(systemName: primary ? "checkmark" : "xmark")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(primary ? CremaColor.bg : CremaColor.secondary)
+                .frame(width: 44, height: 44)
+                .background(Capsule().fill(primary ? CremaColor.crema : CremaColor.surface))
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .help(label)
     }
 
     private var preview: some View {
         let compiled = editing.compile()
         return VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("PREVIEW")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
-                    .tracking(0.6)
-                    .foregroundStyle(CremaColor.secondary)
                 Spacer()
                 Text(String(format: "%.0f s · %.0f mL target · %d stage\(compiled.stages.count == 1 ? "" : "s")",
                             compiled.totalDuration,
                             Double(compiled.targetVolumeMl ?? 0),
                             compiled.stages.count))
-                    .font(.system(size: 11, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 11, design: .rounded).monospacedDigit())
                     .foregroundStyle(CremaColor.secondary)
             }
             ShotChart(
@@ -224,88 +214,84 @@ struct ProfileEditView: View {
             .frame(height: 200)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(.ultraThinMaterial)
+                    .fill(CremaColor.surface)
                     .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .strokeBorder(CremaColor.hairline.opacity(0.5), lineWidth: 0.5))
             )
         }
     }
 
-    @ViewBuilder
     private var recipeSection: some View {
-        SectionHeader("Recipe")
-        EditorRow(label: "Name") {
-            TextField("Profile name", text: $editing.name)
-                .textFieldStyle(.plain)
-                .font(.system(size: 15, weight: .medium, design: .rounded))
-                .foregroundStyle(CremaColor.cream)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 9)
-                .background(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(CremaColor.surface.opacity(0.6))
-                )
-        }
-        SliderRow(label: "Dose", value: $editing.doseG, range: 12...22, step: 0.5,
-                  format: { String(format: "%.1f g", $0) }, accent: CremaColor.cream)
-        // Yield range scales with dose: 1:1 ristretto to 1:10 long shot.
-        // Dynamic max so heavier doses can reach correspondingly heavier yields
-        // (22 g dose → up to 220 g yield) without hitting an arbitrary cap.
-        SliderRow(label: "Target yield", value: $editing.targetYieldG,
-                  range: editing.doseG ... editing.doseG * 10, step: 1,
-                  format: { String(format: "%.0f g", $0) }, accent: CremaColor.cream)
-            // Auto-clamp yield into the new range when dose changes — otherwise
-            // a previously-set yield can sit outside the slider's bounds, leaving
-            // the thumb visually pegged until the user touches it.
-            .onChange(of: editing.doseG) { _, newDose in
-                let lo = newDose
-                let hi = newDose * 10
-                editing.targetYieldG = min(hi, max(lo, editing.targetYieldG))
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader("Recipe")
+            EditorRow(label: "Name") {
+                TextField("Profile name", text: $editing.name)
+                    .textFieldStyle(.plain)
+                    .font(CremaTypography.font(size: 15, weight: .medium, design: .rounded))
+                    .foregroundStyle(CremaColor.cream)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 9)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(CremaColor.surfaceWarm)
+                    )
             }
-        Text(String(format: "Ratio 1 : %.2f", editing.targetYieldG / max(editing.doseG, 1)))
-            .font(.system(size: 11, design: .rounded).monospacedDigit())
-            .foregroundStyle(CremaColor.secondary)
+            SliderRow(label: "Dose", value: $editing.doseG, range: 12...22, step: 0.5,
+                      format: { String(format: "%.1f g", $0) }, accent: CremaColor.cream)
+            // Yield range scales with dose: 1:1 ristretto to 1:10 long shot.
+            // Dynamic max so heavier doses can reach correspondingly heavier yields
+            // (22 g dose → up to 220 g yield) without hitting an arbitrary cap.
+            SliderRow(label: "Target yield", value: $editing.targetYieldG,
+                      range: editing.doseG ... editing.doseG * 10, step: 1,
+                      format: { String(format: "%.0f g", $0) }, accent: CremaColor.cream)
+                // Auto-clamp yield into the new range when dose changes — otherwise
+                // a previously-set yield can sit outside the slider's bounds, leaving
+                // the thumb visually pegged until the user touches it.
+                .onChange(of: editing.doseG) { _, newDose in
+                    let lo = newDose
+                    let hi = newDose * 10
+                    editing.targetYieldG = min(hi, max(lo, editing.targetYieldG))
+                }
+            Text(String(format: "Ratio 1 : %.2f", editing.targetYieldG / max(editing.doseG, 1)))
+                .font(CremaTypography.font(size: 11, design: .rounded).monospacedDigit())
+                .foregroundStyle(CremaColor.secondary)
+        }
     }
 
     // MARK: - Grinder section
 
-    @ViewBuilder
     private var grinderSection: some View {
-        HStack {
-            SectionHeader("Grinder")
-            Spacer()
-            Toggle("", isOn: $editing.grinderEnabled)
-                .labelsHidden()
-                .tint(CremaColor.crema)
-        }
-        if editing.grinderEnabled {
-            VStack(alignment: .leading, spacing: 12) {
-                SliderRow(label: "Grind size",
-                          value: $editing.grinderSizeMicrons,
-                          range: 30...500, step: 1,
-                          format: { String(format: "%.0f µm", $0) },
-                          accent: CremaColor.crema)
-                SliderRow(label: "Motor speed",
-                          value: $editing.grinderRPM,
-                          range: 200...1200, step: 10,
-                          format: { String(format: "%.0f rpm", $0) },
-                          accent: CremaColor.matcha)
-                HStack {
-                    Toggle("Single-dose mode", isOn: $editing.grinderSingleDose)
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
-                        .foregroundStyle(CremaColor.cream)
-                        .tint(CremaColor.crema)
-                    Spacer()
-                }
-                Text("Settings are sent to the machine when you tap **Set grinder** before brewing.")
-                    .font(.system(size: 11, design: .rounded))
-                    .foregroundStyle(CremaColor.secondary)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                SectionHeader("Grinder")
+                Spacer()
+                Toggle("", isOn: $editing.grinderEnabled)
+                    .labelsHidden()
+                    .tint(CremaColor.crema)
+                    .accessibilityLabel("Save grinder settings")
             }
-            .transition(.opacity.combined(with: .move(edge: .top)))
-        } else {
-            Text("Save grinder settings with this profile to push grind size and RPM to your machine before brewing.")
-                .font(.system(size: 11, design: .rounded))
-                .foregroundStyle(CremaColor.secondary)
+            if editing.grinderEnabled {
+                VStack(alignment: .leading, spacing: 12) {
+                    SliderRow(label: "Grind size",
+                              value: $editing.grinderSizeMicrons,
+                              range: 30...500, step: 1,
+                              format: { String(format: "%.0f µm", $0) },
+                              accent: CremaColor.crema)
+                    SliderRow(label: "Motor speed",
+                              value: $editing.grinderRPM,
+                              range: 200...1200, step: 10,
+                              format: { String(format: "%.0f rpm", $0) },
+                              accent: CremaColor.matcha)
+                    HStack {
+                        Toggle("Single-dose mode", isOn: $editing.grinderSingleDose)
+                            .font(CremaTypography.font(size: 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(CremaColor.cream)
+                            .tint(CremaColor.crema)
+                        Spacer()
+                    }
+                }
+                .transition(reduceMotion ? .opacity : .opacity.combined(with: .move(edge: .top)))
+            }
         }
     }
 
@@ -321,14 +307,14 @@ struct ProfileEditView: View {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 12, weight: .semibold))
                     Text("Add stage")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .font(CremaTypography.font(size: 12, weight: .semibold, design: .rounded))
                 }
                 .foregroundStyle(CremaColor.crema)
             }
             .buttonStyle(.plain)
         }
 
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
             ForEach(Array(editing.stages.enumerated()), id: \.element.id) { index, stage in
                 StageCard(
                     stage: stage,
@@ -354,6 +340,7 @@ private struct StageCard: View {
     let onMoveUp: () -> Void
     let onMoveDown: () -> Void
     let onDelete: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var accent: Color {
         stage.priority == .pressure ? CremaColor.crema : CremaColor.matcha
@@ -380,8 +367,8 @@ private struct StageCard: View {
             }
         }
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.ultraThinMaterial)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(CremaColor.surface)
         )
         .overlay(alignment: .leading) {
             // Colored left edge indicates priority at a glance.
@@ -392,9 +379,10 @@ private struct StageCard: View {
                 .padding(.leading, 2)
         }
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .strokeBorder(CremaColor.hairline.opacity(0.5), lineWidth: 0.5)
         )
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: stage.isExpanded)
     }
 
     private var collapsedHeader: some View {
@@ -403,24 +391,24 @@ private struct StageCard: View {
         // would swallow the row's tap otherwise on iOS).
         HStack(spacing: 12) {
             Text("\(index + 1)")
-                .font(.system(size: 10, weight: .semibold, design: .rounded).monospacedDigit())
+                .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).monospacedDigit())
                 .foregroundStyle(CremaColor.secondary)
                 .frame(width: 16)
-                .padding(.leading, 6)
+                .padding(.leading, 8)
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(stage.label.isEmpty ? "Stage \(index + 1)" : stage.label)
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .font(CremaTypography.font(size: 14, weight: .semibold, design: .rounded))
                         .foregroundStyle(CremaColor.cream)
                         .lineLimit(1)
                     Text(stage.priority == .pressure ? "PRESSURE" : "FLOW")
-                        .font(.system(size: 9, weight: .semibold, design: .rounded).smallCaps())
+                        .font(CremaTypography.font(size: 9, weight: .semibold, design: .rounded).smallCaps())
                         .tracking(0.6)
                         .foregroundStyle(accent)
                 }
                 Text(summaryText)
-                    .font(.system(size: 11, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 11, design: .rounded).monospacedDigit())
                     .foregroundStyle(CremaColor.secondary)
                     .lineLimit(1)
             }
@@ -446,23 +434,24 @@ private struct StageCard: View {
                 Image(systemName: "ellipsis")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(CremaColor.secondary)
-                    .frame(width: 32, height: 32)
+                    .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
             .fixedSize()
+            .accessibilityLabel("Options for stage \(index + 1)")
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(CremaColor.secondary)
                 .rotationEffect(.degrees(stage.isExpanded ? 90 : 0))
-                .frame(width: 28, height: 32)
+                .frame(width: 32, height: 44)
                 .contentShape(Rectangle())
                 .onTapGesture { stage.isExpanded.toggle() }
-                .animation(.snappy(duration: 0.18), value: stage.isExpanded)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: stage.isExpanded)
         }
-        .padding(.vertical, 12)
+        .padding(.vertical, 8)
         .padding(.trailing, 4)
     }
 
@@ -475,41 +464,33 @@ private struct StageCard: View {
             }
             .pickerStyle(.segmented)
 
-            // Setpoint slider — only one is meaningful depending on priority.
+            // The rotary setpoint follows the stage's active control axis.
             // We always render the active one so the row doesn't reshape on
             // priority toggle.
             if stage.priority == .pressure {
-                SliderRow(label: "Pressure", value: $stage.pressureBar,
-                          range: 0...9, step: 0.1,
-                          format: { String(format: "%.1f bar", $0) },
-                          accent: CremaColor.crema)
+                CremaDialControl(value: $stage.pressureBar, range: 0...9, step: 0.1,
+                                 label: "Pressure", unit: "bar", accent: CremaColor.crema)
             } else {
-                SliderRow(label: "Flow", value: $stage.flowMlPerSec,
-                          range: 0.1...8.0, step: 0.1,
-                          format: { String(format: "%.1f mL/s", $0) },
-                          accent: CremaColor.matcha)
+                CremaDialControl(value: $stage.flowMlPerSec, range: 0.1...8, step: 0.1,
+                                 label: "Pump flow", unit: "mL/s", accent: CremaColor.matcha)
             }
 
-            SliderRow(label: "Duration", value: $stage.duration,
-                      range: 1...60, step: 0.5,
-                      format: { String(format: "%.1f s", $0) },
-                      accent: CremaColor.cream)
+            CremaRulerControl(value: $stage.duration, range: 1...60, step: 0.5,
+                              label: "Duration", unit: "s")
 
-            SliderRow(label: "Pause after", value: $stage.waitAfter,
-                      range: 0...30, step: 0.5,
-                      format: { $0 == 0 ? "none" : String(format: "%.1f s", $0) },
-                      accent: CremaColor.secondary)
+            CremaRulerControl(value: $stage.waitAfter, range: 0...30, step: 0.5,
+                              label: "Pause after", unit: "s", accent: CremaColor.matcha)
 
             EditorRow(label: "Label") {
                 TextField("Stage label", text: $stage.label)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 14, design: .rounded))
+                    .font(CremaTypography.font(size: 14, design: .rounded))
                     .foregroundStyle(CremaColor.cream)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 7)
                     .background(
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(CremaColor.surface.opacity(0.6))
+                            .fill(CremaColor.surfaceWarm)
                     )
             }
         }
@@ -525,9 +506,8 @@ private struct SectionHeader: View {
     init(_ text: String) { self.text = text }
     var body: some View {
         Text(text)
-            .font(.system(size: 11, weight: .semibold, design: .rounded).smallCaps())
-            .tracking(0.6)
-            .foregroundStyle(CremaColor.secondary)
+            .font(CremaTypography.font(size: 20, weight: .regular, design: .serif))
+            .foregroundStyle(CremaColor.cream)
             .padding(.top, 4)
     }
 }
@@ -544,12 +524,15 @@ private struct SliderRow: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(label)
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(CremaTypography.font(size: 13, weight: .medium, design: .rounded))
                     .foregroundStyle(CremaColor.cream)
                 Spacer()
                 Text(format(value))
-                    .font(.system(size: 13, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 17, weight: .medium, design: .rounded).monospacedDigit())
                     .foregroundStyle(accent)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Capsule().fill(CremaColor.bg))
             }
             Slider(value: $value, in: range, step: step)
                 .tint(accent)
@@ -564,7 +547,7 @@ private struct EditorRow<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label)
-                .font(.system(size: 11, weight: .semibold, design: .rounded).smallCaps())
+                .font(CremaTypography.font(size: 11, weight: .semibold, design: .rounded).smallCaps())
                 .tracking(0.6)
                 .foregroundStyle(CremaColor.secondary)
             content()

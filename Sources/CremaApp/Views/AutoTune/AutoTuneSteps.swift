@@ -16,13 +16,13 @@ struct AutoTuneBeanStep: View {
                         TextField("Name this bean (e.g. Cartwheel Decaf)",
                                   text: $session.inputs.beanName)
                             .textFieldStyle(.plain)
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .font(CremaTypography.font(size: 16, weight: .medium, design: .rounded))
                             .foregroundStyle(CremaColor.cream)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 12)
                             .background(
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .fill(CremaColor.surface.opacity(0.6))
+                                    .fill(CremaColor.surface)
                             )
                     }
 
@@ -72,7 +72,7 @@ struct AutoTuneBeanStep: View {
     private func section(_ label: String, @ViewBuilder content: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
-                .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                 .tracking(0.7)
                 .foregroundStyle(CremaColor.secondary)
             content()
@@ -89,11 +89,11 @@ struct AutoTuneBeanStep: View {
                 .padding(.top, 2)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Did you know?")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                    .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                     .tracking(0.6)
                     .foregroundStyle(CremaColor.secondary)
                 Text(fact)
-                    .font(.system(size: 12, design: .rounded))
+                    .font(CremaTypography.font(size: 12, design: .rounded))
                     .foregroundStyle(CremaColor.cream.opacity(0.9))
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -102,9 +102,9 @@ struct AutoTuneBeanStep: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(CremaColor.surface)
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(CremaColor.hairline.opacity(0.4), lineWidth: 0.5))
+                    .strokeBorder(CremaColor.hairline.opacity(0.8), lineWidth: 1))
         )
         .id(session.inputs.roast)
         .transition(.opacity)
@@ -150,17 +150,17 @@ private struct RoastCard: View {
                     }
                 }
                 Text(level.display)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(CremaColor.cream)
                 Text("\(Int(level.brewTempC))°C · \(Int(level.targetTimeWindow.lowerBound))-\(Int(level.targetTimeWindow.upperBound))s")
-                    .font(.system(size: 9, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 9, design: .rounded).monospacedDigit())
                     .foregroundStyle(CremaColor.secondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(selected ? CremaColor.crema.opacity(0.20) : CremaColor.surface.opacity(0.4))
+                    .fill(selected ? CremaColor.crema.opacity(0.20) : CremaColor.surface)
                     .overlay(
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .strokeBorder(selected ? CremaColor.crema : CremaColor.hairline.opacity(0.5),
@@ -188,17 +188,17 @@ private struct DrinkCard: View {
                     .font(.system(size: 24, weight: .regular))
                     .foregroundStyle(selected ? CremaColor.crema : CremaColor.secondary)
                 Text(drink.display)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(CremaColor.cream)
                 Text(drink.defaultRatio == 2.0 ? "1 : 2 ratio" : "1 : 1.6 ratio")
-                    .font(.system(size: 9, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 9, design: .rounded).monospacedDigit())
                     .foregroundStyle(CremaColor.secondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(selected ? CremaColor.crema.opacity(0.20) : CremaColor.surface.opacity(0.4))
+                    .fill(selected ? CremaColor.crema.opacity(0.20) : CremaColor.surface)
                     .overlay(
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .strokeBorder(selected ? CremaColor.crema : CremaColor.hairline.opacity(0.5),
@@ -235,7 +235,7 @@ struct AutoTuneRecipeStep: View {
                               format: { String(format: "%.0f s", $0) },
                               accent: CremaColor.cream)
                     Text("The saved profile's extract stage will be trimmed to hit this total time. During tuning the extract runs open-ended so you can stop based on cup weight.")
-                        .font(.system(size: 11, design: .rounded))
+                        .font(CremaTypography.font(size: 11, design: .rounded))
                         .foregroundStyle(CremaColor.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                     beanBudgetCard
@@ -258,32 +258,32 @@ struct AutoTuneRecipeStep: View {
         HStack(spacing: 14) {
             VStack(spacing: 0) {
                 Text(String(format: "%.1f", session.inputs.dose))
-                    .font(.system(size: 36, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 36, weight: .bold, design: .rounded).monospacedDigit())
                     .foregroundStyle(CremaColor.crema)
                 Text("dose g")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                    .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                     .tracking(0.6)
                     .foregroundStyle(CremaColor.secondary)
             }
             Text("→")
-                .font(.system(size: 28, weight: .thin, design: .rounded))
+                .font(CremaTypography.font(size: 28, weight: .thin, design: .rounded))
                 .foregroundStyle(CremaColor.secondary)
             VStack(spacing: 0) {
                 Text(String(format: "%.0f", session.inputs.targetYield))
-                    .font(.system(size: 36, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 36, weight: .bold, design: .rounded).monospacedDigit())
                     .foregroundStyle(CremaColor.matcha)
                 Text("yield g")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                    .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                     .tracking(0.6)
                     .foregroundStyle(CremaColor.secondary)
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 0) {
                 Text(session.inputs.ratioString)
-                    .font(.system(size: 18, weight: .semibold, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 18, weight: .semibold, design: .rounded).monospacedDigit())
                     .foregroundStyle(CremaColor.cream)
                 Text("ratio")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                    .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                     .tracking(0.6)
                     .foregroundStyle(CremaColor.secondary)
             }
@@ -292,9 +292,9 @@ struct AutoTuneRecipeStep: View {
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(CremaColor.surface)
                 .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(CremaColor.hairline.opacity(0.5), lineWidth: 0.5))
+                    .strokeBorder(CremaColor.hairline.opacity(0.8), lineWidth: 1))
         )
     }
 
@@ -305,11 +305,11 @@ struct AutoTuneRecipeStep: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(label)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(CremaColor.cream)
                 Spacer()
                 Text(format(value.wrappedValue))
-                    .font(.system(size: 13, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 13, design: .rounded).monospacedDigit())
                     .foregroundStyle(accent)
             }
             Slider(value: value, in: range, step: step).tint(accent)
@@ -322,7 +322,7 @@ struct AutoTuneRecipeStep: View {
                 .font(.system(size: 13))
                 .foregroundStyle(CremaColor.crema)
             Text("Up to **\(Int(session.inputs.maxBeanBudgetG))g** of beans needed for \(session.inputs.maxShots) shots")
-                .font(.system(size: 11, design: .rounded))
+                .font(CremaTypography.font(size: 11, design: .rounded))
                 .foregroundStyle(CremaColor.cream.opacity(0.9))
             Spacer()
         }
@@ -330,9 +330,9 @@ struct AutoTuneRecipeStep: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(CremaColor.surface)
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(CremaColor.hairline.opacity(0.4), lineWidth: 0.5))
+                    .strokeBorder(CremaColor.hairline.opacity(0.8), lineWidth: 1))
         )
     }
 }
@@ -362,7 +362,7 @@ struct AutoTunePrepStep: View {
 
                     if session.history.isEmpty {
                         Text("Your machine and grinder are pre-armed with these settings — just grind into the basket and load the portafilter.")
-                            .font(.system(size: 11, design: .rounded))
+                            .font(CremaTypography.font(size: 11, design: .rounded))
                             .foregroundStyle(CremaColor.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 30)
@@ -419,7 +419,7 @@ struct AutoTunePrepStep: View {
                 if grinderSending {
                     ProgressView()
                         .controlSize(.small)
-                        .tint(CremaColor.matchaBright)
+                        .tint(CremaColor.matcha)
                 } else if grinderSent {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 14, weight: .semibold))
@@ -429,9 +429,9 @@ struct AutoTunePrepStep: View {
                 }
                 Text(grinderSending ? "Sending…"
                      : (grinderSent ? "Grinder set" : "Set grinder"))
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
             }
-            .foregroundStyle(grinderSent ? CremaColor.matchaBright : CremaColor.matcha)
+            .foregroundStyle(CremaColor.matcha)
             .padding(.horizontal, 14)
             .frame(minHeight: 44)
             .background(
@@ -462,7 +462,7 @@ struct AutoTunePrepStep: View {
                 .offset(x: -60)
             // Basket
             Circle()
-                .fill(CremaColor.surface.opacity(0.8))
+                .fill(CremaColor.surface)
                 .overlay(Circle().strokeBorder(CremaColor.cream.opacity(0.5), lineWidth: 1.5))
                 .frame(width: 110, height: 110)
                 .offset(x: 30)
@@ -500,7 +500,7 @@ struct AutoTunePrepStep: View {
                     .font(.system(size: 12))
                     .foregroundStyle(CremaColor.crema)
                 Text("RECOMMENDED FOR THIS SHOT")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                    .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                     .tracking(0.7)
                     .foregroundStyle(CremaColor.secondary)
             }
@@ -511,7 +511,7 @@ struct AutoTunePrepStep: View {
                 statTile(value: "\(Int(rec.profile.totalDuration))", unit: "s", label: "Time")
             }
             Text(rec.advice)
-                .font(.system(size: 11, design: .rounded))
+                .font(CremaTypography.font(size: 11, design: .rounded))
                 .foregroundStyle(CremaColor.cream.opacity(0.85))
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -519,7 +519,7 @@ struct AutoTunePrepStep: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(CremaColor.surface)
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .strokeBorder(CremaColor.crema.opacity(0.3), lineWidth: 0.5))
         )
@@ -529,14 +529,14 @@ struct AutoTunePrepStep: View {
         VStack(spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 2) {
                 Text(value)
-                    .font(.system(size: 18, weight: .semibold, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 18, weight: .semibold, design: .rounded).monospacedDigit())
                     .foregroundStyle(CremaColor.cream)
                 Text(unit)
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .font(CremaTypography.font(size: 10, weight: .medium, design: .rounded))
                     .foregroundStyle(CremaColor.secondary)
             }
             Text(label)
-                .font(.system(size: 9, weight: .semibold, design: .rounded).smallCaps())
+                .font(CremaTypography.font(size: 9, weight: .semibold, design: .rounded).smallCaps())
                 .tracking(0.6)
                 .foregroundStyle(CremaColor.secondary)
         }
@@ -558,9 +558,9 @@ struct AutoTunePrepStep: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(CremaColor.surface.opacity(0.4))
+                .fill(CremaColor.surface)
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(CremaColor.hairline.opacity(0.4), lineWidth: 0.5))
+                    .strokeBorder(CremaColor.hairline.opacity(0.8), lineWidth: 1))
         )
     }
 
@@ -570,7 +570,7 @@ struct AutoTunePrepStep: View {
                 .font(.system(size: 13))
                 .foregroundStyle(CremaColor.crema)
             Text(text)
-                .font(.system(size: 12, design: .rounded))
+                .font(CremaTypography.font(size: 12, design: .rounded))
                 .foregroundStyle(CremaColor.cream.opacity(0.9))
             Spacer()
         }
@@ -582,15 +582,15 @@ struct AutoTunePrepStep: View {
             HStack(spacing: 8) {
                 Image(systemName: "scalemass")
                     .font(.system(size: 11))
-                    .foregroundStyle(CremaColor.matchaBright)
+                    .foregroundStyle(CremaColor.matcha)
                 Text("Reading from **\(name)**")
-                    .font(.system(size: 11, design: .rounded))
+                    .font(CremaTypography.font(size: 11, design: .rounded))
                     .foregroundStyle(CremaColor.cream)
                 Spacer()
                 Text("LIVE")
-                    .font(.system(size: 9, weight: .bold, design: .rounded).smallCaps())
+                    .font(CremaTypography.font(size: 9, weight: .bold, design: .rounded).smallCaps())
                     .tracking(0.7)
-                    .foregroundStyle(CremaColor.matchaBright)
+                    .foregroundStyle(CremaColor.matcha)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(Capsule().fill(CremaColor.matcha.opacity(0.25)))
@@ -607,7 +607,7 @@ struct AutoTunePrepStep: View {
                     .font(.system(size: 11))
                     .foregroundStyle(CremaColor.secondary)
                 Text("No scale paired — we'll ask for the final weight after the shot")
-                    .font(.system(size: 11, design: .rounded))
+                    .font(CremaTypography.font(size: 11, design: .rounded))
                     .foregroundStyle(CremaColor.secondary)
                 Spacer()
             }
@@ -667,10 +667,7 @@ struct AutoTuneBrewingStep: View {
         }) {
             ZStack {
                 Capsule()
-                    .fill(LinearGradient(
-                        colors: [CremaColor.cremaBright, CremaColor.crema],
-                        startPoint: .topLeading, endPoint: .bottomTrailing
-                    ))
+                    .fill(CremaColor.danger)
                 if scaleConnected, progress < 1 {
                     // Subtle fill that tracks weight — only meaningful with a scale.
                     GeometryReader { geo in
@@ -690,14 +687,14 @@ struct AutoTuneBrewingStep: View {
                         Text("Stop — when cup hits \(Int(target)) g")
                     }
                 }
-                .font(.system(size: 15, weight: .semibold, design: .rounded).monospacedDigit())
-                .foregroundStyle(CremaColor.bg)
+                .font(CremaTypography.font(size: 15, weight: .semibold, design: .rounded).monospacedDigit())
+                .foregroundStyle(CremaColor.onDanger)
                 .padding(.horizontal, 24)
             }
             .frame(maxWidth: .infinity)
             .frame(minHeight: 54)
-            .overlay(Capsule().strokeBorder(CremaColor.cream.opacity(0.2), lineWidth: 0.5))
-            .shadow(color: CremaColor.crema.opacity(0.5), radius: 12, y: 4)
+            .overlay(Capsule().strokeBorder(CremaColor.onPrimary.opacity(0.2), lineWidth: 1))
+            .shadow(color: CremaColor.espresso.opacity(0.12), radius: 8, y: 3)
         }
         .buttonStyle(.plain)
     }
@@ -708,7 +705,7 @@ struct AutoTuneBrewingStep: View {
                 .font(.system(size: 12))
                 .foregroundStyle(CremaColor.crema)
             Text("Target: **\(Int(session.inputs.targetYield)) g** in your cup")
-                .font(.system(size: 12, design: .rounded))
+                .font(CremaTypography.font(size: 12, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             Spacer()
         }
@@ -716,7 +713,7 @@ struct AutoTuneBrewingStep: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(CremaColor.surface.opacity(0.4))
+                .fill(CremaColor.surface)
         )
     }
 
@@ -730,7 +727,7 @@ struct AutoTuneBrewingStep: View {
                 .foregroundStyle(CremaColor.secondary)
                 .padding(.top, 1)
             Text("The machine's mL reading is pump throughput, *before* the puck. A lot of water soaks into the grounds — what lands in the cup is much less. Watch your cup, not the chart.")
-                .font(.system(size: 11, design: .rounded))
+                .font(CremaTypography.font(size: 11, design: .rounded))
                 .foregroundStyle(CremaColor.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer()
@@ -759,10 +756,10 @@ struct AutoTuneBrewingStep: View {
                 .animation(.linear(duration: 0.2), value: frac)
             VStack(spacing: 0) {
                 Text(String(format: "%05.1f", elapsed))
-                    .font(.system(size: 28, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 28, weight: .bold, design: .rounded).monospacedDigit())
                     .foregroundStyle(CremaColor.cream)
                 Text("seconds")
-                    .font(.system(size: 9, weight: .semibold, design: .rounded).smallCaps())
+                    .font(CremaTypography.font(size: 9, weight: .semibold, design: .rounded).smallCaps())
                     .tracking(0.6)
                     .foregroundStyle(CremaColor.secondary)
             }
@@ -794,14 +791,14 @@ struct AutoTuneBrewingStep: View {
         VStack(spacing: 2) {
             HStack(alignment: .firstTextBaseline, spacing: 2) {
                 Text(value)
-                    .font(.system(size: 22, weight: .semibold, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 22, weight: .semibold, design: .rounded).monospacedDigit())
                     .foregroundStyle(color)
                 Text(unit)
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .font(CremaTypography.font(size: 10, weight: .medium, design: .rounded))
                     .foregroundStyle(CremaColor.secondary)
             }
             Text(title)
-                .font(.system(size: 9, weight: .semibold, design: .rounded).smallCaps())
+                .font(CremaTypography.font(size: 9, weight: .semibold, design: .rounded).smallCaps())
                 .tracking(0.6)
                 .foregroundStyle(CremaColor.secondary)
         }
@@ -809,7 +806,7 @@ struct AutoTuneBrewingStep: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(CremaColor.surface)
         )
     }
 
@@ -872,10 +869,10 @@ struct AutoTuneMeasureStep: View {
         HStack(spacing: 14) {
             VStack(spacing: 2) {
                 Text(String(format: "%.1f", session.lastShotElapsedS))
-                    .font(.system(size: 34, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 34, weight: .bold, design: .rounded).monospacedDigit())
                     .foregroundStyle(CremaColor.cream)
                 Text("seconds at stop")
-                    .font(.system(size: 9, weight: .semibold, design: .rounded).smallCaps())
+                    .font(CremaTypography.font(size: 9, weight: .semibold, design: .rounded).smallCaps())
                     .tracking(0.6)
                     .foregroundStyle(CremaColor.secondary)
             }
@@ -884,26 +881,26 @@ struct AutoTuneMeasureStep: View {
             // pump-not-yield so the user doesn't confuse it with cup weight.
             VStack(spacing: 2) {
                 Text("\(Int(session.lastShotMlReportedByMachine))")
-                    .font(.system(size: 18, weight: .semibold, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 18, weight: .semibold, design: .rounded).monospacedDigit())
                     .foregroundStyle(CremaColor.secondary)
                 Text("pumped mL (pre-puck)")
-                    .font(.system(size: 9, weight: .semibold, design: .rounded).smallCaps())
+                    .font(CremaTypography.font(size: 9, weight: .semibold, design: .rounded).smallCaps())
                     .tracking(0.6)
-                    .foregroundStyle(CremaColor.secondary.opacity(0.7))
+                    .foregroundStyle(CremaColor.secondary)
             }
         }
         .padding(18)
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(CremaColor.surface)
         )
     }
 
     private var measurementInput: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(session.scaleName != nil ? "FROM \(session.scaleName!.uppercased())" : "WEIGH YOUR CUP")
-                .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                 .tracking(0.7)
                 .foregroundStyle(CremaColor.secondary)
             HStack(spacing: 0) {
@@ -914,12 +911,12 @@ struct AutoTuneMeasureStep: View {
                     #if os(iOS)
                     .keyboardType(.decimalPad)
                     #endif
-                    .font(.system(size: 44, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 44, weight: .bold, design: .rounded).monospacedDigit())
                     .foregroundStyle(CremaColor.cream)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .multilineTextAlignment(.center)
                 Text("g")
-                    .font(.system(size: 18, weight: .medium, design: .rounded))
+                    .font(CremaTypography.font(size: 18, weight: .medium, design: .rounded))
                     .foregroundStyle(CremaColor.secondary)
                     .padding(.trailing, 8)
             }
@@ -927,7 +924,7 @@ struct AutoTuneMeasureStep: View {
             .padding(.vertical, 16)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(.ultraThinMaterial)
+                    .fill(CremaColor.surface)
                     .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .strokeBorder(CremaColor.crema.opacity(0.4), lineWidth: 1))
             )
@@ -936,18 +933,19 @@ struct AutoTuneMeasureStep: View {
                 ForEach([2.0, 5.0, 10.0, 20.0], id: \.self) { add in
                     Button(action: { session.manualYieldEntryG += add }) {
                         Text("+\(Int(add))g")
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .font(CremaTypography.font(size: 11, weight: .semibold, design: .rounded))
                             .foregroundStyle(CremaColor.cream)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 5)
-                            .background(Capsule().fill(CremaColor.surface.opacity(0.6)))
+                            .frame(minHeight: 44)
+                            .background(Capsule().fill(CremaColor.surface))
                     }
                     .buttonStyle(.plain)
                 }
                 Spacer()
                 Button(action: { session.manualYieldEntryG = 0 }) {
                     Text("Reset")
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .font(CremaTypography.font(size: 11, weight: .semibold, design: .rounded))
                         .foregroundStyle(CremaColor.secondary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
@@ -978,7 +976,7 @@ struct AutoTuneMeasureStep: View {
                 .font(.system(size: 14))
                 .foregroundStyle(color)
             Text(blurb)
-                .font(.system(size: 12, design: .rounded))
+                .font(CremaTypography.font(size: 12, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             Spacer()
         }
@@ -1035,38 +1033,38 @@ struct AutoTuneSuggestStep: View {
         let shot = session.history.last!
         return VStack(spacing: 12) {
             Text("SHOT \(shot.shotNumber) GRADE")
-                .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                 .tracking(0.7)
                 .foregroundStyle(CremaColor.secondary)
             Text(shot.grade)
-                .font(.system(size: 64, weight: .black, design: .rounded))
+                .font(CremaTypography.font(size: 64, weight: .black, design: .rounded))
                 .foregroundStyle(LinearGradient(
                     colors: shot.scoreOutOf100 >= 80
-                        ? [CremaColor.matchaBright, CremaColor.matcha]
-                        : [CremaColor.cremaBright, CremaColor.crema],
+                        ? [CremaColor.matcha, CremaColor.connected]
+                        : [CremaColor.crema, CremaColor.crema],
                     startPoint: .topLeading, endPoint: .bottomTrailing
                 ))
             Text("\(shot.scoreOutOf100) / 100")
-                .font(.system(size: 13, weight: .semibold, design: .rounded).monospacedDigit())
+                .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded).monospacedDigit())
                 .foregroundStyle(CremaColor.cream)
             HStack(spacing: 22) {
                 VStack(spacing: 0) {
                     Text(String(format: "%.1f", shot.actualTimeS))
-                        .font(.system(size: 16, weight: .semibold, design: .rounded).monospacedDigit())
+                        .font(CremaTypography.font(size: 16, weight: .semibold, design: .rounded).monospacedDigit())
                         .foregroundStyle(CremaColor.cream)
-                    Text("seconds").font(.system(size: 9, design: .rounded)).foregroundStyle(CremaColor.secondary)
+                    Text("seconds").font(CremaTypography.font(size: 9, design: .rounded)).foregroundStyle(CremaColor.secondary)
                 }
                 VStack(spacing: 0) {
                     Text(String(format: "%.1f g", shot.actualYieldG))
-                        .font(.system(size: 16, weight: .semibold, design: .rounded).monospacedDigit())
+                        .font(CremaTypography.font(size: 16, weight: .semibold, design: .rounded).monospacedDigit())
                         .foregroundStyle(CremaColor.cream)
-                    Text("yield").font(.system(size: 9, design: .rounded)).foregroundStyle(CremaColor.secondary)
+                    Text("yield").font(CremaTypography.font(size: 9, design: .rounded)).foregroundStyle(CremaColor.secondary)
                 }
                 VStack(spacing: 0) {
                     Text(String(format: "1:%.1f", shot.actualYieldG / max(session.inputs.dose, 0.1)))
-                        .font(.system(size: 16, weight: .semibold, design: .rounded).monospacedDigit())
+                        .font(CremaTypography.font(size: 16, weight: .semibold, design: .rounded).monospacedDigit())
                         .foregroundStyle(CremaColor.cream)
-                    Text("ratio").font(.system(size: 9, design: .rounded)).foregroundStyle(CremaColor.secondary)
+                    Text("ratio").font(CremaTypography.font(size: 9, design: .rounded)).foregroundStyle(CremaColor.secondary)
                 }
             }
         }
@@ -1074,9 +1072,9 @@ struct AutoTuneSuggestStep: View {
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(CremaColor.surface)
                 .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(CremaColor.hairline.opacity(0.5), lineWidth: 0.5))
+                    .strokeBorder(CremaColor.hairline.opacity(0.8), lineWidth: 1))
         )
     }
 
@@ -1087,15 +1085,15 @@ struct AutoTuneSuggestStep: View {
                     .font(.system(size: 12))
                     .foregroundStyle(CremaColor.crema)
                 Text("FOR NEXT SHOT")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                    .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                     .tracking(0.7)
                     .foregroundStyle(CremaColor.secondary)
             }
             Text(rec.changeSummary)
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .font(CremaTypography.font(size: 17, weight: .semibold, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             Text(rec.advice)
-                .font(.system(size: 12, design: .rounded))
+                .font(CremaTypography.font(size: 12, design: .rounded))
                 .foregroundStyle(CremaColor.cream.opacity(0.85))
                 .fixedSize(horizontal: false, vertical: true)
             // Apply the new grinder setting immediately so the user can grind
@@ -1109,7 +1107,7 @@ struct AutoTuneSuggestStep: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(CremaColor.surface)
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .strokeBorder(CremaColor.crema.opacity(0.3), lineWidth: 0.5))
         )
@@ -1135,7 +1133,7 @@ struct AutoTuneSuggestStep: View {
         }) {
             HStack(spacing: 5) {
                 if grinderSending {
-                    ProgressView().controlSize(.small).tint(CremaColor.matchaBright)
+                    ProgressView().controlSize(.small).tint(CremaColor.matcha)
                 } else if grinderSent {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 12, weight: .semibold))
@@ -1145,11 +1143,12 @@ struct AutoTuneSuggestStep: View {
                 }
                 Text(grinderSending ? "Sending…"
                      : (grinderSent ? "Grinder set" : "Set grinder now"))
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .font(CremaTypography.font(size: 12, weight: .semibold, design: .rounded))
             }
-            .foregroundStyle(grinderSent ? CremaColor.matchaBright : CremaColor.matcha)
+            .foregroundStyle(CremaColor.matcha)
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
+            .frame(minHeight: 44)
             .background(
                 Capsule()
                     .fill(CremaColor.matcha.opacity(0.18))
@@ -1168,12 +1167,12 @@ struct AutoTuneSuggestStep: View {
         VStack(alignment: .leading, spacing: 8) {
             Image(systemName: "sparkles")
                 .font(.system(size: 18))
-                .foregroundStyle(CremaColor.matchaBright)
+                .foregroundStyle(CremaColor.matcha)
             Text("That's a dialed shot.")
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .font(CremaTypography.font(size: 17, weight: .semibold, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             Text("This recipe is ready to save and brew. Tap Finish to lock it into your library.")
-                .font(.system(size: 12, design: .rounded))
+                .font(CremaTypography.font(size: 12, design: .rounded))
                 .foregroundStyle(CremaColor.cream.opacity(0.85))
         }
         .padding(14)
@@ -1189,24 +1188,24 @@ struct AutoTuneSuggestStep: View {
     private var shotTimeline: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("YOUR JOURNEY")
-                .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                 .tracking(0.7)
                 .foregroundStyle(CremaColor.secondary)
             HStack(spacing: 8) {
                 ForEach(session.history) { shot in
                     VStack(spacing: 4) {
                         Text(shot.grade)
-                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .font(CremaTypography.font(size: 14, weight: .bold, design: .rounded))
                             .foregroundStyle(CremaColor.cream)
                         Text("#\(shot.shotNumber)")
-                            .font(.system(size: 9, weight: .semibold, design: .rounded))
+                            .font(CremaTypography.font(size: 9, weight: .semibold, design: .rounded))
                             .foregroundStyle(CremaColor.secondary)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
                     .background(
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(CremaColor.surface.opacity(0.5))
+                            .fill(CremaColor.surface)
                     )
                 }
             }
@@ -1248,7 +1247,7 @@ struct AutoTuneSuggestStep: View {
                         Image(systemName: "trash")
                             .font(.system(size: 10, weight: .medium))
                         Text("Discard this shot — re-brew shot \(session.history.count)")
-                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .font(CremaTypography.font(size: 11, weight: .medium, design: .rounded))
                     }
                     .foregroundStyle(CremaColor.secondary)
                     .padding(.horizontal, 10)
@@ -1309,15 +1308,15 @@ struct AutoTuneCompleteStep: View {
                     .frame(width: 80, height: 80)
                 Image(systemName: "checkmark.seal.fill")
                     .font(.system(size: 38, weight: .bold))
-                    .foregroundStyle(CremaColor.matchaBright)
+                    .foregroundStyle(CremaColor.matcha)
             }
             Text("Dialed in!")
-                .font(.system(size: 26, weight: .bold, design: .rounded))
+                .font(CremaTypography.font(size: 26, weight: .bold, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             Text(session.inputs.beanName.isEmpty
                  ? "We've tuned a recipe for your bean."
                  : "We've tuned a recipe for \(session.inputs.beanName).")
-                .font(.system(size: 13, design: .rounded))
+                .font(CremaTypography.font(size: 13, design: .rounded))
                 .foregroundStyle(CremaColor.secondary)
                 .multilineTextAlignment(.center)
         }
@@ -1330,18 +1329,18 @@ struct AutoTuneCompleteStep: View {
                     .font(.system(size: 12))
                     .foregroundStyle(CremaColor.crema)
                 Text("BEST SHOT")
-                    .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                    .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                     .tracking(0.7)
                     .foregroundStyle(CremaColor.secondary)
             }
             if let best = session.bestShot {
                 HStack(alignment: .firstTextBaseline) {
                     Text(best.grade)
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
-                        .foregroundStyle(CremaColor.matchaBright)
+                        .font(CremaTypography.font(size: 30, weight: .bold, design: .rounded))
+                        .foregroundStyle(CremaColor.matcha)
                     Spacer()
                     Text("Shot #\(best.shotNumber) of \(session.history.count)")
-                        .font(.system(size: 11, design: .rounded))
+                        .font(CremaTypography.font(size: 11, design: .rounded))
                         .foregroundStyle(CremaColor.secondary)
                 }
                 Divider().overlay(CremaColor.hairline.opacity(0.4))
@@ -1356,7 +1355,7 @@ struct AutoTuneCompleteStep: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(CremaColor.surface)
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .strokeBorder(CremaColor.matcha.opacity(0.3), lineWidth: 0.5))
         )
@@ -1365,11 +1364,11 @@ struct AutoTuneCompleteStep: View {
     private func statRow(_ label: String, _ value: String) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .font(CremaTypography.font(size: 11, weight: .medium, design: .rounded))
                 .foregroundStyle(CremaColor.secondary)
             Spacer()
             Text(value)
-                .font(.system(size: 12, weight: .semibold, design: .rounded).monospacedDigit())
+                .font(CremaTypography.font(size: 12, weight: .semibold, design: .rounded).monospacedDigit())
                 .foregroundStyle(CremaColor.cream)
         }
     }
@@ -1377,18 +1376,18 @@ struct AutoTuneCompleteStep: View {
     private var nameField: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("SAVE AS")
-                .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                 .tracking(0.7)
                 .foregroundStyle(CremaColor.secondary)
             TextField("Profile name", text: $profileName)
                 .textFieldStyle(.plain)
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .font(CremaTypography.font(size: 15, weight: .medium, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(CremaColor.surface.opacity(0.6))
+                        .fill(CremaColor.surface)
                 )
         }
     }

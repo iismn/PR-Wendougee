@@ -41,7 +41,6 @@ struct ShotFeedbackSheet: View {
             .padding(.bottom, 24)
         }
         .background(CremaColor.bg.ignoresSafeArea())
-        .preferredColorScheme(.dark)
         #if os(macOS)
         .frame(minWidth: 460, idealWidth: 520, minHeight: 520, idealHeight: 640)
         #endif
@@ -64,7 +63,7 @@ struct ShotFeedbackSheet: View {
             }
             Spacer()
             Text("How was it?")
-                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .font(CremaTypography.font(size: 16, weight: .semibold, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             Spacer()
             tappableHeaderButton(needsSuggestions ? "Save & Suggest" : "Save", role: .primary) {
@@ -96,11 +95,11 @@ struct ShotFeedbackSheet: View {
     private func stat(label: String, value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label.uppercased())
-                .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                 .tracking(0.6)
                 .foregroundStyle(CremaColor.secondary)
             Text(value)
-                .font(.system(size: 14, weight: .semibold, design: .rounded).monospacedDigit())
+                .font(CremaTypography.font(size: 14, weight: .semibold, design: .rounded).monospacedDigit())
                 .foregroundStyle(CremaColor.cream)
         }
     }
@@ -114,20 +113,20 @@ struct ShotFeedbackSheet: View {
                 .keyboardType(.decimalPad)
                 #endif
                 .textFieldStyle(.plain)
-                .font(.system(size: 22, weight: .light, design: .rounded).monospacedDigit())
+                .font(CremaTypography.font(size: 22, weight: .light, design: .rounded).monospacedDigit())
                 .foregroundStyle(CremaColor.cream)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(CremaColor.surface.opacity(0.6))
+                        .fill(CremaColor.surface)
                 )
             Text("g")
-                .font(.system(size: 14, design: .rounded))
+                .font(CremaTypography.font(size: 14, design: .rounded))
                 .foregroundStyle(CremaColor.secondary)
             Spacer()
             Text("target \(Int(profile.targetVolumeMl ?? 0)) g")
-                .font(.system(size: 11, design: .rounded).monospacedDigit())
+                .font(CremaTypography.font(size: 11, design: .rounded).monospacedDigit())
                 .foregroundStyle(CremaColor.secondary)
         }
     }
@@ -153,14 +152,14 @@ struct ShotFeedbackSheet: View {
         TextField("Optional — e.g. fresh beans, channelling, …",
                   text: $comments, axis: .vertical)
             .textFieldStyle(.plain)
-            .font(.system(size: 13, design: .rounded))
+            .font(CremaTypography.font(size: 13, design: .rounded))
             .foregroundStyle(CremaColor.cream)
             .lineLimit(2...5)
             .padding(.horizontal, 12)
             .padding(.vertical, 9)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(CremaColor.surface.opacity(0.6))
+                    .fill(CremaColor.surface)
             )
     }
 
@@ -200,7 +199,7 @@ private enum HeaderButtonRole { case primary, secondary }
 private func tappableHeaderButton(_ label: String, role: HeaderButtonRole, action: @escaping () -> Void) -> some View {
     Button(action: action) {
         Text(label)
-            .font(.system(size: 14, weight: role == .primary ? .semibold : .regular, design: .rounded))
+            .font(CremaTypography.font(size: 14, weight: role == .primary ? .semibold : .regular, design: .rounded))
             .foregroundStyle(role == .primary ? CremaColor.crema : CremaColor.secondary)
             .padding(.horizontal, 12)
             .frame(minHeight: 44)
@@ -214,7 +213,7 @@ private struct SectionHeader: View {
     init(_ text: String) { self.text = text }
     var body: some View {
         Text(text)
-            .font(.system(size: 11, weight: .semibold, design: .rounded).smallCaps())
+            .font(CremaTypography.font(size: 11, weight: .semibold, design: .rounded).smallCaps())
             .tracking(0.6)
             .foregroundStyle(CremaColor.secondary)
             .padding(.top, 4)
@@ -241,17 +240,17 @@ private struct TasteSegmented: View {
         let selected = abs(value - tagValue) < 0.25
         return Button(action: { value = tagValue }) {
             Text(label)
-                .font(.system(size: 12, weight: selected ? .semibold : .regular, design: .rounded))
-                .foregroundStyle(selected ? CremaColor.bg : CremaColor.cream)
+                .font(CremaTypography.font(size: 12, weight: selected ? .semibold : .regular, design: .rounded))
+                .foregroundStyle(selected ? CremaColor.onPrimary : CremaColor.cream)
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: 36)
+                .frame(minHeight: 44)
                 .background(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(selected ? CremaColor.crema : CremaColor.surface.opacity(0.7))
+                        .fill(selected ? CremaColor.primarySurface : CremaColor.surface)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .strokeBorder(CremaColor.hairline.opacity(0.5), lineWidth: 0.5)
+                        .strokeBorder(CremaColor.hairline.opacity(0.8), lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)

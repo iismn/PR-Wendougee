@@ -1,28 +1,15 @@
 import SwiftUI
 import CremaKit
 
-/// The bottom of the Live Shot screen — the primary action surface.
-///
-/// Replaces the playback-style bar in `.live` mode. Designed for full-screen use
-/// on macOS, iOS, iPadOS, and Android (via future Compose port): one obvious next
-/// action at any moment, scales from phone-portrait to mac-full-screen without
-/// breaking. No hardcoded pixel widths.
-///
-/// State-driven layout:
-/// - **Disconnected / failed** → big "Connect" pill, centered
-/// - **Scanning / connecting** → progress indicator with cancel
-/// - **Connected · ready**    → connection chip (left) + big "Brew" pill (right)
-/// - **Brewing**              → connection chip dimmed + "Abort" pill in danger color
-/// - **Done**                 → "Save / Discard / Brew Again" trio
+/// A tactile action dock. Transport and brew state determine every available action.
 struct BrewActionZone: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Binding var mode: AppMode
     let liveDriver: LiveDriver
     let replayPlayback: ShotPlayback
     let library: ProfileLibrary
     let history: ShotHistory
     let tipPreferences: TipPreferences
-    /// Parent-owned callback to spin up an AutoTuneSession + present its sheet.
-    /// Optional so the macOS / iPhone-portrait paths can omit if needed.
     var onAutoTune: (() -> Void)? = nil
 
     var body: some View {
@@ -35,55 +22,21 @@ struct BrewActionZone: View {
                             onAutoTune: onAutoTune)
             }
         }
-        .animation(.smooth(duration: 0.35), value: mode)
-        .padding(.horizontal, 24)
-        .padding(.vertical, 18)
-        // Floating frosted bar that sits above the chart, with breathing room.
+        .padding(14)
         .background {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay(
+                .fill(CremaColor.surface)
+                .overlay {
                     RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .strokeBorder(CremaColor.hairline.opacity(0.5), lineWidth: 0.5)
-                )
-                .padding(.horizontal, 12)
+                        .strokeBorder(CremaColor.hairline, lineWidth: 1)
+                }
+                .shadow(color: CremaColor.espresso.opacity(0.06), radius: 20, x: 0, y: 8)
         }
-        .padding(.bottom, 8)
+        .padding(.horizontal, 12)
+        .padding(.bottom, 10)
+        .animation(reduceMotion ? nil : .smooth(duration: 0.25), value: mode)
     }
 }
-
-// MARK: - Auto-tune entry chip
-
-/// Compact secondary action that sits beside the Brew button when the machine
-/// is ready. Subtle sparkle treatment to signal "smart, novel feature" without
-/// shouting over the primary Brew action.
-private struct AutoTuneChip: View {
-    let action: () -> Void
-    @State private var glimmer = false
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 5) {
-                Image(systemName: "wand.and.stars")
-                    .font(.system(size: 12, weight: .semibold))
-                    .symbolEffect(.pulse, options: .repeating, value: glimmer)
-                Text("Auto-tune")
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-            }
-            .foregroundStyle(CremaColor.crema)
-            .padding(.horizontal, 12)
-            .frame(minHeight: 34)
-            .background(
-                Capsule().fill(CremaColor.crema.opacity(0.16))
-                    .overlay(Capsule().strokeBorder(CremaColor.crema.opacity(0.4), lineWidth: 0.5))
-            )
-        }
-        .buttonStyle(.plain)
-        .onAppear { glimmer = true }
-    }
-}
-
-// MARK: - Live brew bar (state-driven)
 
 private struct LiveBrewBar: View {
     @Bindable var driver: LiveDriver
@@ -94,154 +47,85 @@ private struct LiveBrewBar: View {
     @State private var showMachines = false
     @State private var showFeedback = false
 
-    #if os(iOS)
-    @Environment(\.horizontalSizeClass) private var sizeClass
-    private var isCompact: Bool { sizeClass == .compact }
-    #else
-    private var isCompact: Bool { false }
-    #endif
-
     var body: some View {
-        Group {
+        VStack(alignment: .leading, spacing: 12) {
             switch phase {
             case .needsSetup:
-                VStack(spacing: 10) {
-                    CenterPrimaryButton(
-                        label: "Set up your machine",
-                        systemImage: "wave.3.right",
-                        tint: .crema,
-                        action: { showMachines = true }
-                    )
-                    Text("Pair your Wendougee over Bluetooth to brew. The curve above is your selected recipe — tap its name to switch.")
-                        .font(.system(size: 11, design: .rounded))
-                        .foregroundStyle(CremaColor.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
-                        .fixedSize(horizontal: false, vertical: true)
+                AdaptiveDockRow {
+                    DockStatus(text: "Not paired", symbol: "link", tint: CremaColor.secondary,
+                               accessibilityText: "Machine not paired")
+                } action: {
+                    PrimaryPill(label: "Pair machine", systemImage: "antenna.radiowaves.left.and.right",
+                                action: { showMachines = true })
                 }
             case .primaryDisconnected(let name):
-                ResponsiveTwoSlot(
-                    isCompact: isCompact,
-                    leading: { MachinesMenuButton(driver: driver, showSheet: $showMachines) },
-                    trailing: {
-                        PrimaryPill(label: "Connect to \(name)",
-                                    systemImage: "wave.3.right",
-                                    tint: .crema, pulsing: true,
-                                    action: { driver.connectToPrimary() })
-                    }
-                )
-            case .scanning(let msg):
-                ProgressRow(text: msg, onCancel: { driver.stop() })
-            case .readyToBrew(let name):
-                ResponsiveTwoSlot(
-                    isCompact: isCompact,
-                    leading: {
-                        ConnectionChip(name: name, active: true, isDimmed: false,
-                                       onTap: { showMachines = true })
-                    },
-                    trailing: {
-                        HStack(spacing: 10) {
-                            if let onAutoTune {
-                                AutoTuneChip(action: onAutoTune)
-                            }
-                            if driver.playback.profile.grinder != nil {
-                                GrinderPill(driver: driver)
-                            }
-                            PrimaryPill(label: "Brew",
-                                        systemImage: "drop.fill",
-                                        tint: .crema, pulsing: true,
-                                        action: { driver.brew() })
-                        }
-                    }
-                )
-            case .brewing(let name):
-                ResponsiveTwoSlot(
-                    isCompact: isCompact,
-                    leading: {
-                        ConnectionChip(name: name, active: true, isDimmed: true, onTap: nil)
-                    },
-                    trailing: {
-                        PrimaryPill(label: "Abort",
-                                    systemImage: "stop.fill",
-                                    tint: .danger, pulsing: false,
-                                    action: { driver.abort() })
-                    }
-                )
-            case .done(let name):
-                if isCompact {
-                    VStack(spacing: 10) {
-                        ConnectionChip(name: name, active: true, isDimmed: false,
-                                       onTap: { showMachines = true })
-                        HStack(spacing: 8) {
-                            SecondaryPill(label: "Discard", systemImage: "trash",
-                                          action: { driver.clearShot() })
-                            SecondaryPill(label: "Brew again", systemImage: "arrow.clockwise",
-                                          action: { driver.clearShot(); driver.brew() })
-                        }
-                        PrimaryPill(label: "Save & Suggest",
-                                    systemImage: "square.and.arrow.down",
-                                    tint: .crema, pulsing: false,
-                                    action: { showFeedback = true })
-                    }
-                } else {
+                AdaptiveDockRow {
                     HStack(spacing: 12) {
-                        ConnectionChip(name: name, active: true, isDimmed: false,
-                                       onTap: { showMachines = true })
-                        Spacer(minLength: 8)
-                        SecondaryPill(label: "Discard", systemImage: "trash",
-                                      action: { driver.clearShot() })
+                        DockStatus(text: name, symbol: "link", tint: CremaColor.secondary,
+                                   accessibilityText: "Disconnected, \(name)")
+                        Spacer(minLength: 0)
+                        SecondaryPill(label: "Machines", systemImage: "slider.horizontal.3",
+                                      action: { showMachines = true })
+                    }
+                } action: {
+                    PrimaryPill(label: "Connect to \(name)", systemImage: "antenna.radiowaves.left.and.right",
+                                action: { driver.connectToPrimary() })
+                }
+            case .scanning(let message):
+                HStack(spacing: 12) {
+                    ProgressView().tint(CremaColor.crema)
+                    Text(message)
+                        .font(CremaTypography.font(size: 12))
+                        .foregroundStyle(CremaColor.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                    SecondaryPill(label: "Cancel connection", systemImage: "xmark", action: { driver.stop() })
+                }
+                .frame(minHeight: 44)
+            case .readyToBrew(let name):
+                AdaptiveDockRow {
+                    HStack(spacing: 10) {
+                        ConnectionChip(name: name, isDimmed: false, onTap: { showMachines = true })
+                        Spacer(minLength: 0)
+                        BrewToolsMenu(driver: driver, onAutoTune: onAutoTune,
+                                      onMachines: { showMachines = true })
+                    }
+                } action: {
+                    PrimaryPill(label: "Brew", systemImage: "drop.fill", action: { driver.brew() })
+                }
+            case .brewing(let name):
+                AdaptiveDockRow {
+                    DockStatus(text: name, symbol: "drop.fill", tint: CremaColor.crema,
+                               accessibilityText: "Brewing with \(name)")
+                } action: {
+                    PrimaryPill(label: "Abort shot", systemImage: "stop.fill", isDestructive: true,
+                                action: { driver.abort() })
+                }
+            case .done(let name):
+                AdaptiveDockRow {
+                    ConnectionChip(name: name, isDimmed: false, onTap: { showMachines = true })
+                        .accessibilityValue("Shot complete")
+                } action: {
+                    HStack(spacing: 8) {
+                        SecondaryPill(label: "Discard shot", systemImage: "trash",
+                                      action: { prepareNextShot() })
                         SecondaryPill(label: "Brew again", systemImage: "arrow.clockwise",
-                                      action: { driver.clearShot(); driver.brew() })
-                        PrimaryPill(label: "Save & Suggest",
-                                    systemImage: "square.and.arrow.down",
-                                    tint: .crema, pulsing: false,
+                                      action: { prepareNextShot(); driver.brew() })
+                        PrimaryPill(label: "Save shot and tasting notes", systemImage: "tray.and.arrow.down",
                                     action: { showFeedback = true })
                     }
                 }
             case .failed(let reason):
-                if isCompact {
-                    VStack(spacing: 10) {
-                        HStack(spacing: 10) {
-                            StatusGlyph(systemImage: "exclamationmark.triangle.fill", tint: .danger)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Connection failed")
-                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                                    .foregroundStyle(CremaColor.cream)
-                                Text(reason)
-                                    .font(.system(size: 11, design: .rounded))
-                                    .foregroundStyle(CremaColor.secondary)
-                                    .lineLimit(2)
-                                    .multilineTextAlignment(.leading)
-                            }
-                            Spacer()
-                        }
-                        HStack(spacing: 8) {
-                            SecondaryPill(label: "Machines", systemImage: "antenna.radiowaves.left.and.right",
-                                          action: { showMachines = true })
-                            PrimaryPill(label: "Retry", systemImage: "arrow.clockwise",
-                                        tint: .crema, pulsing: false,
-                                        action: { driver.connectToPrimary() })
-                        }
-                    }
-                } else {
-                    HStack(spacing: 12) {
-                        StatusGlyph(systemImage: "exclamationmark.triangle.fill", tint: .danger)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Connection failed")
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                                .foregroundStyle(CremaColor.cream)
-                            Text(reason)
-                                .font(.system(size: 11, design: .rounded))
-                                .foregroundStyle(CremaColor.secondary)
-                                .lineLimit(1)
-                        }
-                        Spacer()
-                        SecondaryPill(label: "Machines", systemImage: "antenna.radiowaves.left.and.right",
-                                      action: { showMachines = true })
-                        PrimaryPill(label: "Retry", systemImage: "arrow.clockwise",
-                                    tint: .crema, pulsing: false,
-                                    action: { driver.connectToPrimary() })
-                    }
+                Label(reason, systemImage: "exclamationmark.triangle.fill")
+                    .font(CremaTypography.font(size: 12))
+                    .foregroundStyle(CremaColor.danger)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 8) {
+                    Spacer(minLength: 0)
+                    SecondaryPill(label: "Machines", systemImage: "antenna.radiowaves.left.and.right",
+                                  action: { showMachines = true })
+                    PrimaryPill(label: "Retry connection", systemImage: "arrow.clockwise",
+                                action: { driver.connectToPrimary() })
                 }
             }
         }
@@ -258,6 +142,12 @@ private struct LiveBrewBar: View {
                 library: library
             )
         }
+    }
+
+    /// Keep completed telemetry tied to its original recipe until explicitly cleared.
+    private func prepareNextShot() {
+        driver.clearShot()
+        driver.playback.profile = library.active
     }
 
     /// Snapshot the playback's samples as the persisted curve for history.
@@ -326,171 +216,205 @@ private struct LiveBrewBar: View {
     }
 }
 
-/// Small "···" button that opens the Machines sheet — used when we're not yet
-/// connected so the user can swap primary / scan for new ones.
-private struct MachinesMenuButton: View {
-    let driver: LiveDriver
-    @Binding var showSheet: Bool
-
-    var body: some View {
-        Button(action: { showSheet = true }) {
-            HStack(spacing: 8) {
-                Image(systemName: "antenna.radiowaves.left.and.right")
-                    .font(.system(size: 12, weight: .medium))
-                Text("Machines")
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
-            }
-            .foregroundStyle(CremaColor.secondary)
-            .padding(.horizontal, 12)
-            .frame(minHeight: 36)
-            .cremaGlass(in: Capsule())
-        }
-        .buttonStyle(PressDownStyle())
-    }
-}
-
-// MARK: - Replay playback bar (unchanged behavior, extracted)
+// MARK: - Replay controls
 
 private struct ReplayPlaybackBar: View {
     @Bindable var playback: ShotPlayback
 
     var body: some View {
-        HStack(spacing: 22) {
+        HStack(spacing: 12) {
             Button(action: { playback.reset() }) {
                 Image(systemName: "arrow.counterclockwise")
                     .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(CremaColor.secondary)
-                    .frame(width: 36, height: 36)
-                    .cremaGlass(in: Circle())
+                    .foregroundStyle(CremaColor.cream)
+                    .frame(width: 44, height: 44)
+                    .background(CremaColor.bg, in: Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PressDownStyle())
+            .accessibilityLabel("Reset playback")
+            .help("Reset playback")
 
             Button(action: { playback.toggle() }) {
-                ZStack {
-                    Circle()
-                        .fill(CremaColor.crema.opacity(0.25))
-                        .frame(width: 64, height: 64)
-                        .blur(radius: 14)
-                    Circle()
-                        .fill(LinearGradient(
-                            colors: [CremaColor.cremaBright, CremaColor.crema],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        ))
-                        .frame(width: 52, height: 52)
-                        .overlay(Circle().strokeBorder(CremaColor.cream.opacity(0.25), lineWidth: 0.5))
-                    Image(systemName: playback.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(CremaColor.bg)
-                        .contentTransition(.symbolEffect(.replace))
-                        .offset(x: playback.isPlaying ? 0 : 2)
-                }
+                Image(systemName: playback.isPlaying ? "pause.fill" : "play.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(CremaColor.onPrimary)
+                    .offset(x: playback.isPlaying ? 0 : 1)
+                    .frame(width: 54, height: 54)
+                    .background(CremaColor.primarySurface, in: Circle())
+                    .contentTransition(.symbolEffect(.replace))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PressDownStyle())
+            .accessibilityLabel(playback.isPlaying ? "Pause playback" : "Play recording")
+            .help(playback.isPlaying ? "Pause playback" : "Play recording")
 
-            GeometryReader { geo in
-                let frac = playback.t / max(0.001, playback.totalDuration)
-                ZStack(alignment: .leading) {
-                    Capsule().fill(CremaColor.hairline).frame(height: 3)
-                    Capsule()
-                        .fill(LinearGradient(colors: [CremaColor.crema, CremaColor.cremaBright],
-                                              startPoint: .leading, endPoint: .trailing))
-                        .frame(width: geo.size.width * CGFloat(frac), height: 3)
-                    Circle().fill(CremaColor.cream).frame(width: 14, height: 14)
-                        .shadow(color: CremaColor.crema.opacity(0.55), radius: 6)
-                        .offset(x: geo.size.width * CGFloat(frac) - 7)
-                }
-                .frame(height: 14)
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0).onChanged { v in
-                        let f = max(0, min(1, v.location.x / geo.size.width))
-                        playback.scrub(to: f * playback.totalDuration)
-                    }
-                )
+            VStack(spacing: 0) {
+                Text(String(format: "%.1f / %.1f s", playback.t, playback.totalDuration))
+                    .font(CremaTypography.font(size: 10, weight: .medium))
+                    .foregroundStyle(CremaColor.secondary)
+                    .monospacedDigit()
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                ReplayScrubber(playback: playback)
             }
-            .frame(height: 14)
 
             Menu {
-                ForEach([0.5, 1.0, 1.5, 2.0, 4.0], id: \.self) { s in
-                    Button(s == 1.0 ? "1×" : (s.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(s))×" : "\(s)×")) {
-                        playback.speed = s
-                    }
+                ForEach([0.5, 1.0, 1.5, 2.0, 4.0], id: \.self) { speed in
+                    Button(speedLabel(speed)) { playback.speed = speed }
                 }
             } label: {
-                Text(playback.speed == 1.0 ? "1×" :
-                     (playback.speed.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(playback.speed))×" : String(format: "%.1f×", playback.speed)))
-                    .font(.system(size: 12, weight: .semibold, design: .rounded).monospacedDigit())
+                Text(speedLabel(playback.speed))
+                    .font(CremaTypography.font(size: 12, weight: .semibold))
+                    .monospacedDigit()
                     .foregroundStyle(CremaColor.cream)
-                    .frame(width: 40, height: 28)
-                    .cremaGlass(in: Capsule())
+                    .frame(minWidth: 44, minHeight: 44)
+                    .background(CremaColor.bg, in: Capsule())
             }
             .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .accessibilityLabel("Playback speed")
+            .accessibilityValue(speedLabel(playback.speed))
+            .help("Playback speed")
+        }
+    }
+
+    private func speedLabel(_ speed: Double) -> String {
+        speed.truncatingRemainder(dividingBy: 1) == 0
+            ? "\(Int(speed))×" : String(format: "%.1f×", speed)
+    }
+}
+
+private struct ReplayScrubber: View {
+    @Bindable var playback: ShotPlayback
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @FocusState private var hasKeyboardFocus: Bool
+    @State private var isScrubbing = false
+
+    var body: some View {
+        GeometryReader { geometry in
+            let fraction = min(1, max(0, playback.t / max(0.001, playback.totalDuration)))
+            let trackWidth = max(0, geometry.size.width - 18)
+            let duration = playback.totalDuration.isFinite ? max(0.001, playback.totalDuration) : 0.001
+            ZStack(alignment: .topLeading) {
+                Canvas { context, _ in
+                    let minorInterval = trackWidth / CGFloat(duration) >= 14 ? 0.5 : 1.0
+                    let minorCount = Int(duration / minorInterval)
+                    let baseline = Path { path in
+                        path.move(to: CGPoint(x: 9, y: 19))
+                        path.addLine(to: CGPoint(x: 9 + trackWidth, y: 19))
+                    }
+                    context.stroke(baseline, with: .color(CremaColor.hairline.opacity(0.7)), lineWidth: 0.7)
+                    let played = CGRect(x: 9, y: 17, width: trackWidth * CGFloat(fraction), height: 3)
+                    context.fill(Path(roundedRect: played, cornerRadius: 1.5),
+                                 with: .color(CremaColor.crema.opacity(0.2)))
+
+                    for index in 0...minorCount {
+                        let second = Double(index) * minorInterval
+                        let isMajor = abs(second / 5 - (second / 5).rounded()) < 0.001
+                        let x = 9 + trackWidth * CGFloat(second / duration)
+                        let tick = Path { path in
+                            path.move(to: CGPoint(x: x, y: isMajor ? 5 : 12))
+                            path.addLine(to: CGPoint(x: x, y: 19))
+                        }
+                        context.stroke(tick, with: .color(CremaColor.secondary.opacity(isMajor ? 0.75 : 0.35)),
+                                       lineWidth: isMajor ? 1 : 0.7)
+                        if isMajor {
+                            context.draw(Text("\(Int(second))")
+                                .font(CremaTypography.font(size: 8, weight: .medium))
+                                .foregroundStyle(CremaColor.secondary),
+                                         at: CGPoint(x: x, y: 33))
+                        }
+                    }
+                }
+                .accessibilityHidden(true)
+
+                VStack(spacing: -1) {
+                    Circle().fill(CremaColor.surface)
+                        .frame(width: 10, height: 10)
+                        .overlay(Circle().strokeBorder(CremaColor.crema, lineWidth: 2))
+                    Capsule().fill(CremaColor.crema).frame(width: 2, height: 12)
+                }
+                .scaleEffect(isScrubbing && !reduceMotion ? 1.1 : 1, anchor: .top)
+                .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.8), value: isScrubbing)
+                .offset(x: 4 + trackWidth * CGFloat(fraction), y: 1)
+                .accessibilityHidden(true)
+            }
+            .frame(height: 44)
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 0)
+                .onChanged { value in
+                    hasKeyboardFocus = true
+                    isScrubbing = true
+                    let fraction = max(0, min(1, (value.location.x - 9) / max(1, trackWidth)))
+                    playback.scrub(to: fraction * playback.totalDuration)
+                }
+                .onEnded { _ in isScrubbing = false }
+            )
+        }
+        .frame(minWidth: 40, minHeight: 44, maxHeight: 44)
+        .focusable()
+        .focused($hasKeyboardFocus)
+        .onKeyPress(.leftArrow) {
+            playback.scrub(to: max(0, playback.t - 1))
+            return .handled
+        }
+        .onKeyPress(.rightArrow) {
+            playback.scrub(to: min(playback.totalDuration, playback.t + 1))
+            return .handled
+        }
+        .accessibilityElement()
+        .accessibilityLabel("Playback position in seconds")
+        .help("Seek playback")
+        .accessibilityValue(String(format: "%.1f seconds", playback.t))
+        .accessibilityHint("Drag the ruler, or use the left and right arrow keys to seek by one second.")
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: playback.scrub(to: min(playback.totalDuration, playback.t + 1))
+            case .decrement: playback.scrub(to: max(0, playback.t - 1))
+            @unknown default: break
+            }
         }
     }
 }
 
-// MARK: - Building blocks
+// MARK: - Dock components
 
-private enum PillTint { case crema, danger }
-private extension PillTint {
-    var fill: LinearGradient {
-        switch self {
-        case .crema:  return LinearGradient(colors: [CremaColor.cremaBright, CremaColor.crema],
-                                            startPoint: .topLeading, endPoint: .bottomTrailing)
-        case .danger: return LinearGradient(colors: [CremaColor.danger, CremaColor.danger.opacity(0.85)],
-                                            startPoint: .topLeading, endPoint: .bottomTrailing)
+private struct DockStatus: View {
+    let text: String
+    let symbol: String
+    let tint: Color
+    let accessibilityText: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: symbol).font(.system(size: 13, weight: .medium))
+                .foregroundStyle(tint)
+            Text(text)
+                .font(CremaTypography.font(size: 12, weight: .medium))
+                .foregroundStyle(CremaColor.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
-    }
-    var halo: Color {
-        switch self {
-        case .crema:  return CremaColor.crema.opacity(0.35)
-        case .danger: return CremaColor.danger.opacity(0.35)
-        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityText)
     }
 }
-
-/// Big primary action — used for Brew, Abort, Connect, Retry, Brew again.
-/// Adaptive width: at narrow widths it stretches; at wide widths it caps at 280pt
-/// so it looks like a deliberate CTA, not a stretched-out bar.
 private struct PrimaryPill: View {
     let label: String
     let systemImage: String
-    let tint: PillTint
-    let pulsing: Bool
+    var isDestructive = false
     let action: () -> Void
-
-    @State private var pulse = false
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 10) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 16, weight: .semibold))
-                Text(label)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .tracking(0.3)
-            }
-            .foregroundStyle(CremaColor.bg)
-            .frame(maxWidth: 280, minHeight: 48)
-            .frame(maxWidth: .infinity)        // grow on narrow widths
-            .padding(.horizontal, 22)
-            .background {
-                Capsule().fill(tint.fill)
-                    .overlay(Capsule().strokeBorder(CremaColor.cream.opacity(0.2), lineWidth: 0.5))
-            }
-            .background {
-                if pulsing {
-                    Capsule().fill(tint.halo)
-                        .blur(radius: 18)
-                        .scaleEffect(pulse ? 1.08 : 1.0)
-                        .opacity(pulse ? 0.0 : 0.9)
-                        .animation(.easeOut(duration: 1.6).repeatForever(autoreverses: false), value: pulse)
-                }
-            }
+            Image(systemName: systemImage)
+                .font(.system(size: 19, weight: .semibold))
+                .foregroundStyle(isDestructive ? CremaColor.onDanger : CremaColor.onPrimary)
+                .frame(width: 54, height: 54)
+                .background(isDestructive ? CremaColor.danger : CremaColor.primarySurface, in: Circle())
+                .contentShape(Circle())
         }
         .buttonStyle(PressDownStyle())
-        .frame(maxWidth: 280)               // hard cap on wide layouts
-        .onAppear { if pulsing { pulse = true } }
+        .accessibilityLabel(label)
+        .help(label)
     }
 }
 
@@ -501,180 +425,121 @@ private struct SecondaryPill: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 12, weight: .medium))
-                Text(label)
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
-            }
-            .foregroundStyle(CremaColor.cream)
-            .padding(.horizontal, 14)
-            .frame(minHeight: 36)
-            .cremaGlass(in: Capsule())
+            Image(systemName: systemImage)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(CremaColor.cream)
+                .frame(width: 44, height: 44)
+                .background(CremaColor.bg, in: Circle())
+                .overlay(Circle().strokeBorder(CremaColor.hairline.opacity(0.7), lineWidth: 1))
+                .contentShape(Circle())
         }
         .buttonStyle(PressDownStyle())
+        .accessibilityLabel(label)
+        .help(label)
     }
 }
-
-/// Connection state pill — `●  Sunday Lita ⋯` style. Tap to manage machines.
 private struct ConnectionChip: View {
     let name: String
-    let active: Bool
     let isDimmed: Bool
     let onTap: (() -> Void)?
 
-    var body: some View {
-        let chip = HStack(spacing: 8) {
-            Circle()
-                .fill(active ? CremaColor.connected : CremaColor.secondary)
-                .frame(width: 8, height: 8)
-                .overlay(
-                    Circle().fill(active ? CremaColor.connected.opacity(0.45) : .clear)
-                        .frame(width: 14, height: 14)
-                        .blur(radius: 3)
-                )
+    private var label: some View {
+        HStack(spacing: 7) {
+            Circle().fill(CremaColor.connected).frame(width: 6, height: 6)
             Text(name)
-                .font(.system(size: 12, weight: .medium, design: .rounded))
-                .foregroundStyle(CremaColor.cream)
+                .font(CremaTypography.font(size: 11, weight: .medium, design: .rounded))
+                .lineLimit(1)
             if onTap != nil {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 11))
-                    .foregroundStyle(CremaColor.secondary)
+                Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold))
             }
         }
+        .foregroundStyle(CremaColor.matcha)
         .padding(.horizontal, 12)
-        .frame(minHeight: 36)
-        .cremaGlass(in: Capsule())
-        .opacity(isDimmed ? 0.55 : 1.0)
+        .frame(minHeight: 44)
+        .background(CremaColor.matcha.opacity(0.08), in: Capsule())
+        .opacity(isDimmed ? 0.6 : 1)
+        .accessibilityLabel("Connected to \(name)")
+    }
 
+    var body: some View {
         if let onTap {
-            Button(action: onTap) { chip }.buttonStyle(.plain)
+            Button(action: onTap) { label }.buttonStyle(PressDownStyle())
+                .accessibilityLabel("Connected to \(name)")
+                .accessibilityHint("Manage machine")
+                .help("Manage \(name)")
         } else {
-            chip
+            label
         }
     }
 }
 
-/// Centered primary button — used as the standalone "Connect" CTA when nothing
-/// else is going on. Same `PrimaryPill` look but centered with `Spacer`s.
-private struct CenterPrimaryButton: View {
-    let label: String
-    let systemImage: String
-    let tint: PillTint
-    let action: () -> Void
-
-    var body: some View {
-        HStack {
-            Spacer()
-            PrimaryPill(label: label, systemImage: systemImage,
-                        tint: tint, pulsing: true, action: action)
-            Spacer()
-        }
-    }
-}
-
-private struct ProgressRow: View {
-    let text: String
-    let onCancel: () -> Void
-
-    var body: some View {
-        HStack(spacing: 14) {
-            ProgressView()
-                .controlSize(.small)
-                .tint(CremaColor.crema)
-            Text(text)
-                .font(.system(size: 13, design: .rounded))
-                .foregroundStyle(CremaColor.cream)
-            Spacer()
-            SecondaryPill(label: "Cancel", systemImage: "xmark", action: onCancel)
-        }
-        .padding(.horizontal, 12)
-        .frame(minHeight: 48)
-    }
-}
-
-private struct StatusGlyph: View {
-    let systemImage: String
-    let tint: PillTint
-    var body: some View {
-        Image(systemName: systemImage)
-            .font(.system(size: 18, weight: .semibold))
-            .foregroundStyle(tint == .danger ? CremaColor.danger : CremaColor.crema)
-            .frame(width: 36, height: 36)
-    }
-}
-
-/// Two-slot layout (status on the left, primary action on the right) that
-/// becomes a vertical stack on compact width so labels never get clipped.
-/// Used by all the "[status]  ←spacer→  [BREW / CONNECT / ABORT]" rows.
-private struct ResponsiveTwoSlot<Leading: View, Trailing: View>: View {
-    let isCompact: Bool
-    @ViewBuilder let leading: () -> Leading
-    @ViewBuilder let trailing: () -> Trailing
-
-    var body: some View {
-        if isCompact {
-            VStack(spacing: 10) {
-                leading()
-                trailing()
-            }
-        } else {
-            HStack(spacing: 16) {
-                leading()
-                Spacer(minLength: 12)
-                trailing()
-            }
-        }
-    }
-}
-
-/// Secondary action button shown next to Brew when the active profile carries
-/// grinder settings. Tap pushes the FF55 grinder command and shows a brief
-/// "✓ Sent" confirmation so the user knows it landed (since the firmware
-/// doesn't produce a parseable ack for this write).
-private struct GrinderPill: View {
+/// A single equipment menu keeps preparation actions within reach without growing the dock.
+private struct BrewToolsMenu: View {
     let driver: LiveDriver
+    let onAutoTune: (() -> Void)?
+    let onMachines: () -> Void
     @State private var justSent = false
 
     var body: some View {
-        Button(action: {
-            driver.sendGrinderSettings()
-            justSent = true
-            Task {
-                try? await Task.sleep(nanoseconds: 1_400_000_000)
-                justSent = false
+        Menu {
+            if let onAutoTune {
+                Button("Auto-tune", systemImage: "wand.and.stars", action: onAutoTune)
             }
-        }) {
-            HStack(spacing: 6) {
-                Image(systemName: justSent ? "checkmark" : "circle.hexagongrid.fill")
-                    .font(.system(size: 13, weight: .semibold))
-                    .contentTransition(.symbolEffect(.replace))
-                Text(justSent ? "Sent" : "Set grinder")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .contentTransition(.identity)
+            if driver.playback.profile.grinder != nil {
+                Button("Set grinder", systemImage: "circle.hexagongrid.fill") {
+                    driver.sendGrinderSettings()
+                    justSent = true
+                    Task {
+                        try? await Task.sleep(nanoseconds: 1_400_000_000)
+                        justSent = false
+                    }
+                }
             }
-            .foregroundStyle(CremaColor.cream)
-            .padding(.horizontal, 14)
-            .frame(minHeight: 44)
-            .background {
-                Capsule()
-                    .fill(.ultraThinMaterial)
-                    .overlay(Capsule().strokeBorder(
-                        justSent ? CremaColor.connected.opacity(0.7) : CremaColor.hairline.opacity(0.6),
-                        lineWidth: 0.5))
-            }
+            if onAutoTune != nil || driver.playback.profile.grinder != nil { Divider() }
+            Button("Machines", systemImage: "antenna.radiowaves.left.and.right", action: onMachines)
+        } label: {
+            Image(systemName: justSent ? "checkmark" : "slider.horizontal.3")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(justSent ? CremaColor.matcha : CremaColor.cream)
+                .frame(width: 44, height: 44)
+                .background(CremaColor.bg, in: Circle())
+                .overlay(Circle().strokeBorder(CremaColor.hairline.opacity(0.7), lineWidth: 1))
         }
-        .buttonStyle(PressDownStyle())
-        .animation(.snappy(duration: 0.22), value: justSent)
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .accessibilityLabel(justSent ? "Grinder settings sent" : "Brew tools")
+        .help(justSent ? "Grinder settings sent" : "Auto-tune, grinder and machines")
     }
 }
 
-/// Press-down feedback — scale + slight opacity dip. Same feel on mac and iOS.
+/// A single compact row when space permits; a full-width action on smaller screens.
+private struct AdaptiveDockRow<Leading: View, Action: View>: View {
+    @ViewBuilder let leading: () -> Leading
+    @ViewBuilder let action: () -> Action
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 16) {
+                leading().fixedSize(horizontal: true, vertical: false)
+                Spacer(minLength: 4)
+                action().fixedSize(horizontal: true, vertical: false)
+            }
+            VStack(alignment: .leading, spacing: 12) {
+                leading().frame(maxWidth: .infinity, alignment: .leading)
+                HStack { Spacer(minLength: 0); action() }
+            }
+        }
+    }
+}
 private struct PressDownStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
-            .opacity(configuration.isPressed ? 0.92 : 1.0)
-            .animation(.snappy(duration: 0.12), value: configuration.isPressed)
+            .scaleEffect(reduceMotion ? 1 : configuration.isPressed ? 0.98 : 1)
+            .opacity(configuration.isPressed ? 0.9 : 1)
+            .animation(reduceMotion ? nil : .spring(response: 0.22, dampingFraction: 0.8),
+                       value: configuration.isPressed)
     }
 }

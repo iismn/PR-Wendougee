@@ -1,4 +1,11 @@
-# Crema
+# PR-Wendougee
+Custom Wendougee App
+
+[Mac에서 이어서 작업하기](MAC_HANDOFF.md) · [UI 변경 내용](outputs/UI-REDESIGN.md)
+
+Based on [dallonby/Crema](https://github.com/dallonby/Crema), with its original chart, profile library, history, editor, and machine flows retained. UI refinements add Pretendard, time-aware colors, aligned dot readouts, and tactile stage controls.
+
+## Crema
 
 A native client for the Wendougee LITA-BA / LITA-BR / DATA-S espresso machines, built for coffee nerds who want to author, share, and run pressure / flow / weight profiles.
 

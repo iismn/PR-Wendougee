@@ -34,7 +34,6 @@ struct SettingsSheet: View {
             }
         }
         .background(CremaColor.bg.ignoresSafeArea())
-        .preferredColorScheme(.dark)
         .onAppear {
             editedName = session.user?.displayName ?? ""
             // Read the current backend URL from defaults — synchronously,
@@ -47,16 +46,22 @@ struct SettingsSheet: View {
 
     private var header: some View {
         HStack {
-            Text("Settings")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundStyle(CremaColor.cream)
+            VStack(alignment: .leading, spacing: 5) {
+                Text("YOUR COFFEE CORNER")
+                    .font(CremaTypography.font(size: 9, weight: .semibold))
+                    .tracking(1.8)
+                    .foregroundStyle(CremaColor.crema)
+                Text("Settings")
+                    .font(CremaTypography.font(size: 30, weight: .regular, design: .serif))
+                    .foregroundStyle(CremaColor.cream)
+            }
             Spacer()
             Button(action: onDismiss) {
                 Image(systemName: "xmark")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(CremaColor.secondary)
-                    .frame(width: 32, height: 32)
-                    .background(Circle().fill(CremaColor.surface.opacity(0.6)))
+                    .frame(width: 44, height: 44)
+                    .background(Circle().fill(CremaColor.surface))
             }
             .buttonStyle(.plain)
         }
@@ -79,10 +84,10 @@ struct SettingsSheet: View {
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(session.user?.displayName ?? "")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(CremaTypography.font(size: 15, weight: .semibold, design: .rounded))
                         .foregroundStyle(CremaColor.cream)
                     Text("Signed in")
-                        .font(.system(size: 11, design: .rounded))
+                        .font(CremaTypography.font(size: 11, design: .rounded))
                         .foregroundStyle(CremaColor.secondary)
                 }
                 Spacer()
@@ -93,31 +98,31 @@ struct SettingsSheet: View {
             // Display name editor
             VStack(alignment: .leading, spacing: 6) {
                 Text("Display name")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded).smallCaps())
+                    .font(CremaTypography.font(size: 11, weight: .semibold, design: .rounded).smallCaps())
                     .tracking(0.6)
                     .foregroundStyle(CremaColor.secondary)
                 HStack(spacing: 8) {
                     TextField("Name shown on shared profiles", text: $editedName)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 14, design: .rounded))
+                        .font(CremaTypography.font(size: 14, design: .rounded))
                         .foregroundStyle(CremaColor.cream)
                         .padding(.horizontal, 10).padding(.vertical, 8)
                         .background(RoundedRectangle(cornerRadius: 8)
-                            .fill(CremaColor.surface.opacity(0.6)))
+                            .fill(CremaColor.surfaceWarm))
                     if editedName.trimmingCharacters(in: .whitespaces)
                         != session.user?.displayName {
                         Button(action: saveName) {
                             HStack(spacing: 4) {
                                 if savingName {
-                                    ProgressView().controlSize(.small).tint(CremaColor.bg)
+                                    ProgressView().controlSize(.small).tint(CremaColor.onAccent)
                                 } else {
                                     Image(systemName: "checkmark")
                                         .font(.system(size: 11, weight: .bold))
                                 }
                                 Text("Save")
-                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                    .font(CremaTypography.font(size: 12, weight: .semibold, design: .rounded))
                             }
-                            .foregroundStyle(CremaColor.bg)
+                            .foregroundStyle(CremaColor.onAccent)
                             .padding(.horizontal, 10).padding(.vertical, 7)
                             .background(Capsule().fill(CremaColor.crema))
                         }
@@ -133,7 +138,7 @@ struct SettingsSheet: View {
                     Image(systemName: "rectangle.portrait.and.arrow.right")
                         .font(.system(size: 12, weight: .semibold))
                     Text("Sign out")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
                 }
                 .foregroundStyle(CremaColor.danger)
                 .padding(.horizontal, 14).frame(minHeight: 38)
@@ -147,7 +152,7 @@ struct SettingsSheet: View {
         VStack(alignment: .leading, spacing: 8) {
             sectionLabel("ACCOUNT")
             Text("Not signed in. Profile sharing + community features need an account.")
-                .font(.system(size: 12, design: .rounded))
+                .font(CremaTypography.font(size: 12, design: .rounded))
                 .foregroundStyle(CremaColor.secondary)
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -162,12 +167,12 @@ struct SettingsSheet: View {
             sectionLabel("BACKEND")
             VStack(alignment: .leading, spacing: 6) {
                 Text("Base URL")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded).smallCaps())
+                    .font(CremaTypography.font(size: 11, weight: .semibold, design: .rounded).smallCaps())
                     .tracking(0.6).foregroundStyle(CremaColor.secondary)
                 HStack(spacing: 8) {
                     TextField("https://crema.coffee", text: $backendURLString)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 13, design: .rounded).monospacedDigit())
+                        .font(CremaTypography.font(size: 13, design: .rounded).monospacedDigit())
                         .foregroundStyle(CremaColor.cream)
                         #if os(iOS)
                         .keyboardType(.URL).autocapitalization(.none)
@@ -175,23 +180,23 @@ struct SettingsSheet: View {
                         #endif
                         .padding(.horizontal, 10).padding(.vertical, 8)
                         .background(RoundedRectangle(cornerRadius: 8)
-                            .fill(CremaColor.surface.opacity(0.6)))
+                            .fill(CremaColor.surfaceWarm))
                     Button(action: applyBackendURL) {
                         Text("Apply")
-                            .font(.system(size: 12, weight: .semibold, design: .rounded))
-                            .foregroundStyle(CremaColor.bg)
+                            .font(CremaTypography.font(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundStyle(CremaColor.onAccent)
                             .padding(.horizontal, 12).padding(.vertical, 7)
-                            .background(Capsule().fill(CremaColor.matchaBright))
+                            .background(Capsule().fill(CremaColor.matcha))
                     }
                     .buttonStyle(.plain)
                 }
                 if let backendError {
                     Text(backendError)
-                        .font(.system(size: 11, design: .rounded))
+                        .font(CremaTypography.font(size: 11, design: .rounded))
                         .foregroundStyle(CremaColor.danger)
                 }
                 Text("Crema points here for uploads, downloads, and sign-in. Self-host via `docker compose up` in the `backend/` directory of the repo.")
-                    .font(.system(size: 11, design: .rounded))
+                    .font(CremaTypography.font(size: 11, design: .rounded))
                     .foregroundStyle(CremaColor.secondary)
             }
         }
@@ -215,27 +220,27 @@ struct SettingsSheet: View {
     private func row(_ label: String, _ value: String) -> some View {
         HStack {
             Text(label)
-                .font(.system(size: 12, design: .rounded))
+                .font(CremaTypography.font(size: 12, design: .rounded))
                 .foregroundStyle(CremaColor.secondary)
             Spacer()
             Text(value)
-                .font(.system(size: 12, weight: .medium, design: .rounded).monospacedDigit())
+                .font(CremaTypography.font(size: 12, weight: .medium, design: .rounded).monospacedDigit())
                 .foregroundStyle(CremaColor.cream)
         }
     }
 
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
-            .tracking(0.7)
-            .foregroundStyle(CremaColor.secondary)
+            .font(CremaTypography.font(size: 11, weight: .semibold))
+            .tracking(1.5)
+            .foregroundStyle(CremaColor.crema)
     }
 
     private var card: some View {
-        RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(.ultraThinMaterial)
-            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(CremaColor.hairline.opacity(0.4), lineWidth: 0.5))
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .fill(CremaColor.surface)
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(CremaColor.hairline, lineWidth: 0.5))
     }
 
     // MARK: Actions

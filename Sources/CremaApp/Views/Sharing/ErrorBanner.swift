@@ -25,13 +25,13 @@ struct InlineErrorBanner: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(friendlyMessage)
-                    .font(.system(size: 12, design: .rounded))
+                    .font(CremaTypography.font(size: 12, design: .rounded))
                     .foregroundStyle(CremaColor.cream)
                     .fixedSize(horizontal: false, vertical: true)
                 if let onRetry {
                     Button(action: onRetry) {
                         Text("Retry")
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .font(CremaTypography.font(size: 11, weight: .semibold, design: .rounded))
                             .foregroundStyle(CremaColor.crema)
                     }
                     .buttonStyle(.plain)

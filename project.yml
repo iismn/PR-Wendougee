@@ -38,6 +38,10 @@ targets:
           - "Generated-*-Info.plist"
       - path: Sources/CremaApp/Resources
         buildPhase: resources
+        excludes: ["Fonts/**"]
+      - path: Sources/CremaApp/Resources/Fonts
+        type: folder
+        buildPhase: resources
     dependencies:
       - package: CremaKit
         product: CremaKit
@@ -47,6 +51,11 @@ targets:
         CFBundleDisplayName: Crema
         LSApplicationCategoryType: public.app-category.lifestyle
         UILaunchScreen: {}
+        UIAppFonts:
+          - Fonts/Pretendard-Regular.otf
+          - Fonts/Pretendard-Medium.otf
+          - Fonts/Pretendard-SemiBold.otf
+          - Fonts/Pretendard-Bold.otf
         UIApplicationSupportsIndirectInputEvents: true
         NSBluetoothAlwaysUsageDescription: "Crema connects to your Wendougee espresso machine over Bluetooth LE to send brew profiles and read live pressure / flow / temperature data."
         UISupportedInterfaceOrientations~iphone:
@@ -106,6 +115,10 @@ targets:
           - "Generated-*-Info.plist"
       - path: Sources/CremaApp/Resources
         buildPhase: resources
+        excludes: ["Fonts/**"]
+      - path: Sources/CremaApp/Resources/Fonts
+        type: folder
+        buildPhase: resources
     dependencies:
       - package: CremaKit
         product: CremaKit
@@ -115,6 +128,7 @@ targets:
         CFBundleDisplayName: Crema
         LSApplicationCategoryType: public.app-category.lifestyle
         NSHumanReadableCopyright: "© 2026"
+        ATSApplicationFontsPath: Fonts
         NSBluetoothAlwaysUsageDescription: "Crema connects to your Wendougee espresso machine over Bluetooth LE to send brew profiles and read live pressure / flow / temperature data."
         CFBundleURLTypes:
           - CFBundleURLName: coffee.crema.app

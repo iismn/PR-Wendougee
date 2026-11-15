@@ -21,10 +21,10 @@ struct SignInView: View {
                     .foregroundStyle(CremaColor.crema)
             }
             Text("Join the Crema community")
-                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .font(CremaTypography.font(size: 18, weight: .semibold, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             Text("Share your tuned recipes and browse what other coffee nerds have brewed.")
-                .font(.system(size: 12, design: .rounded))
+                .font(CremaTypography.font(size: 12, design: .rounded))
                 .foregroundStyle(CremaColor.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 30)
@@ -34,7 +34,7 @@ struct SignInView: View {
                 // for full async/await ergonomics. The button just looks
                 // right (Apple HIG requires the specific style).
             } onCompletion: { _ in }
-                .signInWithAppleButtonStyle(.white)
+                .signInWithAppleButtonStyle(.black)
                 .frame(width: 260, height: 48)
                 .allowsHitTesting(false)
                 .overlay(
@@ -62,16 +62,17 @@ struct SignInView: View {
                             ], startPoint: .topLeading, endPoint: .bottomTrailing),
                                               lineWidth: 2.5)
                                 .frame(width: 18, height: 18)
-                            Text("G").font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(CremaColor.bg)
+                            Text("G").font(CremaTypography.font(size: 11, weight: .bold))
+                                .foregroundStyle(CremaColor.espresso)
                         }
                         Text("Sign in with Google")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(CremaColor.bg)
+                            .font(CremaTypography.font(size: 15, weight: .semibold))
+                            .foregroundStyle(CremaColor.espresso)
                     }
                     .frame(width: 260, height: 48)
                     .background(RoundedRectangle(cornerRadius: 8)
                         .fill(Color.white))
+                    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(CremaColor.hairline, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
                 .disabled(signingIn)
@@ -82,7 +83,7 @@ struct SignInView: View {
             }
             if let errorText {
                 Text(errorText)
-                    .font(.system(size: 11, design: .rounded))
+                    .font(CremaTypography.font(size: 11, design: .rounded))
                     .foregroundStyle(CremaColor.danger)
                     .multilineTextAlignment(.center)
             }

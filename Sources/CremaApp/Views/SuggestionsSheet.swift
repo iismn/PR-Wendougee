@@ -41,7 +41,6 @@ struct SuggestionsSheet: View {
             .padding(.bottom, 28)
         }
         .background(CremaColor.bg.ignoresSafeArea())
-        .preferredColorScheme(.dark)
         #if os(macOS)
         .frame(minWidth: 460, idealWidth: 540, minHeight: 480, idealHeight: 620)
         #endif
@@ -57,7 +56,7 @@ struct SuggestionsSheet: View {
             tappableHeaderButton("Close", role: .secondary) { dismissAll() }
             Spacer()
             Text("Tweak suggestions")
-                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .font(CremaTypography.font(size: 16, weight: .semibold, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             Spacer()
             tappableHeaderButton(" ", role: .primary, action: {})   // visual symmetry
@@ -69,11 +68,11 @@ struct SuggestionsSheet: View {
     private var intro: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("From this shot…")
-                .font(.system(size: 11, weight: .semibold, design: .rounded).smallCaps())
+                .font(CremaTypography.font(size: 11, weight: .semibold, design: .rounded).smallCaps())
                 .tracking(0.6)
                 .foregroundStyle(CremaColor.secondary)
             Text(shotSummary)
-                .font(.system(size: 13, design: .rounded))
+                .font(CremaTypography.font(size: 13, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -98,10 +97,10 @@ struct SuggestionsSheet: View {
                 .font(.system(size: 32))
                 .foregroundStyle(CremaColor.connected)
             Text("Looks balanced")
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .font(CremaTypography.font(size: 15, weight: .semibold, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             Text("No tweaks suggested — keep brewing!")
-                .font(.system(size: 12, design: .rounded))
+                .font(CremaTypography.font(size: 12, design: .rounded))
                 .foregroundStyle(CremaColor.secondary)
                 .multilineTextAlignment(.center)
         }
@@ -182,7 +181,7 @@ private struct SuggestionCard: View {
                     .fill(confidenceColor)
                     .frame(width: 6, height: 6)
                 Text(confidenceLabel)
-                    .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                    .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                     .tracking(0.6)
                     .foregroundStyle(confidenceColor)
                 Spacer()
@@ -193,7 +192,7 @@ private struct SuggestionCard: View {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(CremaColor.secondary)
-                        .frame(width: 32, height: 32)
+                        .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
                 .menuStyle(.borderlessButton)
@@ -201,34 +200,34 @@ private struct SuggestionCard: View {
                 .fixedSize()
             }
             Text(suggestion.headline)
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .font(CremaTypography.font(size: 17, weight: .semibold, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             Text(suggestion.reason)
-                .font(.system(size: 13, design: .rounded))
+                .font(CremaTypography.font(size: 13, design: .rounded))
                 .foregroundStyle(CremaColor.cream.opacity(0.85))
                 .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 10) {
                 Button(action: onSaveAsVariant) {
                     Text("Save as variant")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
                         .foregroundStyle(CremaColor.cream)
                         .padding(.horizontal, 14)
-                        .frame(minHeight: 38)
+                        .frame(minHeight: 44)
                         .background(
-                            Capsule().fill(.ultraThinMaterial)
-                                .overlay(Capsule().strokeBorder(CremaColor.hairline.opacity(0.5), lineWidth: 0.5))
+                            Capsule().fill(CremaColor.surface)
+                                .overlay(Capsule().strokeBorder(CremaColor.hairline.opacity(0.8), lineWidth: 1))
                         )
                 }
                 .buttonStyle(.plain)
                 Spacer()
                 Button(action: onApply) {
                     Text("Apply")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(CremaColor.bg)
+                        .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(CremaColor.onPrimary)
                         .padding(.horizontal, 18)
-                        .frame(minHeight: 38)
-                        .background(Capsule().fill(CremaColor.crema))
+                        .frame(minHeight: 44)
+                        .background(Capsule().fill(CremaColor.primarySurface))
                 }
                 .buttonStyle(.plain)
             }
@@ -236,9 +235,9 @@ private struct SuggestionCard: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(CremaColor.surface)
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(CremaColor.hairline.opacity(0.5), lineWidth: 0.5))
+                    .strokeBorder(CremaColor.hairline.opacity(0.8), lineWidth: 1))
         )
     }
 }
@@ -251,7 +250,7 @@ private enum HeaderButtonRole { case primary, secondary }
 private func tappableHeaderButton(_ label: String, role: HeaderButtonRole, action: @escaping () -> Void) -> some View {
     Button(action: action) {
         Text(label)
-            .font(.system(size: 14, weight: role == .primary ? .semibold : .regular, design: .rounded))
+            .font(CremaTypography.font(size: 14, weight: role == .primary ? .semibold : .regular, design: .rounded))
             .foregroundStyle(role == .primary ? CremaColor.crema : CremaColor.secondary)
             .padding(.horizontal, 12)
             .frame(minHeight: 44)

@@ -25,7 +25,7 @@ struct ProfilesView: View {
             header
                 .safeAreaPadding(.top)   // iPhone Dynamic Island / notch
             ScrollView {
-                VStack(spacing: 10) {
+                LazyVStack(spacing: 8) {
                     ForEach(library.profiles) { profile in
                         ProfileRow(
                             profile: profile,
@@ -47,8 +47,8 @@ struct ProfilesView: View {
                         )
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 18)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
             }
             footer
         }
@@ -56,7 +56,6 @@ struct ProfilesView: View {
         .frame(minWidth: 460, minHeight: 540, idealHeight: 720)
         #endif
         .background(CremaColor.bg.ignoresSafeArea())
-        .preferredColorScheme(.dark)
         .modifier(EditorPresentation(item: $editingProfile) { editing in
             ProfileEditView(
                 editing: editing,
@@ -108,75 +107,72 @@ struct ProfilesView: View {
     // MARK: - Header / footer
 
     private var header: some View {
-        HStack {
+        HStack(spacing: 12) {
             Text("Profiles")
-                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .font(CremaTypography.font(size: 18, weight: .semibold))
                 .foregroundStyle(CremaColor.cream)
             Spacer()
             Button(action: { dismiss() }) {
-                Text("Done")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(CremaColor.crema)
-                    .padding(.horizontal, 12)
-                    .frame(minHeight: 44)         // 44pt min tap target
+                Image(systemName: "xmark")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(CremaColor.cream)
+                    .frame(width: 44, height: 44)
+                    .background(Capsule().fill(CremaColor.surface))
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Close recipe library")
+            .help("Close recipe library")
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 22)
-        .padding(.bottom, 14)
+        .padding(.horizontal, 16)
+        .padding(.top, 16)
+        .padding(.bottom, 12)
     }
 
     private var footer: some View {
         HStack(spacing: 10) {
             Button(action: { newProfile = EditableProfile() }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 14, weight: .semibold))
-                    Text("New profile")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                }
-                .foregroundStyle(CremaColor.crema)
-                .padding(.horizontal, 14)
-                .frame(minHeight: 34)
+                Image(systemName: "plus")
+                    .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(CremaColor.onPrimary)
+                .frame(width: 44, height: 44)
                 .background(
-                    Capsule().fill(CremaColor.crema.opacity(0.16))
-                        .overlay(Capsule().strokeBorder(CremaColor.crema.opacity(0.35), lineWidth: 0.5))
+                    Capsule().fill(CremaColor.primarySurface)
                 )
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("New recipe")
+            .help("New recipe")
             Spacer()
             if session != nil {
                 Button(action: { showBrowse = true }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "globe")
-                            .font(.system(size: 14, weight: .semibold))
-                        Text("Community")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    }
-                    .foregroundStyle(CremaColor.matchaBright)
-                    .padding(.horizontal, 14)
-                    .frame(minHeight: 34)
+                    Image(systemName: "globe")
+                        .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(CremaColor.matcha)
+                    .frame(width: 44, height: 44)
                     .background(
                         Capsule().fill(CremaColor.matcha.opacity(0.16))
                             .overlay(Capsule().strokeBorder(CremaColor.matcha.opacity(0.35), lineWidth: 0.5))
                     )
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Community recipes")
+                .help("Community recipes")
                 Button(action: { showSettings = true }) {
                     Image(systemName: "gearshape.fill")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(CremaColor.secondary)
-                        .frame(width: 34, height: 34)
+                        .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Settings")
+                .help("Settings")
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
-        .background(CremaColor.surface.opacity(0.7))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(CremaColor.bg)
     }
 }
 
@@ -210,72 +206,102 @@ private struct ProfileRow: View {
     let onDelete: (() -> Void)?
 
     var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 14) {
-                ProfilePreviewMini(profile: profile)
-                    .frame(width: 110, height: 64)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(CremaColor.bg.opacity(0.6))
-                    )
-
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        if isActive {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 12))
-                                .foregroundStyle(CremaColor.crema)
+        HStack(spacing: 8) {
+            Button(action: onTap) {
+                HStack(spacing: 12) {
+                    ProfilePreviewMini(profile: profile)
+                        .frame(width: 80, height: 56)
+                        .background(CremaColor.surfaceWarm.opacity(0.55),
+                                    in: RoundedRectangle(cornerRadius: 8))
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            if isActive {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(CremaColor.crema)
+                                    .accessibilityHidden(true)
+                            }
+                            Text(profile.name)
+                                .font(CremaTypography.font(size: 14, weight: .semibold))
+                                .foregroundStyle(CremaColor.cream)
+                                .lineLimit(2)
                         }
-                        Text(profile.name)
-                            .font(.system(size: 14, weight: .semibold, design: .rounded))
-                            .foregroundStyle(CremaColor.cream)
-                            .lineLimit(1)
+                        Text(metaLine)
+                            .font(CremaTypography.font(size: 11).monospacedDigit())
+                            .foregroundStyle(CremaColor.secondary)
+                            .lineLimit(3)
                     }
-                    Text(metaLine)
-                        .font(.system(size: 11, design: .rounded).monospacedDigit())
-                        .foregroundStyle(CremaColor.secondary)
-                        .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-
-                Spacer()
-
-                Menu {
-                    Button("Edit", systemImage: "slider.horizontal.3", action: onEdit)
-                    if let onShare {
-                        Button("Share…", systemImage: "square.and.arrow.up", action: onShare)
-                    }
-                    if let onDelete {
-                        Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(CremaColor.secondary)
-                        .frame(width: 28, height: 28)
-                }
-                .menuStyle(.borderlessButton)
-                .menuIndicator(.hidden)
-                .fixedSize()
+                .contentShape(Rectangle())
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(isActive ? CremaColor.crema.opacity(0.4) : CremaColor.hairline.opacity(0.5),
-                                       lineWidth: 0.5))
-            )
+            .buttonStyle(ProfilePressStyle())
+            .accessibilityLabel("\(profile.name), \(metaLine)\(isActive ? ", selected" : "")")
+            .accessibilityAddTraits(isActive ? .isSelected : [])
+
+            Button(action: onEdit) {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(CremaColor.secondary)
+                    .frame(width: 44, height: 44)
+            }
+            .buttonStyle(ProfilePressStyle())
+            .accessibilityLabel("Edit \(profile.name)")
+            .help("Edit profile")
+            rowMenu
         }
-        .buttonStyle(.plain)
+        .padding(12)
+        .frame(minHeight: 96)
+        .background(RoundedRectangle(cornerRadius: 12).fill(CremaColor.surface))
+        .overlay(RoundedRectangle(cornerRadius: 12)
+            .strokeBorder(isActive ? CremaColor.crema.opacity(0.45) : CremaColor.hairline.opacity(0.7),
+                          lineWidth: isActive ? 1 : 0.5))
+    }
+
+    private var rowMenu: some View {
+        Menu {
+            Button("Edit", systemImage: "slider.horizontal.3", action: onEdit)
+            if let onShare {
+                Button("Share…", systemImage: "square.and.arrow.up", action: onShare)
+            }
+            if let onDelete {
+                Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(CremaColor.secondary)
+                .frame(width: 44, height: 44)
+                .background(Circle().fill(CremaColor.bg))
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .accessibilityLabel("Recipe options")
     }
 
     private var metaLine: String {
         var bits: [String] = []
-        if let v = profile.targetVolumeMl { bits.append("\(v) mL target") }
+        if profile.target == .weight, let target = profile.targetWeightG {
+            bits.append("\(target) g target")
+        } else if let target = profile.targetVolumeMl {
+            bits.append("\(target) mL target")
+        }
         bits.append(String(format: "%.0f s", profile.totalDuration))
         bits.append("\(profile.stages.count) stage\(profile.stages.count == 1 ? "" : "s")")
-        return bits.joined(separator: "  ·  ")
+        return bits.joined(separator: " · ")
+    }
+}
+
+private struct ProfilePressStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .opacity(configuration.isPressed ? 0.75 : 1)
+            .scaleEffect(reduceMotion ? 1 : (configuration.isPressed ? 0.99 : 1))
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 

@@ -39,7 +39,6 @@ struct AutoTuneSheet: View {
                 }
                 .animation(.smooth(duration: 0.35), value: session.step)
             }
-            .preferredColorScheme(.dark)
 
             // Confetti rains down on completion — fixed to chart layer so it
             // doesn't push surrounding content.
@@ -57,10 +56,10 @@ struct AutoTuneSheet: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Auto-tune")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(CremaTypography.font(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(CremaColor.cream)
                 Text(stepBlurb)
-                    .font(.system(size: 12, design: .rounded))
+                    .font(CremaTypography.font(size: 12, design: .rounded))
                     .foregroundStyle(CremaColor.secondary)
             }
             Spacer()
@@ -71,8 +70,8 @@ struct AutoTuneSheet: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(CremaColor.secondary)
-                    .frame(width: 36, height: 36)
-                    .background(Circle().fill(CremaColor.surface.opacity(0.6)))
+                    .frame(width: 44, height: 44)
+                    .background(Circle().fill(CremaColor.surface))
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
@@ -181,23 +180,23 @@ private struct StepDot: View {
                     .foregroundStyle(iconColor)
             }
             Text(label)
-                .font(.system(size: 9, weight: .medium, design: .rounded))
-                .foregroundStyle(state == .upcoming ? CremaColor.secondary.opacity(0.5) : CremaColor.secondary)
+                .font(CremaTypography.font(size: 9, weight: .medium, design: .rounded))
+                .foregroundStyle(state == .current ? CremaColor.crema : CremaColor.secondary)
         }
     }
 
     private var fillColor: Color {
         switch state {
-        case .upcoming: return CremaColor.surface.opacity(0.4)
+        case .upcoming: return CremaColor.surface
         case .current:  return CremaColor.crema.opacity(0.25)
-        case .complete: return CremaColor.crema.opacity(0.8)
+        case .complete: return CremaColor.primarySurface
         }
     }
     private var iconColor: Color {
         switch state {
-        case .upcoming: return CremaColor.secondary.opacity(0.4)
+        case .upcoming: return CremaColor.secondary
         case .current:  return CremaColor.crema
-        case .complete: return CremaColor.bg
+        case .complete: return CremaColor.onPrimary
         }
     }
 }
@@ -223,27 +222,24 @@ struct AutoTunePrimaryButton: View {
                 }
                 VStack(spacing: 0) {
                     Text(title)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(CremaTypography.font(size: 15, weight: .semibold, design: .rounded))
                     if let subtitle {
                         Text(subtitle)
-                            .font(.system(size: 10, weight: .medium, design: .rounded))
-                            .foregroundStyle(CremaColor.bg.opacity(0.7))
+                            .font(CremaTypography.font(size: 10, weight: .medium, design: .rounded))
+                            .foregroundStyle(CremaColor.onPrimary.opacity(0.8))
                     }
                 }
             }
-            .foregroundStyle(CremaColor.bg)
+            .foregroundStyle(CremaColor.onPrimary)
             .padding(.horizontal, 28)
             .frame(minHeight: 54)
             .background(
-                Capsule().fill(LinearGradient(
-                    colors: [CremaColor.cremaBright, CremaColor.crema],
-                    startPoint: .topLeading, endPoint: .bottomTrailing
-                ))
+                Capsule().fill(CremaColor.primarySurface)
             )
             .overlay(
-                Capsule().strokeBorder(CremaColor.cream.opacity(0.2), lineWidth: 0.5)
+                Capsule().strokeBorder(CremaColor.espresso.opacity(0.1), lineWidth: 1)
             )
-            .shadow(color: CremaColor.crema.opacity(disabled ? 0 : 0.5), radius: 12, y: 4)
+            .shadow(color: CremaColor.espresso.opacity(disabled ? 0 : 0.12), radius: 8, y: 3)
             .opacity(disabled ? 0.4 : 1)
             .scaleEffect(pressed ? 0.97 : 1.0)
             .animation(.snappy(duration: 0.12), value: pressed)
@@ -268,7 +264,7 @@ struct AutoTuneSecondaryButton: View {
                         .font(.system(size: 11, weight: .semibold))
                 }
                 Text(title)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
             }
             .foregroundStyle(CremaColor.secondary)
             .padding(.horizontal, 14)

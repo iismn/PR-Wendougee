@@ -23,7 +23,7 @@ struct ImportProfileSheet: View {
                     titleCard
                     if let desc = profile.description {
                         Text(desc)
-                            .font(.system(size: 12, design: .rounded))
+                            .font(CremaTypography.font(size: 12, design: .rounded))
                             .foregroundStyle(CremaColor.cream.opacity(0.9))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(14)
@@ -37,17 +37,16 @@ struct ImportProfileSheet: View {
             footer
         }
         .background(CremaColor.bg.ignoresSafeArea())
-        .preferredColorScheme(.dark)
     }
 
     private var header: some View {
         HStack {
             Button("Cancel", action: onDone)
                 .foregroundStyle(CremaColor.secondary)
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(CremaTypography.font(size: 13, weight: .medium, design: .rounded))
             Spacer()
             Text("Import")
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .font(CremaTypography.font(size: 14, weight: .semibold, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             Spacer()
             // Skip the moderation menu for local-only profiles (no real
@@ -64,13 +63,13 @@ struct ImportProfileSheet: View {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(CremaColor.secondary)
-                        .frame(width: 32, height: 32)
+                        .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
             } else {
-                Color.clear.frame(width: 32, height: 32)
+                Color.clear.frame(width: 44, height: 44)
             }
         }
         .padding(.horizontal, 20).padding(.top, 14).padding(.bottom, 10)
@@ -117,14 +116,14 @@ struct ImportProfileSheet: View {
     private var titleCard: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(profile.name)
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(CremaTypography.font(size: 22, weight: .bold, design: .rounded))
                 .foregroundStyle(CremaColor.cream)
             HStack(spacing: 6) {
                 Image(systemName: "person.fill")
                     .font(.system(size: 10))
                     .foregroundStyle(CremaColor.crema)
                 Text("by \(profile.author.displayName)")
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .font(CremaTypography.font(size: 12, weight: .medium, design: .rounded))
                     .foregroundStyle(CremaColor.cream)
             }
             HStack(spacing: 14) {
@@ -141,14 +140,14 @@ struct ImportProfileSheet: View {
     private func stat(_ text: String, icon: String) -> some View {
         HStack(spacing: 4) {
             Image(systemName: icon).font(.system(size: 10))
-            Text(text).font(.system(size: 11, weight: .medium, design: .rounded).monospacedDigit())
+            Text(text).font(CremaTypography.font(size: 11, weight: .medium, design: .rounded).monospacedDigit())
         }
     }
 
     private var stagesCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("STAGES")
-                .font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                .font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                 .tracking(0.7)
                 .foregroundStyle(CremaColor.secondary)
             ForEach(profile.profileJson.stages) { stage in
@@ -158,10 +157,10 @@ struct ImportProfileSheet: View {
                         .frame(width: 3)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(stage.label)
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded))
                             .foregroundStyle(CremaColor.cream)
                         Text(detail(stage))
-                            .font(.system(size: 11, design: .rounded).monospacedDigit())
+                            .font(CremaTypography.font(size: 11, design: .rounded).monospacedDigit())
                             .foregroundStyle(CremaColor.secondary)
                     }
                     Spacer()
@@ -170,11 +169,11 @@ struct ImportProfileSheet: View {
             }
             HStack {
                 Text("Total")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .font(CremaTypography.font(size: 11, weight: .semibold, design: .rounded))
                     .foregroundStyle(CremaColor.secondary)
                 Spacer()
                 Text("\(Int(profile.profileJson.totalDuration)) s")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded).monospacedDigit())
+                    .font(CremaTypography.font(size: 13, weight: .semibold, design: .rounded).monospacedDigit())
                     .foregroundStyle(CremaColor.cream)
             }
             .padding(.top, 6)
@@ -199,19 +198,19 @@ struct ImportProfileSheet: View {
             VStack(alignment: .leading, spacing: 8) {
                 if let bean = profile.beanName {
                     HStack {
-                        Text("BEAN").font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                        Text("BEAN").font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                             .tracking(0.7).foregroundStyle(CremaColor.secondary)
                         Spacer()
-                        Text(bean).font(.system(size: 12, weight: .medium, design: .rounded))
+                        Text(bean).font(CremaTypography.font(size: 12, weight: .medium, design: .rounded))
                             .foregroundStyle(CremaColor.cream)
                     }
                 }
                 if let eq = profile.equipment {
                     HStack {
-                        Text("EQUIPMENT").font(.system(size: 10, weight: .semibold, design: .rounded).smallCaps())
+                        Text("EQUIPMENT").font(CremaTypography.font(size: 10, weight: .semibold, design: .rounded).smallCaps())
                             .tracking(0.7).foregroundStyle(CremaColor.secondary)
                         Spacer()
-                        Text(eq).font(.system(size: 12, weight: .medium, design: .rounded))
+                        Text(eq).font(CremaTypography.font(size: 12, weight: .medium, design: .rounded))
                             .foregroundStyle(CremaColor.cream)
                     }
                 }
@@ -224,16 +223,16 @@ struct ImportProfileSheet: View {
 
     private var card: some View {
         RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .fill(.ultraThinMaterial)
+            .fill(CremaColor.surface)
             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(CremaColor.hairline.opacity(0.4), lineWidth: 0.5))
+                .strokeBorder(CremaColor.hairline.opacity(0.8), lineWidth: 1))
     }
 
     private var footer: some View {
         VStack(spacing: 8) {
             if let moderationFeedback {
                 Text(moderationFeedback)
-                    .font(.system(size: 11, design: .rounded))
+                    .font(CremaTypography.font(size: 11, design: .rounded))
                     .foregroundStyle(CremaColor.secondary)
             }
             HStack {
@@ -243,15 +242,12 @@ struct ImportProfileSheet: View {
                     Image(systemName: added ? "checkmark.circle.fill" : "tray.and.arrow.down.fill")
                         .font(.system(size: 13, weight: .semibold))
                     Text(added ? "Added to library" : "Add to my library")
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .font(CremaTypography.font(size: 14, weight: .semibold, design: .rounded))
                 }
-                .foregroundStyle(CremaColor.bg)
+                .foregroundStyle(CremaColor.onPrimary)
                 .padding(.horizontal, 22).frame(minHeight: 46)
-                .background(Capsule().fill(LinearGradient(
-                    colors: [CremaColor.cremaBright, CremaColor.crema],
-                    startPoint: .topLeading, endPoint: .bottomTrailing
-                )))
-                .shadow(color: CremaColor.crema.opacity(0.5), radius: 8, y: 3)
+                .background(Capsule().fill(CremaColor.primarySurface))
+                .shadow(color: CremaColor.espresso.opacity(0.12), radius: 8, y: 3)
             }
                 .buttonStyle(.plain)
                 .disabled(added)

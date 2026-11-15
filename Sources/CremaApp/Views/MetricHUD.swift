@@ -1,15 +1,17 @@
 import SwiftUI
 
-/// The four-tile "watch face" beneath the chart. Reads like an instrument panel:
-/// big ultralight numerals, tiny caps captions, monospaced digits so they don't jitter.
-/// Each tile sits on Liquid Glass (macOS 26) with a thin accent rail bottom-aligned
-/// to its semantic color (pressure = crema, flow = matcha, etc.).
+/// The original four readouts beneath the curve. Pumped volume remains in mL.
 struct MetricHUD: View {
     let pressure: Double
     let flow: Double
     let volume: Double
     let elapsed: Double
+    var hasReading: Bool = true
+    /// Kept for callers that explicitly need a two-column presentation.
+    var columns: Int = 0
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .largeTitle) private var numberSize: CGFloat = 32
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
     private var isCompact: Bool { sizeClass == .compact }
@@ -18,93 +20,105 @@ struct MetricHUD: View {
     #endif
 
     var body: some View {
-        if isCompact {
-            // iPhone portrait: 2x2 grid so each tile gets ~half the width and
-            // the ultralight 46pt numerals don't get clipped.
-            VStack(spacing: 8) {
-                HStack(spacing: 8) {
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(spacing: 8) {
                     pressureTile
                     flowTile
-                }
-                HStack(spacing: 8) {
                     volumeTile
                     timeTile
                 }
+            } else if isCompact || columns == 2 {
+                twoColumns
+            } else {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 10) {
+                        pressureTile.frame(minWidth: 128)
+                        flowTile.frame(minWidth: 128)
+                        volumeTile.frame(minWidth: 128)
+                        timeTile.frame(minWidth: 128)
+                    }
+                    twoColumns
+                }
             }
-        } else {
-            HStack(spacing: 10) {
-                pressureTile
-                flowTile
-                volumeTile
-                timeTile
-            }
+        }
+    }
+
+    private var twoColumns: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 8) { pressureTile; flowTile }
+            HStack(spacing: 8) { volumeTile; timeTile }
         }
     }
 
     private var pressureTile: some View {
-        tile(value: String(format: "%.1f", pressure), unit: "bar",
-             caption: "Pressure", accent: CremaColor.crema)
-    }
-    private var flowTile: some View {
-        tile(value: String(format: "%.1f", flow), unit: "mL/s",
-             caption: "Pump flow", accent: CremaColor.matcha)
-    }
-    private var volumeTile: some View {
-        tile(value: String(format: "%.0f", volume), unit: "mL",
-             caption: "Pumped", accent: CremaColor.cream)
-    }
-    private var timeTile: some View {
-        tile(value: timeString(elapsed), unit: "s",
-             caption: "Time", accent: CremaColor.cream)
+        tile(value: reading(pressure, decimals: 1), unit: "bar",
+             caption: "Pressure", symbol: "gauge.with.needle", accent: CremaColor.crema)
     }
 
-    private func tile(value: String, unit: String, caption: String, accent: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(accent)
-                    .frame(width: 5, height: 5)
-                Text(caption)
-                    .font(CremaFont.hudCaption)
-                    .foregroundStyle(CremaColor.secondary)
-                    .tracking(0.8)
+    private var flowTile: some View {
+        tile(value: reading(flow, decimals: 1), unit: "mL/s",
+             caption: "Pump flow", symbol: "drop.fill", accent: CremaColor.matcha)
+    }
+
+    private var volumeTile: some View {
+        tile(value: reading(volume, decimals: 0), unit: "mL",
+             caption: "Pumped", symbol: "waterbottle", accent: CremaColor.cream)
+    }
+
+    private var timeTile: some View {
+        tile(value: hasReading && elapsed.isFinite ? String(format: "%.1f", max(0, elapsed)) : "—",
+             unit: "s", caption: "Time", symbol: "clock", accent: CremaColor.cream)
+    }
+
+    private func tile(value: String, unit: String, caption: String, symbol: String, accent: Color) -> some View {
+        VStack(spacing: 10) {
+            Image(systemName: symbol)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(accent)
+                .frame(height: 14)
+                .accessibilityHidden(true)
+            ViewThatFits(in: .horizontal) {
+                valueGroup(value, unit: unit, accent: accent, size: numberSize)
+                valueGroup(value, unit: unit, accent: accent, size: numberSize * 0.875)
+                valueGroup(value, unit: unit, accent: accent, size: numberSize * 0.75)
             }
-            HStack(alignment: .lastTextBaseline, spacing: 4) {
-                Text(value)
-                    .font(CremaFont.hudNumber(46))
-                    .foregroundStyle(accent)
-                    // No .contentTransition(.numericText()) — at the ~3.4 Hz
-                    // sample cadence the interpolation takes longer than the
-                    // gap between samples, so the displayed value lags behind
-                    // and visually "bounces" between old and new. The native
-                    // monospaced-digit refresh feels instant and matches the
-                    // cursor pills on the chart.
-                if !unit.isEmpty {
-                    Text(unit)
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(CremaColor.secondary)
-                        .padding(.bottom, 2)
-                }
-            }
+            .frame(maxWidth: .infinity, alignment: .center)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 18)
-        .padding(.vertical, 16)
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 14)
+        .frame(minHeight: 110)
         .cremaGlass(in: RoundedRectangle(cornerRadius: 16, style: .continuous), tint: accent)
         .overlay(alignment: .bottom) {
-            // Thin accent rail at the bottom of the tile
             Rectangle()
-                .fill(LinearGradient(colors: [accent.opacity(0), accent.opacity(0.55), accent.opacity(0)],
+                .fill(LinearGradient(colors: [accent.opacity(0), accent.opacity(0.45), accent.opacity(0)],
                                      startPoint: .leading, endPoint: .trailing))
                 .frame(height: 1)
-                .padding(.horizontal, 18)
+                .padding(.horizontal, 14)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(caption))
+        .accessibilityValue(Text(value == "—" ? "No reading" : "\(value) \(unit)"))
     }
 
-    private func timeString(_ t: Double) -> String {
-        let s = max(0, t)
-        let whole = Int(s)
-        let tenths = Int((s - Double(whole)) * 10)
-        return String(format: "%d.%d", whole, tenths)
+    private func valueGroup(_ value: String, unit: String, accent: Color, size: CGFloat) -> some View {
+        HStack(alignment: value == "—" ? .center : .lastTextBaseline, spacing: 4) {
+            CremaDotReadout(text: value, color: accent, size: size)
+                .fixedSize()
+                .alignmentGuide(.lastTextBaseline) { dimensions in
+                    // The reference dots occupy 18.44 of the nominal 20 vertical units.
+                    dimensions.height - size * 0.039
+                }
+            Text(unit)
+                .font(CremaTypography.font(size: 11, weight: .medium))
+                .foregroundStyle(CremaColor.secondary)
+                .fixedSize()
+        }
+        .fixedSize(horizontal: true, vertical: false)
+    }
+    private func reading(_ value: Double, decimals: Int) -> String {
+        guard hasReading, value.isFinite else { return "—" }
+        return String(format: "%.*f", decimals, value)
     }
 }

@@ -2,7 +2,7 @@ import SwiftUI
 import CremaKit
 
 /// The hero visualization. Three live series (pressure / flow / volume) drawn over
-/// a ghost of the target profile. Custom `Canvas` instead of Swift Charts so we can
+/// a dashed target profile on a porcelain plotting surface. Custom `Canvas` instead of Swift Charts so we can
 /// own the ghost overlay, the playhead, value pills, and stage-aware coloring.
 struct ShotChart: View {
     let samples: ArraySlice<ShotSample>
@@ -74,6 +74,9 @@ struct ShotChart: View {
             if !compact { drawValuePills(ctx: ctx, in: plot) }
             if !compact { drawAxisLabels(ctx: ctx, in: plot) }
         }
+        .background(CremaColor.surface)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Pressure, pump flow, and pumped volume chart")
         // No drawingGroup() — it forces Metal rasterization which interacts badly
         // with the high-frequency sample appends in live mode (causes the
         // "squished straight lines" effect because the rasterized layer lags
@@ -93,8 +96,8 @@ struct ShotChart: View {
                    style: StrokeStyle(lineWidth: 0.75, dash: [3, 4]))
         if compact { return }   // skip the "target N mL" text in mini previews
         let label = Text("target \(Int(target)) mL")
-            .font(.system(size: 9, weight: .medium, design: .rounded).monospacedDigit())
-            .foregroundColor(CremaColor.cream.opacity(0.5))
+            .font(CremaTypography.font(size: 9, weight: .medium).monospacedDigit())
+            .foregroundColor(CremaColor.secondary)
         ctx.draw(label, at: CGPoint(x: r.maxX - 4, y: y - 8), anchor: .trailing)
     }
 
@@ -130,7 +133,9 @@ struct ShotChart: View {
     }
 
     private func drawAxisLabels(ctx: GraphicsContext, in r: CGRect) {
-        // Time labels every 5s
+        // Keep time labels distinct in narrow phone plots; grid marks stay at 5 seconds.
+        let labelCount = max(1, Int(r.width / 38))
+        let labelStep = max(5.0, (totalDuration / Double(labelCount) / 5).rounded(.up) * 5)
         var t = 0.0
         while t <= totalDuration + 0.01 {
             let x = xFor(t, in: r)
@@ -138,7 +143,7 @@ struct ShotChart: View {
                 .font(CremaFont.axisLabel)
                 .foregroundColor(CremaColor.secondary)
             ctx.draw(text, at: CGPoint(x: x, y: r.maxY + 14), anchor: .center)
-            t += 5
+            t += labelStep
         }
         // Y axis: pressure labels in crema
         let pressureSteps = stride(from: 0, through: Int(maxPressure.rounded(.up)), by: 3).map { Double($0) }
@@ -146,13 +151,13 @@ struct ShotChart: View {
             let y = yPressure(bar, in: r)
             let text = Text("\(Int(bar))")
                 .font(CremaFont.axisLabel)
-                .foregroundColor(CremaColor.crema.opacity(0.55))
+                .foregroundColor(CremaColor.crema)
             ctx.draw(text, at: CGPoint(x: r.minX - 16, y: y), anchor: .center)
         }
         // tiny "bar" unit label at top of axis
         let unit = Text("bar")
-            .font(.system(size: 8, weight: .medium, design: .rounded).smallCaps())
-            .foregroundColor(CremaColor.crema.opacity(0.4))
+            .font(CremaTypography.font(size: 8, weight: .medium).smallCaps())
+            .foregroundColor(CremaColor.crema)
         ctx.draw(unit, at: CGPoint(x: r.minX - 16, y: r.minY - 4), anchor: .center)
 
         // Right-side volume axis in cream — three ticks (0, target/2, target).
@@ -162,12 +167,12 @@ struct ShotChart: View {
             let y = yVolume(v, in: r)
             let text = Text("\(Int(v))")
                 .font(CremaFont.axisLabel)
-                .foregroundColor(CremaColor.cream.opacity(0.45))
+                .foregroundColor(CremaColor.secondary)
             ctx.draw(text, at: CGPoint(x: r.maxX + 18, y: y), anchor: .center)
         }
         let volUnit = Text("mL")
-            .font(.system(size: 8, weight: .medium, design: .rounded).smallCaps())
-            .foregroundColor(CremaColor.cream.opacity(0.35))
+            .font(CremaTypography.font(size: 8, weight: .medium).smallCaps())
+            .foregroundColor(CremaColor.secondary.opacity(0.85))
         ctx.draw(volUnit, at: CGPoint(x: r.maxX + 18, y: r.minY - 4), anchor: .center)
     }
 
@@ -203,7 +208,7 @@ struct ShotChart: View {
         // BrewProfile.pressure(at:) used to produce a one-sample "leak" from the
         // prior stage's setpoint at every same-priority transition (e.g. the
         // PREINFUSE 6.1 bar briefly showing at the start of SOAK 2.3 bar).
-        let style = StrokeStyle(lineWidth: 8, lineCap: .round, lineJoin: .round)
+        let style = StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round, dash: [5, 5])
         let drawLabels = showsGhostLabels
         var cursor = 0.0
         for stage in profile.stages {
@@ -216,7 +221,7 @@ struct ShotChart: View {
                 var p = Path()
                 p.move(to: CGPoint(x: x0, y: y))
                 p.addLine(to: CGPoint(x: x1, y: y))
-                ctx.stroke(p, with: .color(CremaColor.crema.opacity(0.42)), style: style)
+                ctx.stroke(p, with: .color(CremaColor.crema.opacity(0.4)), style: style)
                 if drawLabels {
                     drawGhostLabel(
                         ctx: ctx,
@@ -234,7 +239,7 @@ struct ShotChart: View {
                 var p = Path()
                 p.move(to: CGPoint(x: x0, y: y))
                 p.addLine(to: CGPoint(x: x1, y: y))
-                ctx.stroke(p, with: .color(CremaColor.matcha.opacity(0.42)), style: style)
+                ctx.stroke(p, with: .color(CremaColor.matcha.opacity(0.4)), style: style)
                 if drawLabels {
                     drawGhostLabel(
                         ctx: ctx,
@@ -265,7 +270,7 @@ struct ShotChart: View {
         in r: CGRect
     ) {
         let label = Text(text)
-            .font(.system(size: 9, weight: .semibold, design: .rounded).monospacedDigit())
+            .font(CremaTypography.font(size: 9, weight: .semibold).monospacedDigit())
             .foregroundColor(CremaColor.cream.opacity(0.85))
         let resolved = ctx.resolve(label)
         let textSize = resolved.measure(in: CGSize(width: r.width, height: 30))
@@ -283,8 +288,8 @@ struct ShotChart: View {
             height: textSize.height + 2
         )
         let pill = Capsule().path(in: rect)
-        ctx.fill(pill, with: .color(CremaColor.bg.opacity(0.75)))
-        ctx.stroke(pill, with: .color(accent.opacity(0.55)), lineWidth: 0.75)
+        ctx.fill(pill, with: .color(CremaColor.surface.opacity(0.96)))
+        ctx.stroke(pill, with: .color(accent.opacity(0.25)), lineWidth: 0.75)
         ctx.draw(resolved, at: CGPoint(x: midX, y: rect.midY), anchor: .center)
     }
 
@@ -314,28 +319,19 @@ struct ShotChart: View {
         flowFill.addLine(to: CGPoint(x: xFor(samples.first!.t, in: r), y: r.maxY))
         flowFill.closeSubpath()
         ctx.fill(flowFill, with: .linearGradient(
-            Gradient(colors: [CremaColor.matcha.opacity(0.35), CremaColor.matcha.opacity(0.0)]),
+            Gradient(colors: [CremaColor.matcha.opacity(0.12), CremaColor.matcha.opacity(0.0)]),
             startPoint: CGPoint(x: 0, y: r.minY),
             endPoint:   CGPoint(x: 0, y: r.maxY)))
 
-        // Glow underlayer (blur) — gives the live trace a Decent-like neon feel.
-        ctx.drawLayer { layer in
-            layer.addFilter(.blur(radius: 6))
-            layer.stroke(pressureLine, with: .color(CremaColor.crema.opacity(0.55)),
-                         style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
-            layer.stroke(flowLine, with: .color(CremaColor.matcha.opacity(0.45)),
-                         style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
-        }
-
         // Flow stroke
-        ctx.stroke(flowLine, with: .color(CremaColor.matchaBright),
+        ctx.stroke(flowLine, with: .color(CremaColor.matcha),
                    style: StrokeStyle(lineWidth: 2.3, lineCap: .round, lineJoin: .round))
 
         // Pressure stroke (drawn on top — primary axis)
-        ctx.stroke(pressureLine, with: .color(CremaColor.cremaBright),
+        ctx.stroke(pressureLine, with: .color(CremaColor.crema),
                    style: StrokeStyle(lineWidth: 2.8, lineCap: .round, lineJoin: .round))
 
-        // Volume — solid cream line, thin but visible
+        // Pumped volume follows the adaptive primary ink.
         ctx.stroke(volumeLine, with: .color(CremaColor.cream.opacity(0.72)),
                    style: StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round))
     }
@@ -352,37 +348,37 @@ struct ShotChart: View {
         ctx.stroke(line, with: .linearGradient(
             Gradient(colors: [
                 CremaColor.cream.opacity(0.0),
-                CremaColor.cream.opacity(0.45),
-                CremaColor.cream.opacity(0.15)
+                CremaColor.cream.opacity(0.23),
+                CremaColor.cream.opacity(0.08)
             ]),
             startPoint: CGPoint(x: 0, y: r.minY),
             endPoint:   CGPoint(x: 0, y: r.maxY)),
             style: StrokeStyle(lineWidth: 1))
 
-        // Cursor dots with strong halos
+        // Small contrast rings keep live readings visible over target traces.
         if let s = samples.last {
             drawCursorDot(ctx: ctx, at: CGPoint(x: x, y: yPressure(s.pressureBar, in: r)),
-                          color: CremaColor.cremaBright)
+                          color: CremaColor.crema)
             drawCursorDot(ctx: ctx, at: CGPoint(x: x, y: yFlow(s.flowMlPerSec, in: r)),
-                          color: CremaColor.matchaBright)
+                          color: CremaColor.matcha)
             drawCursorDot(ctx: ctx, at: CGPoint(x: x, y: yVolume(s.volumeMl, in: r)),
                           color: CremaColor.cream, small: true)
         }
     }
 
     private func drawCursorDot(ctx: GraphicsContext, at p: CGPoint, color: Color, small: Bool = false) {
-        let outer: CGFloat = small ? 14 : 20
-        let inner: CGFloat = small ? 6 : 9
+        let outer: CGFloat = small ? 10 : 14
+        let inner: CGFloat = small ? 4 : 6
         // outer halo
         ctx.fill(
             Path(ellipseIn: CGRect(x: p.x - outer/2, y: p.y - outer/2, width: outer, height: outer)),
-            with: .color(color.opacity(0.22))
+            with: .color(color.opacity(0.14))
         )
         // mid ring
         ctx.fill(
             Path(ellipseIn: CGRect(x: p.x - inner/2 - 1, y: p.y - inner/2 - 1,
                                     width: inner + 2, height: inner + 2)),
-            with: .color(CremaColor.bg)
+            with: .color(CremaColor.surface)
         )
         // dot
         ctx.fill(
@@ -415,7 +411,7 @@ struct ShotChart: View {
         let resolved = ctx.resolve(
             Text(text)
                 .font(CremaFont.valuePill)
-                .foregroundColor(CremaColor.cream)
+                .foregroundColor(CremaColor.onAccent)
         )
         let textSize = resolved.measure(in: CGSize(width: 200, height: 30))
         let pad: CGFloat = 7
@@ -428,7 +424,7 @@ struct ShotChart: View {
 
         let rect = CGRect(x: x, y: y, width: w, height: h)
         let shape = Path(roundedRect: rect, cornerRadius: 9, style: .continuous)
-        ctx.fill(shape, with: .color(tint.opacity(0.9)))
+        ctx.fill(shape, with: .color(tint))
         ctx.stroke(shape, with: .color(tint.opacity(0.6)),
                    style: StrokeStyle(lineWidth: 0.5))
         ctx.draw(resolved, at: CGPoint(x: rect.midX, y: rect.midY), anchor: .center)

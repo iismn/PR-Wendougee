@@ -19,9 +19,10 @@ struct ShotHistoryView: View {
             ScrollView {
                 if history.isEmpty {
                     emptyState
-                        .padding(.top, 60)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 24)
                 } else {
-                    VStack(spacing: 10) {
+                    LazyVStack(spacing: 8) {
                         ForEach(history.shots) { shot in
                             ShotHistoryRow(
                                 shot: shot,
@@ -37,8 +38,8 @@ struct ShotHistoryView: View {
                             )
                         }
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 16)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                 }
             }
             if !history.isEmpty {
@@ -49,7 +50,6 @@ struct ShotHistoryView: View {
         .frame(minWidth: 480, idealWidth: 560, minHeight: 540, idealHeight: 720)
         #endif
         .background(CremaColor.bg.ignoresSafeArea())
-        .preferredColorScheme(.dark)
         .confirmationDialog(
             "Clear all shot history?",
             isPresented: $pendingClearAll
@@ -66,65 +66,62 @@ struct ShotHistoryView: View {
     }
 
     private var header: some View {
-        HStack {
+        HStack(spacing: 12) {
             Text("Shot history")
-                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .font(CremaTypography.font(size: 18, weight: .semibold))
                 .foregroundStyle(CremaColor.cream)
             Spacer()
             Button(action: { dismiss() }) {
-                Text("Done")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                Image(systemName: "xmark")
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(CremaColor.crema)
-                    .padding(.horizontal, 12)
-                    .frame(minHeight: 44)
+                    .frame(width: 44, height: 44)
+                    .background(Capsule().fill(CremaColor.surface))
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Close brew journal")
+            .help("Close brew journal")
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 22)
-        .padding(.bottom, 10)
+        .padding(.horizontal, 16)
+        .padding(.top, 16)
+        .padding(.bottom, 12)
     }
 
     private var emptyState: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             Image(systemName: "clock.arrow.circlepath")
-                .font(.system(size: 36))
+                .font(.system(size: 36, weight: .light))
                 .foregroundStyle(CremaColor.secondary)
-            Text("No shots logged yet")
-                .font(.system(size: 16, weight: .semibold, design: .rounded))
+            Text("No saved shots")
+                .font(CremaTypography.font(size: 16, weight: .medium))
                 .foregroundStyle(CremaColor.cream)
-            Text("Pull a brew, then tap Save & Suggest at the end to keep it here.")
-                .font(.system(size: 12, design: .rounded))
-                .foregroundStyle(CremaColor.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
         }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 40)
+        .frame(maxWidth: .infinity)
     }
 
     private var footer: some View {
         HStack {
             Button(role: .destructive, action: { pendingClearAll = true }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "trash")
-                        .font(.system(size: 12, weight: .medium))
-                    Text("Clear all")
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
-                }
+                Image(systemName: "trash")
+                    .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(CremaColor.danger)
-                .padding(.horizontal, 12)
-                .frame(minHeight: 38)
+                .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Delete all saved shots")
+            .help("Delete all saved shots")
             Spacer()
-            Text("\(history.shots.count) shot\(history.shots.count == 1 ? "" : "s") logged")
-                .font(.system(size: 11, design: .rounded).monospacedDigit())
+            Text("\(history.shots.count) shot\(history.shots.count == 1 ? "" : "s")")
+                .font(CremaTypography.font(size: 11, design: .rounded).monospacedDigit())
                 .foregroundStyle(CremaColor.secondary)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
-        .background(CremaColor.surface.opacity(0.7))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(CremaColor.bg)
     }
 }
 
@@ -138,6 +135,7 @@ private struct ShotHistoryRow: View {
     let onDelete: () -> Void
 
     @State private var draftComments: String = ""
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let dateFormatter: DateFormatter = {
         let df = DateFormatter()
@@ -169,93 +167,119 @@ private struct ShotHistoryRow: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(shot.profileName)
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundStyle(CremaColor.cream)
-                    Text(Self.dateFormatter.string(from: shot.timestamp))
-                        .font(.system(size: 10, design: .rounded))
-                        .foregroundStyle(CremaColor.secondary)
+        VStack(alignment: .leading, spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .top, spacing: 12) {
+                    shotIdentity.frame(minWidth: 128)
+                    shotStats.fixedSize(horizontal: true, vertical: false)
+                    rowMenu
                 }
-                Spacer()
-                statTile(label: "Yield", value: yieldText,
-                         subtitle: "target \(Int(shot.targetYieldG))", accent: yieldAccent)
-                statTile(label: "Time", value: "\(Int(shot.actualTimeS)) s",
-                         subtitle: nil, accent: CremaColor.cream)
-                statTile(label: "Taste", value: tasteText,
-                         subtitle: nil, accent: CremaColor.matcha)
-
-                Menu {
-                    Button("Edit comments", systemImage: "pencil", action: onTapComments)
-                    Divider()
-                    Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(CremaColor.secondary)
-                        .frame(width: 32, height: 32)
-                        .contentShape(Rectangle())
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .top, spacing: 12) {
+                        shotIdentity
+                        Spacer(minLength: 0)
+                        rowMenu
+                    }
+                    shotStats
                 }
-                .menuStyle(.borderlessButton)
-                .menuIndicator(.hidden)
-                .fixedSize()
             }
 
             if isEditing {
                 TextField("Add a note for this shot…", text: $draftComments, axis: .vertical)
                     .textFieldStyle(.plain)
-                    .font(.system(size: 12, design: .rounded))
+                    .font(CremaTypography.font(size: 12, design: .rounded))
                     .foregroundStyle(CremaColor.cream)
                     .lineLimit(2...4)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)
                     .background(
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(CremaColor.surface.opacity(0.6))
+                            .fill(CremaColor.bg)
                     )
                 HStack {
                     Spacer()
                     Button("Save note") { onCommitComments(draftComments) }
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .font(CremaTypography.font(size: 12, weight: .semibold, design: .rounded))
                         .foregroundStyle(CremaColor.crema)
                         .padding(.horizontal, 10)
-                        .frame(minHeight: 36)
+                        .frame(minHeight: 44)
                         .contentShape(Rectangle())
                         .buttonStyle(.plain)
                 }
             } else if !shot.comments.isEmpty {
                 Text(shot.comments)
-                    .font(.system(size: 11, design: .rounded))
+                    .font(CremaTypography.font(size: 11))
                     .foregroundStyle(CremaColor.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(.ultraThinMaterial)
+                .fill(CremaColor.surface)
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(CremaColor.hairline.opacity(0.5), lineWidth: 0.5))
+                    .strokeBorder(CremaColor.hairline, lineWidth: 0.5))
         )
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: isEditing)
         .onAppear { draftComments = shot.comments }
     }
 
+    private var shotIdentity: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(shot.profileName)
+                .font(CremaTypography.font(size: 14, weight: .semibold))
+                .foregroundStyle(CremaColor.cream)
+                .lineLimit(2)
+            Text(Self.dateFormatter.string(from: shot.timestamp))
+                .font(CremaTypography.font(size: 10))
+                .foregroundStyle(CremaColor.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var shotStats: some View {
+        HStack(alignment: .top, spacing: 16) {
+            statTile(label: "Yield", value: yieldText,
+                     subtitle: "Target \(Int(shot.targetYieldG)) g", accent: yieldAccent)
+            statTile(label: "Time", value: "\(Int(shot.actualTimeS)) s",
+                     subtitle: nil, accent: CremaColor.cream)
+            statTile(label: "Taste", value: tasteText,
+                     subtitle: nil, accent: CremaColor.matcha)
+        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+
+    private var rowMenu: some View {
+        Menu {
+            Button("Edit comments", systemImage: "pencil", action: onTapComments)
+            Divider()
+            Button("Delete", systemImage: "trash", role: .destructive, action: onDelete)
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(CremaColor.secondary)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .accessibilityLabel("Options for \(shot.profileName)")
+    }
+
     private func statTile(label: String, value: String, subtitle: String?, accent: Color) -> some View {
-        VStack(alignment: .trailing, spacing: 1) {
+        VStack(alignment: .trailing, spacing: 4) {
             Text(label.uppercased())
-                .font(.system(size: 8, weight: .semibold, design: .rounded).smallCaps())
-                .tracking(0.5)
+                .font(CremaTypography.font(size: 8, weight: .semibold))
                 .foregroundStyle(CremaColor.secondary)
             Text(value)
-                .font(.system(size: 12, weight: .semibold, design: .rounded).monospacedDigit())
+                .font(CremaTypography.font(size: 12, weight: .semibold).monospacedDigit())
                 .foregroundStyle(accent)
+                .fixedSize(horizontal: false, vertical: true)
             if let subtitle {
                 Text(subtitle)
-                    .font(.system(size: 9, design: .rounded).monospacedDigit())
-                    .foregroundStyle(CremaColor.secondary.opacity(0.7))
+                    .font(CremaTypography.font(size: 9, design: .rounded).monospacedDigit())
+                    .foregroundStyle(CremaColor.secondary)
             }
         }
     }
