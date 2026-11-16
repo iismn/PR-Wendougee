@@ -9,7 +9,8 @@ The main use case is an iPad mounted horizontally beside the coffee machine. The
 - History remains its original saved-shot list with yield/time/taste/timestamps, inline comments, and deletion actions.
 - Recipe editing keeps visual/list mode, chart, recipe fields, grinder settings, and stages. On landscape widths the chart and recipe fields occupy the left side; stage selection and compact dial/rulers stay visible on the right. Narrow windows retain the stacked editor.
 - Machine pairing and Auto-tune retain their existing presentations and command paths.
-- No persistent sidebar, extra main recipe panel, or separate dashboard navigation is added.
+- Following the user's GeeFlow reference, landscape windows at least1000pt wide show the existing profile library in a persistent right column. Selecting one pauses replay and displays that profile's Live targets without connecting or brewing. Selection is disabled during a brew and while its completed result is pending. Narrow windows and accessibility text sizes retain the original sheet-based composition.
+- Chart stage numbers and fine boundary lines connect the curves to the existing stage timeline. Stage badges are omitted when adjacent badges would overlap.
 
 ## Visual and interaction details
 
@@ -34,3 +35,7 @@ Live companion: http://127.0.0.1:4180 (`node outputs/ui-preview-server.cjs`). It
 Apple CI compiles both native targets and runs CremaKit tests. The isolated Chromium job checks the HTML companion at 1194×834 in day/night, 1024×768 and390×844, including overflow, the four-column landscape HUD, unobscured stages, library/editor entry, a6.1bar keyboard adjustment and cancelled-edit semantics. Screenshots are saved as a review artifact. HTML render checks do not establish native iPad layout or physical Bluetooth behavior.
 
 The user stopped the exhaustive Instagram audit and requested implementation. Existing observations remain in `outputs/design-audit`; no exhaustive-review claim is made.
+
+## GeeFlow reference
+
+Reviewed the developer's three published tablet screenshots: [dashboard](https://drobekk.github.io/GeeFlow/tablet-1.png), [profile editor](https://drobekk.github.io/GeeFlow/tablet-2.png), [step editor](https://drobekk.github.io/GeeFlow/tablet-3.png), linked from [GeeFlow](https://github.com/drobekk/GeeFlow). The applicable ideas are the persistent landscape recipe list, simultaneous chart/control visibility, numbered stage boundaries, and clear selection feedback. These layouts are independently implemented in Crema's SwiftUI and companion preview. GeeFlow code/assets are not bundled; its additional machine capabilities are not implied by this visual work.

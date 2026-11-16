@@ -12,6 +12,7 @@ struct LiveShotView: View {
     @Bindable var tipPreferences: TipPreferences
     @Bindable var session: SignedInUser
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @State private var showLibrary = false
     @State private var showHistory = false
@@ -88,35 +89,142 @@ struct LiveShotView: View {
 
     private var responsiveLayout: some View {
         GeometryReader { geometry in
-            shotScrollView(size: geometry.size)
+            if geometry.size.width >= 1000 && geometry.size.width > geometry.size.height
+                && !dynamicTypeSize.isAccessibilitySize {
+                HStack(spacing: 0) {
+                    shotScrollView(size: CGSize(width: geometry.size.width - 304, height: geometry.size.height),
+                                   wide: true, besideLibrary: true)
+                    recipeRail
+                        .frame(width: 280)
+                        .padding(.trailing, 24)
+                        .padding(.vertical, 16)
+                }
+                .background(CremaColor.bg.ignoresSafeArea())
+            } else {
+                shotScrollView(size: geometry.size, wide: geometry.size.width >= 820)
+            }
         }
     }
 
-    private func shotScrollView(size: CGSize) -> some View {
+    private func shotScrollView(size: CGSize, wide: Bool, besideLibrary: Bool = false) -> some View {
         ScrollView {
-            shotSections(size: size)
+            shotSections(size: size, wide: wide, besideLibrary: besideLibrary)
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom, spacing: 0) { actions }
         .background(CremaColor.bg.ignoresSafeArea())
     }
 
-    private func shotSections(size: CGSize) -> some View {
+    private func shotSections(size: CGSize, wide: Bool, besideLibrary: Bool) -> some View {
         VStack(spacing: 16) {
-            header(wide: size.width >= 820).cremaMeasureHeight(.header)
+            header(wide: wide).cremaMeasureHeight(.header)
             chart(height: chartHeight(in: size))
-            measurements(wide: size.width >= 820).cremaMeasureHeight(.metrics)
+            measurements(wide: wide).cremaMeasureHeight(.metrics)
             StageTimeline(profile: playback.profile, playhead: playback.t)
                 .frame(height: 56)
                 .cremaMeasureHeight(.stages)
         }
-        .padding(.horizontal, size.width >= 820 ? 36 : 20)
+        .padding(.horizontal, besideLibrary ? 24 : wide ? 36 : 20)
         .padding(.top, 16)
         .padding(.bottom, 8)
         .frame(maxWidth: 1180)
         .frame(maxWidth: .infinity)
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 5)
+    }
+
+    // The same library is visible beside the shot on a landscape iPad.
+    // Authoring, sharing, community browsing and deletion keep their original sheet.
+    private var recipeRail: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "square.stack.3d.up")
+                    .font(.system(size: 18))
+                Text("\(library.profiles.count)")
+                    .font(CremaTypography.font(size: 12).monospacedDigit())
+                    .foregroundStyle(CremaColor.secondary)
+                Spacer()
+                Button { showLibrary = true } label: {
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 16))
+                        .frame(width: 44, height: 44)
+                        .background(CremaColor.surface, in: Circle())
+                }
+                .buttonStyle(CremaHeaderPressStyle())
+                .accessibilityLabel("Open recipe library").help("Recipe library")
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            ScrollView {
+                LazyVStack(spacing: 8) {
+                    ForEach(Array(library.profiles.enumerated()), id: \.element.id) { index, profile in
+                        railRecipe(profile, number: index + 1)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 12)
+            }
+            .scrollIndicators(.hidden)
+        }
+        .background(CremaColor.surfaceWarm.opacity(0.6),
+                    in: RoundedRectangle(cornerRadius: 30, style: .continuous))
+    }
+
+    private func railRecipe(_ profile: BrewProfile, number: Int) -> some View {
+        let selected = mode == .live && playback.profile.id == profile.id
+        return Button {
+            guard liveDriver.brewState == .ready else { return }
+            library.setActive(profile.id)
+            liveDriver.setTempProfile(nil)
+            liveDriver.playback.profile = profile
+            if mode == .replay {
+                replayPlayback.pause()
+                mode = .live
+                liveDriver.bootstrap()
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .top, spacing: 10) {
+                    Text(String(format: "%02d", number))
+                        .font(CremaTypography.font(size: 11, weight: .medium).monospacedDigit())
+                        .frame(width: 30, height: 30)
+                        .foregroundStyle(selected ? CremaColor.onPrimary : CremaColor.secondary)
+                        .background(selected ? CremaColor.primarySurface : CremaColor.bg, in: Circle())
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(profile.name).font(CremaTypography.font(size: 16, weight: .medium))
+                            .lineLimit(2).multilineTextAlignment(.leading)
+                        HStack(spacing: 8) {
+                            if profile.target == .weight, let target = profile.targetWeightG {
+                                Text("\(target) g")
+                            } else if let target = profile.targetVolumeMl {
+                                Text("\(target) mL")
+                            }
+                            Text(String(format: "%.0f s", profile.totalDuration))
+                        }
+                        .font(CremaTypography.font(size: 11).monospacedDigit())
+                        .foregroundStyle(CremaColor.secondary)
+                    }
+                    Spacer(minLength: 0)
+                }
+                ShotChart(samples: [][...], profile: profile, playhead: -1,
+                          totalDuration: max(profile.totalDuration, 1), compact: true)
+                    .frame(height: 46)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .accessibilityHidden(true)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(CremaColor.surface, in: RoundedRectangle(cornerRadius: 22))
+            .overlay {
+                RoundedRectangle(cornerRadius: 22)
+                    .strokeBorder(selected ? CremaColor.matcha.opacity(0.65) : .clear, lineWidth: 1)
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 22))
+        }
+        .buttonStyle(CremaHeaderPressStyle())
+        .disabled(liveDriver.brewState != .ready)
+        .accessibilityLabel("Select \(profile.name)")
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     private func measurements(wide: Bool) -> some View {

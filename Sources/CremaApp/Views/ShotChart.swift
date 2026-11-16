@@ -63,12 +63,13 @@ struct ShotChart: View {
             if compact {
                 plot = CGRect(x: 4, y: 4, width: size.width - 8, height: size.height - 8)
             } else {
-                plot = CGRect(x: 38, y: 14, width: size.width - 80, height: size.height - 42)
+                plot = CGRect(x: 38, y: 30, width: size.width - 80, height: size.height - 58)
             }
             if !compact { drawGrid(ctx: ctx, in: plot) }
             drawWaitGaps(ctx: ctx, in: plot)
             drawVolumeTarget(ctx: ctx, in: plot)
             drawGhostProfile(ctx: ctx, in: plot)
+            if !compact { drawStageMarkers(ctx: ctx, in: plot) }
             drawLiveSeries(ctx: ctx, in: plot)
             drawPlayhead(ctx: ctx, in: plot)
             if !compact { drawValuePills(ctx: ctx, in: plot) }
@@ -158,7 +159,7 @@ struct ShotChart: View {
         let unit = Text("bar")
             .font(CremaTypography.font(size: 8, weight: .medium).smallCaps())
             .foregroundColor(CremaColor.crema)
-        ctx.draw(unit, at: CGPoint(x: r.minX - 16, y: r.minY - 4), anchor: .center)
+        ctx.draw(unit, at: CGPoint(x: r.minX - 16, y: r.minY - 16), anchor: .center)
 
         // Right-side volume axis in cream — three ticks (0, target/2, target).
         let target = profile.targetVolumeMl.map(Double.init) ?? maxVolume
@@ -173,7 +174,37 @@ struct ShotChart: View {
         let volUnit = Text("mL")
             .font(CremaTypography.font(size: 8, weight: .medium).smallCaps())
             .foregroundColor(CremaColor.secondary.opacity(0.85))
-        ctx.draw(volUnit, at: CGPoint(x: r.maxX + 18, y: r.minY - 4), anchor: .center)
+        ctx.draw(volUnit, at: CGPoint(x: r.maxX + 18, y: r.minY - 16), anchor: .center)
+    }
+
+    /// Numbered boundaries connect each target segment to the stage timeline.
+    /// Small stages retain their boundary but omit a badge if it would overlap.
+    private func drawStageMarkers(ctx: GraphicsContext, in r: CGRect) {
+        var cursor = 0.0
+        var previousBadgeX: CGFloat = -.infinity
+        for (index, stage) in profile.stages.enumerated() {
+            let end = cursor + stage.duration + stage.waitAfter
+            let x = xFor(cursor, in: r)
+            let active = !samples.isEmpty && playhead >= cursor && playhead < end
+            if index > 0 {
+                var boundary = Path()
+                boundary.move(to: CGPoint(x: x, y: r.minY))
+                boundary.addLine(to: CGPoint(x: x, y: r.maxY))
+                ctx.stroke(boundary, with: .color(CremaColor.secondary.opacity(0.2)),
+                           style: StrokeStyle(lineWidth: 0.7, dash: [2, 5]))
+            }
+            let badgeX = min(r.maxX - 10, max(r.minX + 10, (x + xFor(end, in: r)) / 2))
+            if end > cursor && badgeX - previousBadgeX >= 28 {
+                let badge = CGRect(x: badgeX - 10, y: r.minY - 26, width: 20, height: 20)
+                ctx.fill(Path(ellipseIn: badge), with: .color(active ? CremaColor.primarySurface : CremaColor.surfaceWarm))
+                let label = Text("\(index + 1)")
+                    .font(CremaTypography.font(size: 10, weight: .medium).monospacedDigit())
+                    .foregroundColor(active ? CremaColor.onPrimary : CremaColor.secondary)
+                ctx.draw(label, at: CGPoint(x: badge.midX, y: badge.midY))
+                previousBadgeX = badgeX
+            }
+            cursor = end
+        }
     }
 
     // MARK: - Wait gaps (pump off — preinfusion bloom etc.)
