@@ -220,14 +220,14 @@ private fun ExpandedDashboard(
                     modifier = Modifier.width(libraryWidth).fillMaxHeight(),
                 )
             }
-            Spacer(Modifier.height(32.dp))
-            Row(Modifier.fillMaxWidth().height(64.dp), verticalAlignment = Alignment.CenterVertically) {
+            Spacer(Modifier.height(8.dp))
+            Row(Modifier.fillMaxWidth().height(56.dp), verticalAlignment = Alignment.CenterVertically) {
                 BrewStatistics(
                     brew = viewState.brew,
                     isBrewing = viewState.device.isBrewing,
                     visibleCharts = viewState.visibleCharts,
                     onToggle = { onEvent(DeviceDashboardEvent.ToggleChartVisibility(it)) },
-                    modifier = Modifier.padding(start = 24.dp).widthIn(max = 540.dp),
+                    modifier = Modifier.widthIn(max = 540.dp),
                 )
                 Spacer(Modifier.weight(1f))
                 BrewTime(viewState.brew.time, Modifier.padding(end = 12.dp))

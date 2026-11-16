@@ -164,10 +164,10 @@ internal fun BrewStatistics(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 listOf(entries.take(1), entries.slice(1..2), entries.takeLast(2)).forEachIndexed { index, group ->
                     if (index > 0) VerticalDivider(
-                        modifier = Modifier.padding(horizontal = 8.dp).height(26.dp),
+                        modifier = Modifier.padding(horizontal = 14.dp).height(26.dp),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.14f),
                     )
-                    Row(Modifier.weight(group.size.toFloat()), horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         group.forEach { entry ->
                             StatisticValue(entry, entry.type in visibleCharts, numberHeight,
                                 onToggle = { onToggle(entry.type) }, modifier = Modifier.width(IntrinsicSize.Min))
@@ -229,11 +229,10 @@ private fun StatisticValue(
     }
     Box(
         modifier = modifier
-            .height(64.dp)
+            .height(56.dp)
             .semantics(mergeDescendants = true) { contentDescription = description }
             .clip(MaterialTheme.shapes.small)
-            .toggleable(value = selected, role = Role.Checkbox, onValueChange = { onToggle() })
-            .padding(horizontal = 2.dp),
+            .toggleable(value = selected, role = Role.Checkbox, onValueChange = { onToggle() }),
         contentAlignment = Alignment.Center,
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {

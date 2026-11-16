@@ -31,7 +31,7 @@ import app.geeflow.presentation.feature.device.dashboard.model.ChartData
 import app.geeflow.presentation.feature.device.dashboard.model.ChartPhaseBoundary
 import app.geeflow.ui.isHeightCompact
 import app.geeflow.ui.theme.GeeFlowTheme
-import app.geeflow.ui.theme.coffeeGlass
+import app.geeflow.ui.theme.coffeeSurface
 import app.geeflow.ui.theme.disabled
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.Zoom
@@ -90,7 +90,7 @@ internal fun BrewCharts(
     val boundaries = model.boundaries
     val targetData = model.targets
     val chartModifier = Modifier
-        .coffeeGlass()
+        .coffeeSurface()
         .fillMaxWidth()
         .padding(start = 12.dp, top = 20.dp, end = 18.dp, bottom = 12.dp)
 

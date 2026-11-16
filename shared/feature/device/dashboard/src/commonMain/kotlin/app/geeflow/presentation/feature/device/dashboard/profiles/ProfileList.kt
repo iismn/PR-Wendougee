@@ -1,7 +1,6 @@
 package app.geeflow.presentation.feature.device.dashboard.profiles
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.border
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
@@ -338,16 +337,14 @@ private fun BottomBar(
     modifier: Modifier = Modifier,
 ) {
     val topBrush = Brush.verticalGradient(
-        colors = listOf(
-            MaterialTheme.colorScheme.surfaceContainer,
-            Color.Transparent,
-        ),
+        0f to MaterialTheme.colorScheme.surfaceContainer,
+        0.72f to MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.96f),
+        1f to Color.Transparent,
     )
     val bottomBrush = Brush.verticalGradient(
-        colors = listOf(
-            Color.Transparent,
-            MaterialTheme.colorScheme.surfaceContainer,
-        ),
+        0f to Color.Transparent,
+        0.28f to MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.96f),
+        1f to MaterialTheme.colorScheme.surfaceContainer,
     )
     Row(
         modifier = modifier
@@ -431,7 +428,7 @@ private fun SearchBar(
     }
 
     Row(
-        modifier = modifier.coffeeGlass(CircleShape),
+        modifier = modifier.clip(CircleShape).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -621,8 +618,8 @@ private fun ProfileItemContent(
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.1f
     val backgroundColor by animateColorAsState(
         if (!profile.selected) Color.Transparent
-        else if (dark) MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
-        else Color.White.copy(alpha = 0.38f),
+        else if (dark) Color.White.copy(alpha = 0.09f)
+        else Color.White.copy(alpha = 0.32f),
         label = "selectedRecipe",
     )
     Row(
@@ -630,7 +627,6 @@ private fun ProfileItemContent(
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .background(backgroundColor)
-            .border(1.dp, if (profile.selected) Color.White.copy(alpha = if (dark) 0.25f else 0.70f) else Color.Transparent, RoundedCornerShape(14.dp))
             .clickable { onProfileClick(profile.id) }
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,

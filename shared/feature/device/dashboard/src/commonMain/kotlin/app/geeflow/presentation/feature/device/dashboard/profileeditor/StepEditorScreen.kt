@@ -97,7 +97,7 @@ import app.geeflow.ui.icons.MoreThanOrEqual
 import app.geeflow.ui.isWidthExpanded
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
 import app.geeflow.ui.theme.GeeFlowScreenPreview
-import app.geeflow.ui.theme.coffeeGlass
+import app.geeflow.ui.theme.coffeeSurface
 import geeflow.shared.core.ui.generated.resources.common_go_back
 import geeflow.shared.core.ui.generated.resources.common_ok
 import geeflow.shared.core.ui.generated.resources.common_save
@@ -401,7 +401,7 @@ private fun RampPane(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .coffeeGlass(MaterialTheme.shapes.large),
+            .coffeeSurface(MaterialTheme.shapes.large),
     ) {
         RampSelector(state = state, onEvent = onEvent, modifier = Modifier.fillMaxWidth())
         AnimatedVisibility(visible = state.rampStyle != RampStyle.Instant) {

@@ -82,6 +82,7 @@ import app.geeflow.ui.icons.Steam
 import app.geeflow.ui.icons.Temperature
 import app.geeflow.ui.theme.GeeFlowComponentPreview
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
+import app.geeflow.ui.theme.coffeeGlass
 import geeflow.shared.core.ui.generated.resources.common_settings
 import geeflow.shared.feature.device.dashboard.generated.resources.Res
 import geeflow.shared.feature.device.dashboard.generated.resources.device_dashboard_alarm
@@ -153,7 +154,7 @@ private fun ActionBar(
             HorizontalSpacer(8.dp)
         }
         Row(
-            modifier = Modifier.width(IntrinsicSize.Max),
+            modifier = Modifier.width(IntrinsicSize.Max).coffeeGlass(MaterialTheme.shapes.large),
         ) {
             CleaningButton(
                 onClick = { onEvent(CleaningClicked) },
@@ -164,13 +165,13 @@ private fun ActionBar(
                     ),
                 ),
             )
-            VerticalDivider(color = MaterialTheme.colorScheme.background)
+            VerticalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
             ConnectivityButton(
                 smartScaleConnected = device.smartScaleConnected,
                 singleDoseGrinderConnected = device.singleDoseGrinderConnected,
                 onClick = { onEvent(ConnectedDevicesClicked) },
             )
-            VerticalDivider(color = MaterialTheme.colorScheme.background)
+            VerticalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
             SettingsButton(
                 onClick = { onEvent(QuickSettingsClicked) },
                 onLongClick = { onEvent(QuickSettingsLongPressed) },
@@ -192,8 +193,8 @@ private fun CleaningButton(
 ) = Box(
     modifier = modifier
         .clickable(onClick = onClick)
-        .background(MaterialTheme.colorScheme.surfaceContainer)
-        .height(if (LocalCompactHeader.current) 36.dp else 48.dp)
+        .height(if (LocalCompactHeader.current) 44.dp else 48.dp)
+        .widthIn(min = 44.dp)
         .padding(horizontal = if (LocalCompactHeader.current) 10.dp else 16.dp),
     contentAlignment = Alignment.Center,
 ) {
@@ -222,7 +223,7 @@ private fun ErrorButton(onClick: () -> Unit) {
             .clip(MaterialTheme.shapes.large)
             .clickable(onClick = onClick)
             .background(MaterialTheme.colorScheme.errorContainer)
-            .size(if (LocalCompactHeader.current) 36.dp else 48.dp),
+            .size(if (LocalCompactHeader.current) 44.dp else 48.dp),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -251,8 +252,8 @@ private fun SettingsButton(
                     onLongClick()
                 },
             )
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .height(if (LocalCompactHeader.current) 36.dp else 48.dp)
+            .height(if (LocalCompactHeader.current) 44.dp else 48.dp)
+            .widthIn(min = 44.dp)
             .padding(horizontal = if (LocalCompactHeader.current) 10.dp else 16.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -274,8 +275,8 @@ private fun ConnectivityButton(
 ) = Box(
     modifier = modifier
         .clickable(onClick = onClick)
-        .background(MaterialTheme.colorScheme.surfaceContainer)
-        .height(if (LocalCompactHeader.current) 36.dp else 48.dp)
+        .height(if (LocalCompactHeader.current) 44.dp else 48.dp)
+        .widthIn(min = 44.dp)
         .padding(horizontal = if (LocalCompactHeader.current) 10.dp else 16.dp),
     contentAlignment = Alignment.Center,
 ) {
@@ -335,7 +336,7 @@ private fun ConnectionStatusButton(
     )
 
     TextButton(
-        modifier = modifier.height(if (LocalCompactHeader.current) 36.dp else 48.dp),
+        modifier = modifier.height(if (LocalCompactHeader.current) 44.dp else 48.dp),
         contentPadding = if (LocalCompactHeader.current) PaddingValues(horizontal = 8.dp, vertical = 6.dp)
             else ButtonDefaults.TextButtonContentPadding,
         onClick = { onEvent(ConnectionButtonClicked) },

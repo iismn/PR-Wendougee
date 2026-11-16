@@ -58,6 +58,7 @@ import app.geeflow.ui.icons.GeeFlowIcon
 import app.geeflow.ui.icons.Logo
 import app.geeflow.ui.theme.GeeFlowComponentPreview
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
+import app.geeflow.ui.theme.coffeeGlass
 import geeflow.shared.core.ui.generated.resources.Res
 import geeflow.shared.core.ui.generated.resources.common_flush
 import geeflow.shared.core.ui.generated.resources.common_machine_busy
@@ -139,10 +140,11 @@ fun BrewButton(
     Box(
         modifier = modifier
             .height(ButtonHeight)
-            .width(IntrinsicSize.Min),
+            .width(IntrinsicSize.Min)
+            .then(if (state == BrewButtonState.Idle) Modifier.coffeeGlass(MaterialTheme.shapes.large) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        WaveDivider(
+        if (state != BrewButtonState.Idle) WaveDivider(
             color = secondColor,
             amplitude = 5.dp,
             modifier = Modifier

@@ -45,6 +45,7 @@ fun main(args: Array<String>) {
         render(screen, PhoneWidth, PhoneHeight, PhoneStatusBarHeight, File(directory, "phone-${index + 1}.png"), overlay)
     }
     render(screens.first(), 2048, 1536, 0, File(directory, "tablet-1024.png"))
+    render(screens.first(), 2048, 1536, 0, File(directory, "tablet-1024-night.png"), phase = CoffeeDayPhase.Night)
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
