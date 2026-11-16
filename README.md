@@ -2,8 +2,21 @@
 
 GeeFlow 기반의 개인용 Wendougee LITA UI 작업입니다. Pretendard, 한국어, 가로 iPad 배치와 시간 연동 테마를 적용합니다.
 
+낮에는 흰색과 붉은 주황빛, 밤에는 검정과 짙은 파랑으로 배경이 바뀝니다. 그래프와 레시피 목록에는 배경 블러·굴절·반사광을 적용하고, 측정값은 배경 없는 도트 숫자와 작은 단위로 표시합니다.
+
+| 낮 | 밤 |
+| --- | --- |
+| ![낮 추출 화면](docs/review/tablet-1.png) | ![밤 추출 화면](docs/review/tablet-night-1.png) |
+
+위 이미지는 실제 공유 Compose 화면을 1194×834 논리 해상도로 렌더링한 결과입니다. 머신 연결과 추출값은 데모 데이터이며, 기존 레시피 이름과 설명은 사용자 데이터로 취급합니다. 메뉴·편집기·설정·오류 안내는 한국어를 지원합니다.
+
+[1024×768 가로 배치](docs/review/tablet-1024.png) · [좁은 화면 배치](docs/review/phone-1.png)
+
+Mac에서 캡처부터 보려면 Node.js로 `node scripts/preview-compose.cjs docs/review`를 실행하고 `http://127.0.0.1:4181`을 엽니다. 앱 실행은 아래 Mac 안내를 참고하세요.
+
 - 앱 기반: [drobekk/GeeFlow](https://github.com/drobekk/GeeFlow), upstream `085f9ee621b7ba241543b63778272b241a6ece74`
 - [Mac 실행 안내](docs/MAC_HANDOFF.md) · [UI 변경 내용](docs/UI-CHANGES.md)
+- [앱 빌드와 UI 검증](https://github.com/iismn/PR-Wendougee/actions/workflows/ipad-design.yml)
 - GeeFlow 원본의 GPL-3.0 라이선스와 이력을 유지합니다. 아래 다운로드 링크와 원본 설명은 upstream 프로젝트에 관한 것입니다.
 
 ---
