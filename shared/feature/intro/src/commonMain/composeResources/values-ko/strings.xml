@@ -1,0 +1,4 @@
+<resources>
+    <string name="intro_screen_welcome_message">나만의 커피 한 잔</string>
+    <string name="intro_screen_set_up">프로필을 만들어 시작하세요</string>
+</resources>

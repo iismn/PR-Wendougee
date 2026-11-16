@@ -67,6 +67,7 @@
     <string name="agreement_terms">Terms &amp; Conditions</string>
     <string name="agreement_and"> and </string>
     <string name="agreement_privacy">Privacy Policy</string>
+    <string name="agreement_suffix"></string>
     <string name="maintenance_daily">Daily Cleaning</string>
     <string name="maintenance_deep">Deep Cleaning</string>
     <string name="maintenance_daily_description">Routine rinsing to help clear coffee residue from the brew group.</string>

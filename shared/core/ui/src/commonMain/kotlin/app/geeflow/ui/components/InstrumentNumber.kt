@@ -16,7 +16,7 @@ import kotlin.math.min
 /** A compact instrument readout. The lit cells and decimal share one optical baseline. */
 @Composable
 fun InstrumentNumber(text: String, color: Color, modifier: Modifier = Modifier, height: Dp = 24.dp) {
-    val columns = text.sumOf { if (it == '.') 2 else 6 }.coerceAtLeast(1) - 1
+    val columns = (text.sumOf { if (it == '.') 2 else 6 } - 1).coerceAtLeast(1)
     Canvas(
         modifier.width(height * (columns / 7f)).height(height)
             .semantics { contentDescription = text },

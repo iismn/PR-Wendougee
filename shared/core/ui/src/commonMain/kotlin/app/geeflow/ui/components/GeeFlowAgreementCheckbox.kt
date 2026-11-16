@@ -25,6 +25,7 @@ import geeflow.shared.core.ui.generated.resources.Res
 import geeflow.shared.core.ui.generated.resources.agreement_and
 import geeflow.shared.core.ui.generated.resources.agreement_prefix
 import geeflow.shared.core.ui.generated.resources.agreement_privacy
+import geeflow.shared.core.ui.generated.resources.agreement_suffix
 import geeflow.shared.core.ui.generated.resources.agreement_terms
 import org.jetbrains.compose.resources.stringResource
 
@@ -49,6 +50,7 @@ fun GeeFlowAgreementCheckbox(
         withLink(LinkAnnotation.Url(GeeFlowUrls.PrivacyPolicy, linkStyle)) {
             append(stringResource(Res.string.agreement_privacy))
         }
+        append(stringResource(Res.string.agreement_suffix))
     }
 
     Row(

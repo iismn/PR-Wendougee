@@ -1,0 +1,14 @@
+<resources>
+    <string name="add_device_screen_title">기기 추가</string>
+    <string name="add_device_screen_description">사용할 에스프레소 머신을 연결해 주세요</string>
+    <string name="add_device_screen_show_nearby">주변 기기 찾기</string>
+    <string name="add_device_screen_scan_qr">QR 코드 스캔</string>
+    <string name="add_device_screen_no_camera_permission">앱 설정에서 카메라 접근을 허용해 주세요</string>
+    <string name="add_device_screen_qr_parsing_error">기기 정보를 읽을 수 없습니다</string>
+    <string name="add_device_screen_empty">기기를 찾지 못했습니다. 머신의 전원을 확인해 주세요.</string>
+    <string name="add_device_demo">데모 기기 추가</string>
+    <string name="add_device_warning_title">사용 전 안내</string>
+    <string name="add_device_warning_message">이 앱은 제조사의 공식 앱이 아닌 타사 앱입니다. 제조사의 통신 프로토콜을 사용하지만, 독립적인 역공학을 통해 구현되었으며 제조사의 승인, 인증 또는 지원을 받지 않았습니다.\n\n이 앱은 기기에 직접 명령을 전송하므로, 예상하지 못한 오류나 펌웨어 호환성 문제로 머신이 잘못 작동할 수 있습니다.\n\n계속 진행하면 다음 사항을 이해하고 동의하는 것으로 간주합니다.\n• 소프트웨어 사용에 따른 위험은 사용자 본인이 부담합니다.\n• 의도하지 않은 동작, 머신 손상 또는 보증 무효가 발생할 수 있습니다.\n• 앱으로 제어하는 동안 머신을 절대 방치하지 마세요.</string>
+    <string name="add_device_warning_accept">위험을 이해하고 동의</string>
+    <string name="add_device_warning_cancel">취소</string>
+</resources>

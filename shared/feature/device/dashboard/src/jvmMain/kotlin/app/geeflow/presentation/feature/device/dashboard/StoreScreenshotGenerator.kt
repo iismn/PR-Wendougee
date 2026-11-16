@@ -18,16 +18,15 @@ import app.geeflow.presentation.feature.device.dashboard.profileeditor.StepEdito
 import app.geeflow.ui.theme.GeeFlowTheme
 import app.geeflow.ui.theme.CoffeeDayPhase
 import app.geeflow.ui.theme.coffeeColorScheme
-import app.geeflow.ui.theme.colorscheme.EspressoSeed
-import com.materialkolor.PaletteStyle
-import com.materialkolor.rememberDynamicColorScheme
 import org.jetbrains.skia.EncodedImageFormat
 import java.awt.image.BufferedImage
 import java.io.File
+import java.util.Locale
 import javax.imageio.ImageIO
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main(args: Array<String>) {
+    Locale.setDefault(Locale.KOREAN)
     val directory = File(args.singleOrNull() ?: "docs/screenshots")
     directory.mkdirs()
 

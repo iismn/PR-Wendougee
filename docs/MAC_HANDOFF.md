@@ -17,6 +17,8 @@ open iosApp/iosApp.xcodeproj
 
 Xcode의 `iosApp` 스킴에서 iPad Simulator를 선택합니다. 실제 iPad 설치는 본인 Signing Team과 고유 Bundle Identifier를 설정합니다. 배포나 앱스토어 제출은 수행하지 않았습니다.
 
+한국어 iPad에서는 한국어 UI가 자동으로 표시됩니다. 다른 언어의 iPad에서는 설정 앱의 GeeFlow 언어를 한국어로 선택하세요. 앱의 `화면 → 언어`에서 시스템 설정으로 이동할 수 있습니다. Pretendard 네 가지 굵기는 앱에 포함되어 있어 별도 설치가 필요 없습니다. `화면 → 화면 모드 → 시간에 맞춰 자동`을 선택하면 현지 시간에 따라 색상이 바뀝니다.
+
 검증 명령:
 
 ```sh

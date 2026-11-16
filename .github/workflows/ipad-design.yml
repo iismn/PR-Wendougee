@@ -19,6 +19,8 @@ jobs:
           java-version: '21'
           distribution: zulu
       - uses: gradle/actions/setup-gradle@v3
+      - name: Check Korean resources
+        run: ./scripts/check-korean.ps1
       - name: Render actual shared Compose screens
         run: .\gradlew.bat :shared:feature:device:dashboard:generateStoreScreenshots --no-configuration-cache
       - name: Test appearance and dashboard behavior

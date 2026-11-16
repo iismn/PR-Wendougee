@@ -7,9 +7,10 @@ The primary display is a landscape iPad. GeeFlow's device status, boiler reading
 UI changes:
 
 - Pretendard Regular/Medium/SemiBold/Bold across shared Compose screens, with tabular numerals. Fonts come from the official [Pretendard distribution](https://github.com/orioncactus/pretendard/tree/main/packages/pretendard/dist/public/static); license in `docs/licenses/Pretendard-OFL.txt`.
+- Korean resources cover every shared UI string and plural, including settings, connection errors, recipe/step editors, maintenance and onboarding. iOS and Android register Korean as an app language; iOS permission prompts are also translated. Existing user-authored recipes and names remain intact. Linked upstream terms, privacy and third-party licenses retain their original language.
 - Neutral porcelain surfaces, charcoal actions, restrained chart colors and consistent corner radii. Selected profiles animate between surfaces and keep their existing swipe actions and drag behavior.
 - Landscape chart/library proportions adapt to width; the profile column stays between 280 and 360 dp. Five existing brew statistics remain grouped by pressure, rates and totals, with compact dot numerals.
 - New **Time of day** appearance setting, enabled for new users. Local 06:00/12:00/18:00/23:00 boundaries select morning/day/evening/night. The clock is rechecked on resume and every30 seconds, including timezone changes. Existing System/Light/Dark settings remain available. This changes app colors, not hardware brightness.
 - Screenshots are rendered from actual shared Compose components via `generateStoreScreenshots`, including dashboard, profile editor and step editor in day/night, a smaller landscape dashboard, and phone layouts. These are JVM Compose renders, not iPad simulator captures.
 
-Demo fixtures in screenshots are GeeFlow's own preview data, not measurements from the user's machine.
+Screenshots use the Korean locale. Demo fixtures are GeeFlow's own preview data, not measurements from the user's machine. `scripts/check-korean.ps1` checks resource parity, XML and format placeholders.

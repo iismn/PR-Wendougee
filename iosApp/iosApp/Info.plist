@@ -56,6 +56,7 @@
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>en</string>
+		<string>ko</string>
 		<string>fr</string>
 		<string>da</string>
 		<string>cs</string>
