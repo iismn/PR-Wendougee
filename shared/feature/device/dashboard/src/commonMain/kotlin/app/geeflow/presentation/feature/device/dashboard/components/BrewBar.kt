@@ -5,7 +5,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
@@ -164,10 +167,10 @@ internal fun BrewStatistics(
                         modifier = Modifier.padding(horizontal = 8.dp).height(26.dp),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.14f),
                     )
-                    Row(Modifier.weight(group.size.toFloat())) {
+                    Row(Modifier.weight(group.size.toFloat()), horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally)) {
                         group.forEach { entry ->
                             StatisticValue(entry, entry.type in visibleCharts, numberHeight,
-                                onToggle = { onToggle(entry.type) }, modifier = Modifier.weight(1f))
+                                onToggle = { onToggle(entry.type) }, modifier = Modifier.width(IntrinsicSize.Min))
                         }
                     }
                 }
@@ -224,31 +227,32 @@ private fun StatisticValue(
     } else {
         "$value ${entry.unit}"
     }
-    Row(
+    Box(
         modifier = modifier
             .height(64.dp)
             .semantics(mergeDescendants = true) { contentDescription = description }
             .clip(MaterialTheme.shapes.small)
             .toggleable(value = selected, role = Role.Checkbox, onValueChange = { onToggle() })
             .padding(horizontal = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
+        contentAlignment = Alignment.Center,
     ) {
-        InstrumentNumber(
-            text = value,
-            color = ink,
-            glowColor = ink,
-            glowStrength = glow,
-            height = numberHeight,
-            modifier = Modifier.weight(1f, fill = false).alignByBaseline().clearAndSetSemantics {},
-        )
-        Text(
-            text = entry.unit,
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
-            color = ink.copy(alpha = 0.75f),
-            maxLines = 1,
-            modifier = Modifier.padding(start = 6.dp).alignByBaseline().clearAndSetSemantics {},
-        )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            InstrumentNumber(
+                text = value,
+                color = ink,
+                glowColor = ink,
+                glowStrength = glow,
+                height = numberHeight,
+                modifier = Modifier.weight(1f, fill = false).alignByBaseline().clearAndSetSemantics {},
+            )
+            Text(
+                text = entry.unit,
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
+                color = ink.copy(alpha = 0.75f),
+                maxLines = 1,
+                modifier = Modifier.padding(start = 6.dp).alignByBaseline().clearAndSetSemantics {},
+            )
+        }
     }
 }
 

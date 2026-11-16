@@ -28,3 +28,5 @@ app.db
 !docs/licenses/*.txt
 !docs/MAC_HANDOFF.md
 !docs/UI-CHANGES.md
+/docs/screenshots/tablet-*.png
+/docs/screenshots/phone-[0-9].png

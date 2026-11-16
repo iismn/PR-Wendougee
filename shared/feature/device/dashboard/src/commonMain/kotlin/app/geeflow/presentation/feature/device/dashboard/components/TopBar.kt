@@ -193,8 +193,8 @@ private fun CleaningButton(
     modifier = modifier
         .clickable(onClick = onClick)
         .background(MaterialTheme.colorScheme.surfaceContainer)
-        .height(if (LocalCompactHeader.current) 40.dp else 48.dp)
-        .padding(horizontal = if (LocalCompactHeader.current) 12.dp else 16.dp),
+        .height(if (LocalCompactHeader.current) 36.dp else 48.dp)
+        .padding(horizontal = if (LocalCompactHeader.current) 10.dp else 16.dp),
     contentAlignment = Alignment.Center,
 ) {
     Icon(
@@ -222,7 +222,7 @@ private fun ErrorButton(onClick: () -> Unit) {
             .clip(MaterialTheme.shapes.large)
             .clickable(onClick = onClick)
             .background(MaterialTheme.colorScheme.errorContainer)
-            .size(if (LocalCompactHeader.current) 40.dp else 48.dp),
+            .size(if (LocalCompactHeader.current) 36.dp else 48.dp),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -252,8 +252,8 @@ private fun SettingsButton(
                 },
             )
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .height(if (LocalCompactHeader.current) 40.dp else 48.dp)
-            .padding(horizontal = if (LocalCompactHeader.current) 12.dp else 16.dp),
+            .height(if (LocalCompactHeader.current) 36.dp else 48.dp)
+            .padding(horizontal = if (LocalCompactHeader.current) 10.dp else 16.dp),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -275,8 +275,8 @@ private fun ConnectivityButton(
     modifier = modifier
         .clickable(onClick = onClick)
         .background(MaterialTheme.colorScheme.surfaceContainer)
-        .height(if (LocalCompactHeader.current) 40.dp else 48.dp)
-        .padding(horizontal = if (LocalCompactHeader.current) 12.dp else 16.dp),
+        .height(if (LocalCompactHeader.current) 36.dp else 48.dp)
+        .padding(horizontal = if (LocalCompactHeader.current) 10.dp else 16.dp),
     contentAlignment = Alignment.Center,
 ) {
     if (singleDoseGrinderConnected) {
@@ -335,7 +335,7 @@ private fun ConnectionStatusButton(
     )
 
     TextButton(
-        modifier = modifier.height(if (LocalCompactHeader.current) 40.dp else 48.dp),
+        modifier = modifier.height(if (LocalCompactHeader.current) 36.dp else 48.dp),
         contentPadding = if (LocalCompactHeader.current) PaddingValues(horizontal = 8.dp, vertical = 6.dp)
             else ButtonDefaults.TextButtonContentPadding,
         onClick = { onEvent(ConnectionButtonClicked) },
@@ -347,13 +347,13 @@ private fun ConnectionStatusButton(
     ) {
         if (connectionStatus == Device.ConnectionStatus.Connecting || connectionStatus == Device.ConnectionStatus.Synchronizing) {
             CircularProgressIndicator(
-                modifier = Modifier.size(if (LocalCompactHeader.current) 16.dp else 20.dp),
+                modifier = Modifier.size(if (LocalCompactHeader.current) 14.dp else 20.dp),
                 color = contentColor,
                 strokeWidth = 2.dp,
             )
         } else {
             Icon(
-                modifier = Modifier.size(if (LocalCompactHeader.current) 16.dp else 20.dp),
+                modifier = Modifier.size(if (LocalCompactHeader.current) 14.dp else 20.dp),
                 painter = rememberVectorPainter(
                     when (connectionStatus) {
                         Device.ConnectionStatus.Connected -> Icons.Filled.BluetoothConnected
@@ -367,7 +367,7 @@ private fun ConnectionStatusButton(
         }
         Text(
             text = text,
-            style = if (LocalCompactHeader.current) MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp)
+            style = if (LocalCompactHeader.current) MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp)
                 else MaterialTheme.typography.labelLarge,
             maxLines = 1,
             softWrap = false,
@@ -392,7 +392,7 @@ internal fun DeviceTile(
         Row(modifier = Modifier.padding(start = 3.dp)) {
             Text(
                 text = device.name,
-                style = if (LocalCompactHeader.current) MaterialTheme.typography.titleSmall.copy(fontSize = 14.sp, lineHeight = 18.sp)
+                style = if (LocalCompactHeader.current) MaterialTheme.typography.titleSmall.copy(fontSize = 13.sp, lineHeight = 18.sp)
                     else MaterialTheme.typography.titleMedium,
             )
             Icon(
@@ -403,7 +403,7 @@ internal fun DeviceTile(
         }
         Row(
             modifier = Modifier.animateContentSize(),
-            horizontalArrangement = Arrangement.spacedBy(if (LocalCompactHeader.current) 6.dp else 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (LocalCompactHeader.current) 4.dp else 8.dp),
         ) {
             ParameterItem(
                 value = device.brewBoilerTemp,
@@ -429,17 +429,17 @@ private fun ParameterItem(
 ) = Row(
     modifier = modifier,
     verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.spacedBy(4.dp),
+    horizontalArrangement = Arrangement.spacedBy(if (LocalCompactHeader.current) 3.dp else 4.dp),
 ) {
     Icon(
         painter = painter,
         contentDescription = null,
-        modifier = Modifier.size(if (LocalCompactHeader.current) 12.dp else 16.dp),
+        modifier = Modifier.size(if (LocalCompactHeader.current) 11.dp else 16.dp),
         tint = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 
     val textMeasurer = rememberTextMeasurer()
-    val style = if (LocalCompactHeader.current) MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, lineHeight = 14.sp)
+    val style = if (LocalCompactHeader.current) MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, lineHeight = 14.sp)
         else MaterialTheme.typography.labelLarge
     val textWidth = LocalDensity.current.run {
         textMeasurer.measure(text = "100.0", style = style).size.width.toDp()

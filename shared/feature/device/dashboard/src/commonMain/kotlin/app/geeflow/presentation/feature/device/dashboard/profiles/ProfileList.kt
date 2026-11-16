@@ -632,7 +632,7 @@ private fun ProfileItemContent(
             .background(backgroundColor)
             .border(1.dp, if (profile.selected) Color.White.copy(alpha = if (dark) 0.25f else 0.70f) else Color.Transparent, RoundedCornerShape(14.dp))
             .clickable { onProfileClick(profile.id) }
-            .padding(16.dp),
+            .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ProfileBadge(profile, onGrinderClick)

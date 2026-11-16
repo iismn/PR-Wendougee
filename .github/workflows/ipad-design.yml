@@ -24,7 +24,7 @@ jobs:
           distribution: zulu
       - uses: gradle/actions/setup-gradle@v3
         with:
-          cache-read-only: false
+          cache-read-only: true
       - name: Check Korean resources
         run: ./scripts/check-korean.ps1
       - name: Render actual shared Compose screens
@@ -52,7 +52,7 @@ jobs:
           distribution: zulu
       - uses: gradle/actions/setup-gradle@v3
         with:
-          cache-read-only: false
+          cache-read-only: true
       - name: Build iPad simulator app
         working-directory: iosApp
         run: xcodebuild -project iosApp.xcodeproj -scheme iosApp -configuration Debug -sdk iphonesimulator build CODE_SIGNING_ALLOWED=NO
