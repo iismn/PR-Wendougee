@@ -53,6 +53,7 @@ import app.geeflow.presentation.feature.device.settings.components.SettingsApply
 import app.geeflow.ui.EventsDispatcher
 import app.geeflow.ui.components.GeeFlowDetailScaffold
 import app.geeflow.ui.components.GeeFlowToggleListItem
+import app.geeflow.ui.components.BoilerControlCard
 import app.geeflow.ui.components.GeeFlowValueListItem
 import app.geeflow.ui.components.HorizontalSpacer
 import app.geeflow.ui.components.VerticalSpacer
@@ -203,35 +204,25 @@ private fun BoilerSection(
         modifier = Modifier.fillMaxWidth().padding(horizontal = GeeFlowTheme.spacing.contentHorizontal),
     )
     VerticalSpacer(16.dp)
-    GeeFlowToggleListItem(
+    BoilerControlCard(
         title = stringResource(CoreRes.string.common_brew_boiler),
-        subtitle = stringResource(
-            CoreRes.string.common_current_temperature,
-            "${viewState.brewBoiler.actualTemp}°",
-        ),
+        actualTemp = viewState.brewBoiler.actualTemp,
         checked = viewState.brewBoiler.enabled,
-        value = "${viewState.brewBoiler.selectedTemp}°",
-        items = viewState.brewBoiler.tempList,
-        unit = "°",
+        selectedTemp = viewState.brewBoiler.selectedTemp,
+        values = viewState.brewBoiler.tempList,
         onCheckedChanged = { onEvent(BrewBoilerToggled(it)) },
-        onValueConfirmed = { onEvent(BrewTempChanged(it)) },
-        contentPadding = PaddingValues(horizontal = GeeFlowTheme.spacing.contentHorizontal, vertical = 8.dp),
-        modifier = Modifier.fillMaxWidth(),
+        onValueChanged = { onEvent(BrewTempChanged(it)) },
+        modifier = Modifier.fillMaxWidth().padding(horizontal = GeeFlowTheme.spacing.contentHorizontal, vertical = 8.dp),
     )
-    GeeFlowToggleListItem(
+    BoilerControlCard(
         title = stringResource(CoreRes.string.common_steam_boiler),
-        subtitle = stringResource(
-            CoreRes.string.common_current_temperature,
-            "${viewState.steamBoiler.actualTemp}°",
-        ),
+        actualTemp = viewState.steamBoiler.actualTemp,
         checked = viewState.steamBoiler.enabled,
-        value = "${viewState.steamBoiler.selectedTemp}°",
-        items = viewState.steamBoiler.tempList,
-        unit = "°",
+        selectedTemp = viewState.steamBoiler.selectedTemp,
+        values = viewState.steamBoiler.tempList,
         onCheckedChanged = { onEvent(SteamBoilerToggled(it)) },
-        onValueConfirmed = { onEvent(SteamTempChanged(it)) },
-        contentPadding = PaddingValues(horizontal = GeeFlowTheme.spacing.contentHorizontal, vertical = 8.dp),
-        modifier = Modifier.fillMaxWidth(),
+        onValueChanged = { onEvent(SteamTempChanged(it)) },
+        modifier = Modifier.fillMaxWidth().padding(horizontal = GeeFlowTheme.spacing.contentHorizontal, vertical = 8.dp),
     )
     GeeFlowToggleListItem(
         title = stringResource(Res.string.device_settings_brewing_pulse_heating),

@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -21,6 +24,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -34,6 +39,7 @@ import app.geeflow.presentation.feature.device.dashboard.quicksettings.QuickSett
 import app.geeflow.ui.EventsDispatcher
 import app.geeflow.ui.components.GeeFlowDialogTopBar
 import app.geeflow.ui.components.GeeFlowToggleListItem
+import app.geeflow.ui.components.BoilerControlCard
 import app.geeflow.ui.components.VerticalSpacer
 import app.geeflow.ui.isWidthExpanded
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
@@ -91,7 +97,8 @@ private fun QuickSettingsContent(
     isExpanded: Boolean = isWidthExpanded(),
 ) = Column(
     modifier = Modifier
-        .background(MaterialTheme.colorScheme.background, MaterialTheme.shapes.large)
+        .widthIn(max = 940.dp)
+        .background(MaterialTheme.colorScheme.surfaceContainerLow, MaterialTheme.shapes.large)
         .verticalScroll(rememberScrollState())
         .padding(horizontal = 24.dp, vertical = 16.dp)
         .fillMaxWidth(),
@@ -102,36 +109,25 @@ private fun QuickSettingsContent(
         onCloseClick = { onEvent(QuickSettingsEvent.CloseClicked) },
     )
     VerticalSpacer(16.dp)
-    GeeFlowToggleListItem(
-        title = stringResource(CoreRes.string.common_brew_boiler),
-        subtitle = stringResource(
-            CoreRes.string.common_current_temperature,
-            "${viewState.brewBoiler.actualTemp}°",
-        ),
-        checked = viewState.brewBoiler.enabled,
-        value = "${viewState.brewBoiler.selectedTemp}°",
-        items = viewState.brewBoiler.tempList,
-        unit = "°",
-        onCheckedChanged = { onEvent(QuickSettingsEvent.BrewBoilerToggled(it)) },
-        onValueConfirmed = { onEvent(QuickSettingsEvent.BrewTempChanged(it)) },
-        contentPadding = PaddingValues(vertical = 8.dp),
-        modifier = Modifier.fillMaxWidth(),
-    )
-    GeeFlowToggleListItem(
-        title = stringResource(CoreRes.string.common_steam_boiler),
-        subtitle = stringResource(
-            CoreRes.string.common_current_temperature,
-            "${viewState.steamBoiler.actualTemp}°",
-        ),
-        checked = viewState.steamBoiler.enabled,
-        value = "${viewState.steamBoiler.selectedTemp}°",
-        items = viewState.steamBoiler.tempList,
-        unit = "°",
-        onCheckedChanged = { onEvent(QuickSettingsEvent.SteamBoilerToggled(it)) },
-        onValueConfirmed = { onEvent(QuickSettingsEvent.SteamTempChanged(it)) },
-        contentPadding = PaddingValues(vertical = 8.dp),
-        modifier = Modifier.fillMaxWidth(),
-    )
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        @Composable fun card(boiler: Boiler, steam: Boolean, modifier: Modifier) {
+            BoilerControlCard(
+                title = stringResource(if (steam) CoreRes.string.common_steam_boiler else CoreRes.string.common_brew_boiler),
+                actualTemp = boiler.actualTemp, selectedTemp = boiler.selectedTemp,
+                values = boiler.tempList, checked = boiler.enabled, enabled = !viewState.applying,
+                onCheckedChanged = { onEvent(if (steam) QuickSettingsEvent.SteamBoilerToggled(it) else QuickSettingsEvent.BrewBoilerToggled(it)) },
+                onValueChanged = { onEvent(if (steam) QuickSettingsEvent.SteamTempChanged(it) else QuickSettingsEvent.BrewTempChanged(it)) },
+                modifier = modifier,
+            )
+        }
+        if (maxWidth >= 660.dp) Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            card(viewState.brewBoiler, false, Modifier.weight(1f))
+            card(viewState.steamBoiler, true, Modifier.weight(1f))
+        } else Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            card(viewState.brewBoiler, false, Modifier.fillMaxWidth())
+            card(viewState.steamBoiler, true, Modifier.fillMaxWidth())
+        }
+    }
     VerticalSpacer(24.dp)
     Buttons(viewState.applying, isExpanded, onEvent)
 }
@@ -150,6 +146,7 @@ private fun Buttons(
         content = { Text(stringResource(Res.string.settings_quick_more)) },
     )
     Button(
+        enabled = !applying,
         onClick = { if (!applying) onEvent(QuickSettingsEvent.ConfirmClicked) },
         content = {
             AnimatedContent(applying) {
@@ -185,4 +182,24 @@ private fun Preview() {
         ),
         onEvent = {},
     )
+}
+
+/** Interactive fixture; events update local state and never call a machine. */
+@Composable
+internal fun QuickSettingsReviewContent() {
+    var state by remember { mutableStateOf(QuickSettingsViewState(
+        brewBoiler = Boiler(true, 93.5f, "94", (80..100).map { it.toString() }),
+        steamBoiler = Boiler(true, 122f, "125", (110..140).map { it.toString() }),
+    )) }
+    Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+        QuickSettingsContent(state, onEvent = { event ->
+            state = when (event) {
+                is QuickSettingsEvent.BrewTempChanged -> state.copy(brewBoiler = state.brewBoiler.copy(selectedTemp = event.temp))
+                is QuickSettingsEvent.SteamTempChanged -> state.copy(steamBoiler = state.steamBoiler.copy(selectedTemp = event.temp))
+                is QuickSettingsEvent.BrewBoilerToggled -> state.copy(brewBoiler = state.brewBoiler.copy(enabled = event.enabled))
+                is QuickSettingsEvent.SteamBoilerToggled -> state.copy(steamBoiler = state.steamBoiler.copy(enabled = event.enabled))
+                else -> state
+            }
+        })
+    }
 }

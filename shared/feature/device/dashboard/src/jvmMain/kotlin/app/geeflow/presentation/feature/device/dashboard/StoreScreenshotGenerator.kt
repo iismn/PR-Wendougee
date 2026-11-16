@@ -46,6 +46,8 @@ fun main(args: Array<String>) {
     }
     render(screens.first(), 2048, 1536, 0, File(directory, "tablet-1024.png"))
     render(screens.first(), 2048, 1536, 0, File(directory, "tablet-1024-night.png"), phase = CoffeeDayPhase.Night)
+    render({ DeviceDesignReviewContent("temperature") }, TabletWidth, TabletHeight, 0, File(directory, "tablet-temperature.png"))
+    render({ DeviceDesignReviewContent("temperature") }, TabletWidth, TabletHeight, 0, File(directory, "tablet-temperature-night.png"), phase = CoffeeDayPhase.Night)
 }
 
 @OptIn(ExperimentalComposeUiApi::class)

@@ -1,4 +1,8 @@
 <resources>
+    <string name="boiler_target">목표 온도</string>
+    <string name="boiler_current">현재 온도</string>
+    <string name="boiler_range">설정 범위</string>
+    <string name="boiler_state">보일러</string>
     <string name="app_name">GeeFlow</string>
     <string name="common_go_back">뒤로</string>
     <string name="common_close">닫기</string>

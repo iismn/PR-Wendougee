@@ -55,4 +55,12 @@ jobs:
           cache-read-only: true
       - name: Build iPad simulator app
         working-directory: iosApp
-        run: xcodebuild -project iosApp.xcodeproj -scheme iosApp -configuration Debug -sdk iphonesimulator build CODE_SIGNING_ALLOWED=NO
+        run: xcodebuild -project iosApp.xcodeproj -scheme iosApp -configuration Debug -sdk iphonesimulator -derivedDataPath ../build/ios-review build CODE_SIGNING_ALLOWED=NO
+      - name: Capture native Liquid Glass on iPad
+        run: bash scripts/capture-native-ipad.sh
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: geeflow-native-ipad-review
+          path: build/native-review/
+          retention-days: 7

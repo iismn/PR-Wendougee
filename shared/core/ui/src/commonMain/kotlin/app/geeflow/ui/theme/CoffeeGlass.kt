@@ -54,6 +54,7 @@ fun Modifier.coffeeGlass(
     shape: Shape = MaterialTheme.shapes.medium,
     prominent: Boolean = false,
 ): Modifier {
+    LocalNativeCoffeeMaterials.current?.let { return nativeCoffeeGlass(it, shape) }
     val backdrop = LocalCoffeeBackdrop.current
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.1f
     val tint = if (dark) Color(0xFF101722) else Color(0xFFFAFCFF)

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -25,6 +26,16 @@ internal fun CoffeeBackdrop(
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {
+    val nativeMaterials = LocalNativeCoffeeMaterials.current
+    if (nativeMaterials != null) {
+        SideEffect { nativeMaterials.setPhase(phase.ordinal) }
+        // UIKit draws the ambient layer below UIVisualEffectView. Drawing it in the
+        // foreground Compose canvas would cover the native glass completely.
+        CompositionLocalProvider(LocalCoffeeBackdrop provides null) {
+            Box(modifier, content = content)
+        }
+        return
+    }
     val base = animateColorAsState(coffeeColorScheme(phase).background, tween(1_200), label = "ambientBase")
     val glow = animateColorAsState(
         when (phase) {

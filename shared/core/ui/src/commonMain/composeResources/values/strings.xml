@@ -1,4 +1,8 @@
 <resources>
+    <string name="boiler_target">Target temperature</string>
+    <string name="boiler_current">Current</string>
+    <string name="boiler_range">Range</string>
+    <string name="boiler_state">Boiler</string>
     <string name="app_name">GeeFlow</string>
 
     <!-- COMMON -->
