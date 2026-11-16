@@ -39,8 +39,8 @@ internal fun CoffeeBackdrop(
     val base = animateColorAsState(coffeeColorScheme(phase).background, tween(1_200), label = "ambientBase")
     val glow = animateColorAsState(
         when (phase) {
-            CoffeeDayPhase.Morning -> Color(0x99FF865D)
-            CoffeeDayPhase.Day -> Color(0xBAFF5A36)
+            CoffeeDayPhase.Morning -> Color(0x3BFF865D)
+            CoffeeDayPhase.Day -> Color(0x42FF5A36)
             CoffeeDayPhase.Evening -> Color(0xE61A3771)
             CoffeeDayPhase.Night -> Color(0xE60B2B68)
         }, tween(1_200), label = "ambientGlow",

@@ -1,4 +1,14 @@
 <resources>
+    <string name="home_add">Add profile</string>
+    <string name="home_profiles">Profiles</string>
+    <string name="home_selected">Selected profile</string>
+    <string name="home_select">Select a profile</string>
+    <string name="home_flow">Flow rate</string>
+    <string name="home_weight">Weight</string>
+    <string name="home_volume">Volume</string>
+    <string name="home_duration">Extraction time</string>
+    <string name="home_machine">Machine pressure</string>
+    <string name="home_brewing">Brewing</string>
     <string name="dashboard_tab_details">Brew</string>
     <string name="device_error_title">Device error</string>
     <string name="device_error_none">No active device errors.</string>

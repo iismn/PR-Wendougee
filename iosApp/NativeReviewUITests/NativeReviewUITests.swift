@@ -1,4 +1,5 @@
 import XCTest
+import UIKit
 
 final class NativeReviewUITests: XCTestCase {
     func testLandscapeDayAndNight() throws {

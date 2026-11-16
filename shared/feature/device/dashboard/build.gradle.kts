@@ -34,6 +34,10 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.materialKolor)
         }
+        jvmTest.dependencies {
+            implementation(libs.compose.uiTest)
+            implementation(compose.desktop.currentOs)
+        }
     }
 }
 

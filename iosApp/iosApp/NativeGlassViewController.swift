@@ -148,8 +148,8 @@ private final class CoffeeAmbientView: UIView {
         context.fill(bounds)
         let glow: UIColor
         switch phase {
-        case 0: glow = UIColor(rgb: 0xFF865D, alpha: 0.60)
-        case 1: glow = UIColor(rgb: 0xFF5A36, alpha: 0.73)
+        case 0: glow = UIColor(rgb: 0xFF865D, alpha: 0.23)
+        case 1: glow = UIColor(rgb: 0xFF5A36, alpha: 0.26)
         case 2: glow = UIColor(rgb: 0x1A3771, alpha: 0.90)
         default: glow = UIColor(rgb: 0x0B2B68, alpha: 0.90)
         }

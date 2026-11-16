@@ -26,6 +26,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -186,6 +191,24 @@ private fun DeviceDashboardContent(
 
 @Composable
 private fun ExpandedDashboard(
+    viewState: DeviceDashboardViewState,
+    profileListViewState: ProfileListViewState,
+    snackbarState: SnackbarHostState,
+    onEvent: (DeviceDashboardEvent) -> Unit = {},
+    onProfileListEvent: (ProfileListEvent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var chartsShown by remember { mutableStateOf(false) }
+    if (chartsShown) Box(modifier.fillMaxSize()) {
+        ChartDashboard(viewState, profileListViewState, snackbarState, onEvent, onProfileListEvent)
+        IconButton(onClick = { chartsShown = false }, modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)) {
+            Icon(Icons.Outlined.Apps, stringResource(DashboardRes.string.profile_list_show_profiles))
+        }
+    } else ProfileHome(viewState, profileListViewState, snackbarState, onEvent, onProfileListEvent, onShowCharts = { chartsShown = true })
+}
+
+@Composable
+private fun ChartDashboard(
     viewState: DeviceDashboardViewState,
     profileListViewState: ProfileListViewState,
     snackbarState: SnackbarHostState,

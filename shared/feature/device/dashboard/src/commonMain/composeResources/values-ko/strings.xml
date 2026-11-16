@@ -1,4 +1,14 @@
 <resources>
+    <string name="home_add">프로파일 추가</string>
+    <string name="home_profiles">프로파일</string>
+    <string name="home_selected">선택된 프로파일</string>
+    <string name="home_select">프로파일 선택</string>
+    <string name="home_flow">유량</string>
+    <string name="home_weight">추출 무게</string>
+    <string name="home_volume">추출 부피</string>
+    <string name="home_duration">추출 시간</string>
+    <string name="home_machine">머신 압력</string>
+    <string name="home_brewing">추출 중</string>
     <string name="dashboard_tab_details">추출</string>
     <string name="device_error_title">머신 오류</string>
     <string name="device_error_none">현재 발생한 오류가 없습니다</string>
