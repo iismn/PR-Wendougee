@@ -63,7 +63,7 @@ const server = spawn(process.execPath, [path.join(__dirname, 'ui-preview-server.
         assert.equal(await page.locator('#pageTitle').textContent(), await page.evaluate(() => window.CremaPreview.recipes[1].name));
         assert.equal(await page.locator('[data-rail-recipe="1"]').getAttribute('aria-pressed'), 'true');
         assert.equal(await page.evaluate(() => window.CremaPreview.state.mode), 'live');
-        assert.equal(await page.locator('#pressureValue .dot-readout').getAttribute('aria-label'), '—', 'Unconnected recipe must not display demo telemetry');
+        assert.equal(await page.locator('#pressureValue .dot-readout').getAttribute('aria-label'), 'No reading', 'Unconnected recipe must not display demo telemetry');
         await page.screenshot({ path: path.join(output, 'landscape-recipe-selection.png'), fullPage: true });
         await page.click('#profilePicker');
         assert.equal(await page.locator('.profile-row').count(), 2);
