@@ -12,7 +12,7 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalTestApi::class)
 class ProfileHomeTest {
     @Test
-    fun orbitSelectionAndEditingUseExistingEventsWithoutStartingTheMachine() = runComposeUiTest {
+    fun listSelectionAndEditingUseExistingEventsWithoutStartingTheMachine() = runComposeUiTest {
         val profileEvents = mutableListOf<ProfileListEvent>()
         val deviceEvents = mutableListOf<DeviceDashboardEvent>()
         val profiles = ProfileListViewState(profiles = listOf(
@@ -22,7 +22,7 @@ class ProfileHomeTest {
         setContent { GeeFlowThemePreview(false) {
             ProfileHome(DeviceDashboardViewState(), profiles, SnackbarHostState(), deviceEvents::add, profileEvents::add, {})
         } }
-        onNodeWithTag("profile-orbit-b").performClick()
+        onNodeWithTag("profile-row-b").performClick()
         onNodeWithTag("profile-orbit-selected").performClick()
         runOnIdle {
             assertEquals(listOf(ProfileListEvent.ProfileSelected("b"), ProfileListEvent.EditProfileClicked("a")), profileEvents)

@@ -46,6 +46,7 @@ jobs:
             shared/**/build/reports/tests/
           retention-days: 7
   ios-build:
+    if: github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
     runs-on: macos-latest
     timeout-minutes: 45
     steps:

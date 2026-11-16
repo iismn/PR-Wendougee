@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.*
@@ -85,27 +84,36 @@ internal fun ProfileHome(
                     Column(Modifier.width(leftWidth).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         PressureSummary(state.device.pressure?.toFloatOrNull() ?: point?.pressure ?: 0f, accent,
                             onOpen = { onEvent(DeviceDashboardEvent.QuickSettingsClicked) })
-                        LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                        Column(Modifier.weight(1f).coffeeSurface(MaterialTheme.shapes.medium).padding(8.dp)) {
+                            Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(stringResource(Res.string.home_profiles), style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(profiles.profiles.size.toString(), style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .5f))
+                            }
+                            LazyColumn(Modifier.weight(1f)) {
                             items(profiles.profiles, key = { it.id }) { profile ->
-                                Column(Modifier.fillMaxWidth().coffeeSurface(MaterialTheme.shapes.small)
-                                    .clickable(role = Role.Button) { onProfileEvent(ProfileListEvent.ProfileSelected(profile.id)) }.padding(12.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("profile-row-${profile.id}")
+                                    .clip(MaterialTheme.shapes.small)
+                                    .background(if (profile.selected) accent.copy(alpha = .13f) else Color.Transparent)
+                                    .clickable(role = Role.Button) { onProfileEvent(ProfileListEvent.ProfileSelected(profile.id)) }
+                                    .padding(start = 10.dp, end = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(profile.number.padStart(2, '0'), style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .5f), modifier = Modifier.width(26.dp))
+                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                         Text(profile.name, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                            style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
-                                        Icon(if (profile.selected) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
-                                            null, Modifier.size(16.dp))
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = if (profile.selected) FontWeight.SemiBold else FontWeight.Normal)
                                     }
-                                    if (profile.selected) {
-                                        Spacer(Modifier.height(14.dp))
-                                        Text(profile.description, style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 3, overflow = TextOverflow.Ellipsis)
-                                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                                            IconButton(onClick = { onProfileEvent(ProfileListEvent.EditProfileClicked(profile.id)) }) {
-                                                Icon(Icons.Outlined.Edit, stringResource(Res.string.device_dashboard_edit_profile), Modifier.size(18.dp))
-                                            }
-                                        }
-                                    }
+                                    if (profile.selected) IconButton(onClick = { onProfileEvent(ProfileListEvent.EditProfileClicked(profile.id)) },
+                                        modifier = Modifier.size(40.dp)) {
+                                        Icon(Icons.Outlined.Edit, stringResource(Res.string.device_dashboard_edit_profile), Modifier.size(16.dp))
+                                    } else Spacer(Modifier.width(8.dp))
                                 }
+                                if (!profile.selected) HorizontalDivider(Modifier.padding(start = 36.dp, end = 10.dp),
+                                    thickness = .5.dp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = .06f))
+                            }
                             }
                         }
                     }
@@ -122,7 +130,8 @@ internal fun ProfileHome(
                         else ProfileOrbit(profiles, selected, accent, state.device.isBrewing,
                             state.brew.time, model.targets.keys.maxOrNull() ?: 0f, onProfileEvent, onEvent, onShowCharts,
                             Modifier.fillMaxWidth().weight(1f))
-                        Row(Modifier.coffeeGlass(CircleShape).padding(4.dp), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Row(Modifier.testTag("profile-home-dock").coffeeGlass(CircleShape).padding(4.dp),
+                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                             HomeIcon(Icons.Outlined.Apps, stringResource(Res.string.home_profiles), !profiles.showHistory) {
                                 if (profiles.showHistory) onProfileEvent(ProfileListEvent.HistoryClicked)
                             }
@@ -132,11 +141,14 @@ internal fun ProfileHome(
                             }
                             HomeIcon(Icons.Outlined.Tune, stringResource(Res.string.free_control_screen_title)) { onEvent(DeviceDashboardEvent.FlowControlClicked) }
                             HomeIcon(Icons.Outlined.Settings, stringResource(Res.string.settings_quick_title)) { onEvent(DeviceDashboardEvent.QuickSettingsClicked) }
+                            VerticalDivider(Modifier.padding(horizontal = 5.dp).height(22.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = .12f))
+                            DashboardBrewButton(state, onEvent, glassBackground = false)
                         }
                     }
                     Column(Modifier.width(rightWidth).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Column(Modifier.fillMaxWidth().weight(1f).coffeeGlass(MaterialTheme.shapes.medium, prominent = true)
-                            .background(Brush.verticalGradient(listOf(accent.copy(alpha = .30f), accent.copy(alpha = .10f))), MaterialTheme.shapes.medium).padding(20.dp)) {
+                            .background(Brush.linearGradient(if (dark) listOf(Color(0xB54D719D), Color(0x80334767), Color(0xB5162848))
+                                else listOf(Color(0xB57498A8), Color(0x806D8D9D), Color(0x4DC8DADD))), MaterialTheme.shapes.medium).padding(20.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(if (profiles.showHistory) state.brew.name else selected?.name ?: stringResource(Res.string.home_select),
                                     style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis,
@@ -163,9 +175,6 @@ internal fun ProfileHome(
                             Text(stringResource(Res.string.home_flow), style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                             HomeCurve(model, true, accent, Modifier.fillMaxWidth().weight(.65f))
-                        }
-                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                            DashboardBrewButton(state, onEvent)
                         }
                     }
                 }
@@ -236,7 +245,6 @@ private fun ProfileOrbit(
     onShowCharts: () -> Unit, modifier: Modifier,
 ) {
     val ink = MaterialTheme.colorScheme.onSurface
-    val dark = MaterialTheme.colorScheme.surface.luminance() < .1f
     val progress by animateFloatAsState(if (brewing && duration > 0) (seconds / duration).coerceIn(0f, 1f) else 1f, tween(450))
     BoxWithConstraints(modifier.clipToBounds()) {
         val diameter = minOf(maxWidth * .57f, maxHeight * .65f)
@@ -245,26 +253,6 @@ private fun ProfileOrbit(
         val top = (maxHeight - diameter) * .33f
         val cx = left + radius
         val cy = top + radius
-        val satellites = listOf(Triple(.12f,.28f,.23f), Triple(.12f,.53f,.15f), Triple(.21f,.72f,.12f),
-            Triple(.19f,.90f,.21f), Triple(.52f,.94f,.30f), Triple(.80f,.91f,.21f), Triple(.92f,.74f,.14f))
-        state.profiles.filter { it.id != selected?.id }.take(satellites.size).forEachIndexed { index, profile ->
-            val position = satellites[index]
-            val d = maxWidth * position.third
-            Box(Modifier.offset(maxWidth * position.first - d / 2, maxHeight * position.second - d / 2).size(d)
-                .alpha(if (index >= 3) .48f else 1f)) {
-                Column(Modifier.fillMaxSize().testTag("profile-orbit-${profile.id}").clip(CircleShape).background(ink.copy(alpha = if (dark) .07f else .035f))
-                    .clickable(role = Role.Button) { onProfileEvent(ProfileListEvent.ProfileSelected(profile.id)) }.padding(12.dp),
-                    verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(profile.name, fontSize = if (d < 90.dp) 10.sp else 12.sp,
-                        lineHeight = if (d < 90.dp) 13.sp else 16.sp, textAlign = TextAlign.Center,
-                        maxLines = 2, overflow = TextOverflow.Ellipsis)
-                }
-                Box(Modifier.align(Alignment.TopEnd).offset(y = (-3).dp).size(28.dp)
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = .9f), CircleShape), contentAlignment = Alignment.Center) {
-                    Text(profile.number, fontSize = 10.sp, lineHeight = 12.sp)
-                }
-            }
-        }
         Box(Modifier.offset(left, top).size(diameter).testTag("profile-orbit-selected").coffeeGlass(CircleShape)
             .background(Brush.linearGradient(listOf(accent.copy(alpha = .44f), accent.copy(alpha = .12f))), CircleShape)
             .clickable(enabled = selected != null, role = Role.Button) { selected?.let { onProfileEvent(ProfileListEvent.EditProfileClicked(it.id)) } },

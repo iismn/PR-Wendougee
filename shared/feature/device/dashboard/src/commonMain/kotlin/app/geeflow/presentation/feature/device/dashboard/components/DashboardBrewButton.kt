@@ -23,6 +23,7 @@ internal fun DashboardBrewButton(
     viewState: DeviceDashboardViewState,
     onEvent: (DeviceDashboardEvent) -> Unit,
     modifier: Modifier = Modifier,
+    glassBackground: Boolean = true,
 ) {
     val actions = buildList {
         add(
@@ -58,5 +59,6 @@ internal fun DashboardBrewButton(
         onHeroButtonClick = { onEvent(DeviceDashboardEvent.BrewClicked) },
         onStopClick = { onEvent(DeviceDashboardEvent.StopBrewClicked) },
         modifier = modifier,
+        glassBackground = glassBackground,
     )
 }

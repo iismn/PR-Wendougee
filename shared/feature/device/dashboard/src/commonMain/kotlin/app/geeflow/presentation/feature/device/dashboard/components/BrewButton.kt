@@ -87,6 +87,7 @@ fun BrewButton(
     onStopClick: () -> Unit,
     modifier: Modifier = Modifier,
     heroContentDescription: String = stringResource(Res.string.common_start),
+    glassBackground: Boolean = true,
 ) {
     require(sideActions.size in 1..MaxSideActions)
     val coroutineScope = rememberCoroutineScope()
@@ -141,7 +142,7 @@ fun BrewButton(
         modifier = modifier
             .height(ButtonHeight)
             .width(IntrinsicSize.Min)
-            .then(if (state == BrewButtonState.Idle) Modifier.coffeeGlass(MaterialTheme.shapes.large) else Modifier),
+            .then(if (state == BrewButtonState.Idle && glassBackground) Modifier.coffeeGlass(MaterialTheme.shapes.large) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         if (state != BrewButtonState.Idle) WaveDivider(
