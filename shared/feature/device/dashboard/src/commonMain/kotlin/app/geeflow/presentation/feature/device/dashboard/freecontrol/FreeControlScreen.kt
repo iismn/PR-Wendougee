@@ -31,6 +31,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -126,7 +128,7 @@ internal fun FreeControlScreen(
 }
 
 @Composable
-private fun FreeControlContent(
+internal fun FreeControlContent(
     viewState: FreeControlViewState,
     snackbarState: SnackbarHostState,
     onEvent: (FreeControlEvent) -> Unit,
@@ -152,8 +154,8 @@ private fun ExpandedLayout(
     onEvent: (FreeControlEvent) -> Unit,
 ) {
     val isPressure = viewState.mode == ControlMode.Pressure
-    val pressureColor = MaterialTheme.colorScheme.error
-    val flowColor = GeeFlowTheme.colors.water
+    val pressureColor = MaterialTheme.colorScheme.onSurface
+    val flowColor = MaterialTheme.colorScheme.onSurface
     val sliderValue = if (isPressure) viewState.pressureTarget else viewState.flowTarget
     val sliderUnit = stringResource(
         if (isPressure) {
@@ -215,10 +217,11 @@ private fun ExpandedLayout(
                         BrewButtonAction(
                             contentDescription = stringResource(CoreRes.string.common_pressure),
                             onClick = { onEvent(ModeChanged(ControlMode.Pressure)) },
+                            selected = isPressure,
                         ) {
                             Icon(
                                 painter = rememberVectorPainter(GeeFlowIcon.Pressure),
-                                contentDescription = stringResource(CoreRes.string.common_pressure),
+                                contentDescription = null,
                                 modifier = Modifier.size(20.dp),
                                 tint = if (isPressure) pressureColor else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -227,10 +230,11 @@ private fun ExpandedLayout(
                             BrewButtonAction(
                                 contentDescription = stringResource(Res.string.free_control_mode_flow),
                                 onClick = { onEvent(ModeChanged(ControlMode.Flow)) },
+                                selected = !isPressure,
                             ) {
                                 Icon(
                                     painter = rememberVectorPainter(GeeFlowIcon.Flow),
-                                    contentDescription = stringResource(Res.string.free_control_mode_flow),
+                                    contentDescription = null,
                                     modifier = Modifier.size(20.dp),
                                     tint = if (!isPressure) flowColor else MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -267,8 +271,8 @@ private fun CompactLayout(
     onEvent: (FreeControlEvent) -> Unit,
 ) {
     val isPressure = viewState.mode == ControlMode.Pressure
-    val pressureColor = MaterialTheme.colorScheme.error
-    val flowColor = GeeFlowTheme.colors.water
+    val pressureColor = MaterialTheme.colorScheme.onSurface
+    val flowColor = MaterialTheme.colorScheme.onSurface
     val sliderValue = if (isPressure) viewState.pressureTarget else viewState.flowTarget
     val sliderUnit = stringResource(
         if (isPressure) {
@@ -303,10 +307,11 @@ private fun CompactLayout(
                     BrewButtonAction(
                         contentDescription = stringResource(CoreRes.string.common_pressure),
                         onClick = { onEvent(ModeChanged(ControlMode.Pressure)) },
+                        selected = isPressure,
                     ) {
                         Icon(
                             painter = rememberVectorPainter(GeeFlowIcon.Pressure),
-                            contentDescription = stringResource(CoreRes.string.common_pressure),
+                            contentDescription = null,
                             modifier = Modifier.size(20.dp),
                             tint = if (isPressure) pressureColor else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -315,10 +320,11 @@ private fun CompactLayout(
                         BrewButtonAction(
                             contentDescription = stringResource(Res.string.free_control_mode_flow),
                             onClick = { onEvent(ModeChanged(ControlMode.Flow)) },
+                            selected = !isPressure,
                         ) {
                             Icon(
                                 painter = rememberVectorPainter(GeeFlowIcon.Flow),
-                                contentDescription = stringResource(Res.string.free_control_mode_flow),
+                                contentDescription = null,
                                 modifier = Modifier.size(20.dp),
                                 tint = if (!isPressure) flowColor else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -385,6 +391,7 @@ private fun FreeControlTopBar(
             Icon(
                 imageVector = Icons.Filled.Close,
                 contentDescription = stringResource(CoreRes.string.common_go_back),
+                modifier = Modifier.size(20.dp),
             )
         }
         Text(
@@ -442,12 +449,11 @@ private val SliderHeight = 72.dp
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-fun FreeControlDesignPreview() {
-    FreeControlContent(
-        viewState = FreeControlViewState(
-            deviceName = "GeeFlow Pro",
+fun FreeControlDesignPreview(mode: ControlMode = ControlMode.Pressure) {
+    var state by remember { mutableStateOf(FreeControlViewState(
+            deviceName = "Wendougee LITA",
             profileName = "New freehand profile",
-            mode = ControlMode.Pressure,
+            mode = mode,
             pressureTarget = 6.0f,
             flowTarget = 3.5f,
             pressureRange = 0f..12f,
@@ -459,8 +465,16 @@ fun FreeControlDesignPreview() {
                 DashboardChartType.FlowRate,
                 DashboardChartType.WeightRate,
             ),
-        ),
+        )) }
+    FreeControlContent(
+        viewState = state,
         snackbarState = remember { SnackbarHostState() },
-        onEvent = {},
+        onEvent = { event ->
+            state = when (event) {
+                is ModeChanged -> if (state.brewButtonState == BrewButtonState.Idle && (event.mode == ControlMode.Pressure || state.flowControlSupported)) state.copy(mode = event.mode) else state
+                is TargetChanged -> if (state.mode == ControlMode.Pressure) state.copy(pressureTarget = event.value) else state.copy(flowTarget = event.value)
+                else -> state
+            }
+        },
     )
 }

@@ -24,9 +24,9 @@ Windows에서는 Xcode/iOS 빌드를 할 수 없습니다. 이 저장소의 CI�
 node scripts/preview-all-ui.cjs
 ```
 
-`http://127.0.0.1:4182`에서 46개 화면·상태를 선택하고 낮·밤 또는 홈과 비교합니다. 재렌더링하면 갱신됩니다. 이 창은 실제 Compose 화면을 렌더링한 이미지 갤러리입니다. JVM 이미지는 UIKit Liquid Glass 캡처가 아닙니다.
+`http://127.0.0.1:4182`에서 47개 화면·상태를 선택하고 낮·밤 또는 홈과 비교합니다. 재렌더링하면 갱신됩니다. 이 창은 실제 Compose 화면을 렌더링한 이미지 갤러리입니다. JVM 이미지는 UIKit Liquid Glass 캡처가 아닙니다.
 
-특정 화면만 다시 캡처하려면 `./gradlew :shared:app:generateAllScreens -PreviewScenes=dashboard,profile-editor,step-editor,temperature,temperature-steam`을 사용합니다. 목록은 `docs/UI-CATALOG.md`, 결과는 `docs/review/all-ui`에 있습니다.
+특정 화면만 다시 캡처하려면 `./gradlew :shared:app:generateAllScreens -PreviewScenes=dashboard,profile-editor,step-editor,temperature,temperature-applying,free-control,free-control-flow,screensaver`을 사용합니다. 목록은 `docs/UI-CATALOG.md`, 결과는 `docs/review/all-ui`에 있습니다.
 
 ## 한국어와 시간 연동
 
@@ -38,7 +38,7 @@ node scripts/preview-all-ui.cjs
 
 `iosApp/iosApp/NativeGlassViewController.swift`가 UIKit 배경, `UIVisualEffectView`와 `UIGlassEffect`, 투명 Compose 전경을 관리합니다. iPadOS 26 이상은 실제 `UIGlassEffect`, 이전 버전은 `UIBlurEffect(.systemMaterial)`를 사용합니다. Compose 컴포넌트가 전달하는 창 좌표로 네이티브 재질의 위치를 맞추고, 제거와 터치 상태도 전달합니다.
 
-빠른 온도 설정은 전체 화면으로 열리고 홈과 같은 세 열 구조를 사용합니다. 왼쪽에서 보일러를 고르며, 전체 추출 설정도 동일한 곡선 눈금 카드를 사용합니다. 머신에서 제공한 값으로 조절되고 기존 확인·저장 동작으로 적용됩니다.
+빠른 온도 설정은 빠른 세척처럼 팝업으로 열립니다. 하나의 배경에서 추출·스팀 보일러를 함께 조절하며, 전체 추출 설정도 동일한 곡선 눈금 카드를 사용합니다. 머신에서 제공한 값으로 조절되고 기존 확인·저장 동작으로 적용됩니다.
 
 Xcode의 **NativeReview** 스킴에서 iPad 시뮬레이터를 선택하고 Test를 실행하면 XCTest가 기기를 가로로 돌려 낮·밤 홈과 온도 화면을 캡처합니다. CI와 같은 파일을 추출하려면 다음 명령을 실행합니다.
 
@@ -56,6 +56,6 @@ bash scripts/capture-native-ipad.sh
 ./gradlew :desktopApp:compileKotlin
 ```
 
-관련 JVM 테스트 241개와 한국어 리소스 427개 검사가 통과했습니다. 프로파일 선택·편집, 온도 범위와 비활성 상태, 기기 제공 값 선택, 네이티브 재질의 좌표·제거·터치 전달을 포함합니다. 최신 iOS 빌드와 캡처 결과는 [Actions](https://github.com/iismn/PR-Wendougee/actions/workflows/ipad-design.yml)에서 확인하세요.
+UI 동작 테스트와 한국어 리소스 427개를 검사합니다. 프로파일 선택·편집, 온도 범위와 비활성 상태, 기기 제공 값 선택, 네이티브 재질의 좌표·제거·터치 전달을 포함합니다. 최신 iOS 빌드와 캡처 결과는 [Actions](https://github.com/iismn/PR-Wendougee/actions/workflows/ipad-design.yml)에서 확인하세요.
 
 실제 iPad의 가로 안전 영역·큰 글자·터치·회전과 LITA의 연결·온도 적용·프로파일 전송·추출·정지·저울·기록은 하드웨어에서 확인해야 합니다. 머신 프로토콜은 GeeFlow 원본을 따릅니다.

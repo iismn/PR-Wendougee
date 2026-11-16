@@ -26,7 +26,6 @@ internal fun DashboardBrewButton(
     onEvent: (DeviceDashboardEvent) -> Unit,
     modifier: Modifier = Modifier,
     glassBackground: Boolean = true,
-    uniformIcons: Boolean = false,
 ) {
     val actions = buildList {
         add(
@@ -35,7 +34,7 @@ internal fun DashboardBrewButton(
                 onClick = { onEvent(DeviceDashboardEvent.ManualBrewClicked) },
             ) {
                 Icon(rememberVectorPainter(GeeFlowIcon.Flush), contentDescription = null,
-                    modifier = Modifier.size(if (uniformIcons) 20.dp else 24.dp))
+                    modifier = Modifier.size(20.dp))
             },
         )
         add(
@@ -44,7 +43,7 @@ internal fun DashboardBrewButton(
                 onClick = { onEvent(DeviceDashboardEvent.FlowControlClicked) },
             ) {
                 Icon(rememberVectorPainter(GeeFlowIcon.FlowControl), contentDescription = null,
-                    modifier = Modifier.size(if (uniformIcons) 20.dp else 24.dp))
+                    modifier = Modifier.size(20.dp))
             },
         )
         if (viewState.hotWaterSupported) {
@@ -54,7 +53,7 @@ internal fun DashboardBrewButton(
                     onClick = { onEvent(DeviceDashboardEvent.HotWaterClicked) },
                 ) {
                     Icon(Icons.Outlined.WaterDrop, contentDescription = null,
-                        modifier = Modifier.size(if (uniformIcons) 20.dp else 24.dp))
+                        modifier = Modifier.size(20.dp))
                 },
             )
         }
@@ -66,6 +65,5 @@ internal fun DashboardBrewButton(
         onStopClick = { onEvent(DeviceDashboardEvent.StopBrewClicked) },
         modifier = modifier,
         glassBackground = glassBackground,
-        uniformIcons = uniformIcons,
     )
 }

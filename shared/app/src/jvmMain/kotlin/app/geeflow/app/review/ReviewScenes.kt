@@ -34,9 +34,10 @@ val reviewScenes = listOf(
     ReviewScene("profile-editor", "프로파일 편집", "추출") { DeviceDesignReviewContent("profile-editor") },
     ReviewScene("step-editor", "단계 편집", "추출") { DeviceDesignReviewContent("step-editor") },
     ReviewScene("temperature", "빠른 온도 조절", "추출") { DeviceDesignReviewContent("temperature") },
-    ReviewScene("temperature-steam", "스팀 온도 조절", "추출") { DeviceDesignReviewContent("temperature-steam") },
+    ReviewScene("temperature-applying", "빠른 온도 조절 · 적용 중", "추출") { DeviceDesignReviewContent("temperature-applying") },
     ReviewScene("add-device", "기기 검색", "시작·연결") { AddDeviceDesignPreview() },
-    ReviewScene("free-control", "수동 추출", "추출") { FreeControlDesignPreview() },
+    ReviewScene("free-control", "자유추출 · 압력", "추출") { FreeControlDesignPreview() },
+    ReviewScene("free-control-flow", "자유추출 · 유량", "추출") { FreeControlDesignPreview(app.geeflow.presentation.feature.device.dashboard.freecontrol.ControlMode.Flow) },
     ReviewScene("bluetooth-permission", "블루투스 권한", "팝업") { DeviceDashboardDesignPreview() },
     ReviewScene("cleaning-reminder", "세척 알림", "팝업") { MaintenanceReminderDesignPreview() },
     ReviewScene("quick-cleaning", "빠른 세척", "머신") { ReviewSheet { QuickMaintenanceDesignPreview() } },
@@ -75,7 +76,7 @@ val reviewScenes = listOf(
     ReviewScene("device-rename", "머신 이름 변경", "팝업") { DeviceListDesignPreview("device-rename") },
     ReviewScene("device-warning", "기기 기능 안내", "팝업") { DeviceWarningDesignPreview() },
     ReviewScene("device-found", "기기 검색 결과", "시작·연결") { AddDeviceDesignPreview(found = true) },
-    ReviewScene("screensaver", "화면 보호기", "사용자") { app.geeflow.app.screensaver.Screensaver("09:41", "2026년 11월 16일 월요일", {}) },
+    ReviewScene("screensaver", "화면 보호기", "사용자") { app.geeflow.app.screensaver.Screensaver("09:41", {}) },
 ).sortedBy { when (it.category) { "추출" -> 0; "머신" -> 1; "사용자" -> 2; "시작·연결" -> 3; else -> 4 } }
 
 @Composable

@@ -42,6 +42,7 @@ fun BoilerControlCard(
     onValueChanged: (String) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    embedded: Boolean = false,
 ) {
     val numeric = remember(values) { values.mapNotNull { value -> value.toFloatOrNull()?.let { it to value } }.sortedBy { it.first } }
     val range = (numeric.firstOrNull()?.first ?: 0f)..(numeric.lastOrNull()?.first ?: 0f)
@@ -53,7 +54,8 @@ fun BoilerControlCard(
     }
     val ink = MaterialTheme.colorScheme.onSurface
     val secondary = MaterialTheme.colorScheme.onSurfaceVariant
-    Column(modifier.coffeeSurface(MaterialTheme.shapes.large).padding(24.dp)) {
+    Column(modifier.then(if (embedded) Modifier else Modifier.coffeeSurface(MaterialTheme.shapes.large))
+        .padding(if (embedded) 12.dp else 24.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(title, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
             Switch(checked = checked, onCheckedChange = onCheckedChanged, enabled = enabled,
@@ -71,9 +73,9 @@ fun BoilerControlCard(
         Spacer(Modifier.height(14.dp))
         ArcTemperatureDial(
             value = selected, valueRange = range, label = title, enabled = interactive,
-            onValueChange = ::select, modifier = Modifier.fillMaxWidth().height(144.dp),
+            onValueChange = ::select, modifier = Modifier.fillMaxWidth().height(if (embedded) 112.dp else 144.dp),
         )
-        Spacer(Modifier.height(22.dp))
+        Spacer(Modifier.height(if (embedded) 16.dp else 22.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             BoilerMetric(stringResource(Res.string.boiler_current), "${(actualTemp * 10).roundToInt() / 10f}°", Modifier.weight(1f))
             BoilerMetric(stringResource(Res.string.boiler_range), if (numeric.isEmpty()) "—" else "${numeric.first().second}–${numeric.last().second}°", Modifier.weight(1f))

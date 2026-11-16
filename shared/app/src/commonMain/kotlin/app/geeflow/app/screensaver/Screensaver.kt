@@ -1,191 +1,115 @@
 package app.geeflow.app.screensaver
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import app.geeflow.platform.rememberFormattedDate
 import app.geeflow.platform.rememberFormattedTime
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
 import app.geeflow.ui.theme.GeeFlowScreenPreview
 
 @Composable
-internal fun Screensaver(
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Screensaver(
-        formattedTime = rememberFormattedTime(),
-        formattedDate = rememberFormattedDate(),
-        onDismiss = onDismiss,
-        modifier = modifier,
-    )
-}
+internal fun Screensaver(onDismiss: () -> Unit, modifier: Modifier = Modifier) =
+    Screensaver(rememberFormattedTime(), onDismiss, modifier)
 
 @Composable
-internal fun Screensaver(
-    formattedTime: String,
-    formattedDate: String,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val parsedTime = remember(formattedTime) { parseScreensaverTime(formattedTime) }
-
-    BoxWithConstraints(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Black)
-            .pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        val event = awaitPointerEvent(PointerEventPass.Initial)
-                        if (event.changes.any { it.pressed }) {
-                            event.changes.forEach { it.consume() }
-                            onDismiss()
-                        }
-                    }
-                }
-            },
-        contentAlignment = Alignment.Center,
-    ) {
-        val (timeFontSize, amPmFontSize) = when {
-            maxWidth < CompactWidthBreakpoint -> TimeFontCompact to AmPmStackedFontCompact
-            maxWidth >= ExpandedWidthBreakpoint -> TimeFontExpanded to AmPmStackedFontExpanded
-            else -> TimeFontRegular to AmPmStackedFontRegular
+internal fun Screensaver(formattedTime: String, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+    val digits = remember(formattedTime) {
+        TimeDigitsRegex.find(formattedTime)?.value?.replace('.', ':') ?: formattedTime
+    }
+    val period = remember(formattedTime) {
+        val value = formattedTime.lowercase()
+        when {
+            value.contains("am") || value.contains("a.m.") -> "AM"
+            value.contains("pm") || value.contains("p.m.") -> "PM"
+            else -> ""
         }
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(24.dp),
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                Text(
-                    text = parsedTime.timeDigits,
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontSize = timeFontSize,
-                        fontWeight = FontWeight.Medium,
-                        letterSpacing = (-1).sp,
-                    ),
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                )
-                if (parsedTime.hasAmPm) {
-                    Spacer(modifier = Modifier.width(AmPmSpacing))
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(2.dp),
-                        horizontalAlignment = Alignment.Start,
-                    ) {
-                        Text(
-                            text = "AM",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = amPmFontSize,
-                                fontWeight = if (parsedTime.isAm) FontWeight.SemiBold else FontWeight.Medium,
-                                lineHeight = amPmFontSize,
-                            ),
-                            color = if (parsedTime.isAm) {
-                                MaterialTheme.colorScheme.primaryFixedDim
-                            } else {
-                                Color.White.copy(alpha = AmPmInactiveAlpha)
-                            },
-                            maxLines = 1,
-                        )
-                        Text(
-                            text = "PM",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = amPmFontSize,
-                                fontWeight = if (!parsedTime.isAm) FontWeight.SemiBold else FontWeight.Medium,
-                                lineHeight = amPmFontSize,
-                            ),
-                            color = if (!parsedTime.isAm) {
-                                MaterialTheme.colorScheme.primaryFixedDim
-                            } else {
-                                Color.White.copy(alpha = AmPmInactiveAlpha)
-                            },
-                            maxLines = 1,
-                        )
+    }
+    BoxWithConstraints(
+        modifier.fillMaxSize().background(Color.Black).pointerInput(onDismiss) {
+            awaitPointerEventScope {
+                while (true) {
+                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                    if (event.changes.any { it.pressed }) {
+                        event.changes.forEach { it.consume() }
+                        onDismiss()
                     }
                 }
             }
-            Text(
-                text = formattedDate,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primaryFixedDim,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-            )
+        },
+        contentAlignment = Alignment.Center,
+    ) {
+        val clockWidth = minOf(maxWidth * .72f, maxHeight * 2f, 820.dp)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            DotClock(digits, formattedTime, Modifier.width(clockWidth))
+            if (period.isNotEmpty()) Text(period, style = MaterialTheme.typography.labelMedium,
+                color = Color.White.copy(alpha = .65f))
         }
     }
 }
 
-private val CompactWidthBreakpoint = 380.dp
-private val ExpandedWidthBreakpoint = 600.dp
-private val TimeFontCompact = 72.sp
-private val TimeFontRegular = 88.sp
-private val TimeFontExpanded = 120.sp
-private val AmPmStackedFontCompact = 15.sp
-private val AmPmStackedFontRegular = 18.sp
-private val AmPmStackedFontExpanded = 24.sp
-private val AmPmSpacing = 8.dp
-private const val AmPmInactiveAlpha = 0.35f
-
-private val TimeDigitsRegex = Regex("""\d{1,2}[:.]\d{2}(?:[:.]\d{2})?""")
-
-private data class ParsedTime(
-    val timeDigits: String,
-    val hasAmPm: Boolean,
-    val isAm: Boolean,
-)
-
-/**
- * Extracts time digits and determines 12-hour format AM/PM state from the localized
- * time string formatted by the underlying platform.
- */
-private fun parseScreensaverTime(formattedTime: String): ParsedTime {
-    val trimmed = formattedTime.trim()
-    val digits = TimeDigitsRegex.find(trimmed)?.value ?: trimmed
-    val lower = trimmed.lowercase()
-    val isAm = lower.contains("am") || lower.contains("a.m.")
-    val isPm = lower.contains("pm") || lower.contains("p.m.")
-    val hasAmPm = isAm || isPm
-
-    return ParsedTime(
-        timeDigits = digits,
-        hasAmPm = hasAmPm,
-        isAm = isAm,
-    )
+/** Clock-only monochrome dot renderer. Brew measurements continue to use Pretendard. */
+@Composable
+private fun DotClock(value: String, spokenTime: String, modifier: Modifier = Modifier) {
+    val glyphs = remember(value) { value.mapNotNull { character ->
+        if (character == ':') Colon else character.digitToIntOrNull()?.let { Digits[it] }
+    } }
+    val columns = glyphs.sumOf { it.first().length } + (glyphs.size - 1).coerceAtLeast(0)
+    val aspect = (columns + 4f) / 11f
+    Canvas(modifier.aspectRatio(aspect).semantics { contentDescription = spokenTime }) {
+        val pitch = size.width / (columns + 4f)
+        val radius = pitch * .18f
+        var xColumn = 2f
+        glyphs.forEach { glyph ->
+            glyph.forEachIndexed { row, cells -> cells.forEachIndexed { column, cell ->
+                if (cell == '1') {
+                    val center = Offset((xColumn + column + .5f) * pitch, (row + 2.5f) * pitch)
+                    val halo = radius * 5f
+                    drawCircle(Brush.radialGradient(
+                        0f to Color.White.copy(alpha = .22f),
+                        .3f to Color.White.copy(alpha = .10f),
+                        1f to Color.Transparent,
+                        center = center, radius = halo), halo, center)
+                    drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = .35f), Color.Transparent),
+                        center, radius * 2f), radius * 2f, center)
+                    drawCircle(Color.White.copy(alpha = .92f), radius, center)
+                }
+            } }
+            xColumn += glyph.first().length + 1f
+        }
+    }
 }
+
+private val Digits = listOf(
+    listOf("01110", "10001", "10011", "10101", "11001", "10001", "01110"),
+    listOf("00100", "01100", "00100", "00100", "00100", "00100", "01110"),
+    listOf("01110", "10001", "00001", "00010", "00100", "01000", "11111"),
+    listOf("11110", "00001", "00001", "01110", "00001", "00001", "11110"),
+    listOf("00010", "00110", "01010", "10010", "11111", "00010", "00010"),
+    listOf("11111", "10000", "10000", "11110", "00001", "00001", "11110"),
+    listOf("01110", "10000", "10000", "11110", "10001", "10001", "01110"),
+    listOf("11111", "00001", "00010", "00100", "01000", "01000", "01000"),
+    listOf("01110", "10001", "10001", "01110", "10001", "10001", "01110"),
+    listOf("01110", "10001", "10001", "01111", "00001", "00001", "01110"),
+)
+private val Colon = listOf("0", "0", "1", "0", "1", "0", "0")
+private val TimeDigitsRegex = Regex("""\d{1,2}[:.]\d{2}(?:[:.]\d{2})?""")
 
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
-    Screensaver(
-        formattedTime = "10:30 PM",
-        formattedDate = "Saturday, 19 September",
-        onDismiss = {},
-    )
-}
+private fun Preview() = Screensaver("09:41", {})

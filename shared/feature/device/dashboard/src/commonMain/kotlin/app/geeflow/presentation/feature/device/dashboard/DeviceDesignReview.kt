@@ -9,7 +9,7 @@ import app.geeflow.presentation.feature.device.dashboard.quicksettings.QuickSett
 fun DeviceDesignReviewContent(scene: String) {
     when (scene) {
         "temperature" -> QuickSettingsReviewContent()
-        "temperature-steam" -> QuickSettingsReviewContent(steam = true)
+        "temperature-applying" -> QuickSettingsReviewContent(applying = true)
         "profile-editor" -> app.geeflow.presentation.feature.device.dashboard.profileeditor.ProfileEditorPreviewContent()
         "step-editor" -> app.geeflow.presentation.feature.device.dashboard.profileeditor.StepEditorPreviewContent()
         "charts" -> app.geeflow.presentation.feature.device.dashboard.main.DashboardChartsDesignPreview()

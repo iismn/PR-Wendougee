@@ -8,6 +8,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -390,7 +391,8 @@ private fun RampPane(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .coffeeSurface(MaterialTheme.shapes.large),
+            .clip(MaterialTheme.shapes.small)
+            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = .12f), MaterialTheme.shapes.small),
     ) {
         RampSelector(state = state, onEvent = onEvent, modifier = Modifier.fillMaxWidth())
         AnimatedVisibility(visible = state.rampStyle != RampStyle.Instant) {
@@ -510,8 +512,8 @@ private fun ConditionTile(
             modifier = modifier
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min)
-                .clip(MaterialTheme.shapes.large)
-                .background(MaterialTheme.colorScheme.surfaceContainer),
+                .clip(MaterialTheme.shapes.small)
+                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = .12f), MaterialTheme.shapes.small),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             ConditionContent(
@@ -520,9 +522,7 @@ private fun ConditionTile(
                 onEvent = onEvent,
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxHeight()
-                    .clip(MaterialTheme.shapes.large)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                    .fillMaxHeight(),
             )
             IconButton(
                 onClick = { onEvent(StepEditorEvent.ConditionRemoved(condition.id)) },
@@ -543,8 +543,8 @@ private fun ConditionTile(
             onEvent = onEvent,
             modifier = modifier
                 .fillMaxWidth()
-                .clip(MaterialTheme.shapes.large)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                .clip(MaterialTheme.shapes.small)
+                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = .12f), MaterialTheme.shapes.small),
         )
     }
 }
@@ -566,7 +566,7 @@ private fun ConditionContent(
             },
             selected = condition.measure,
             modifier = Modifier.fillMaxWidth(),
-            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = .06f),
+            containerColor = Color.Transparent,
             label = { it.conditionLabel() },
             icon = { it.metric.icon() },
             experimental = { state.conditionExperimental(it) },
@@ -600,7 +600,7 @@ private fun ConditionContent(
                     },
                     shape = MaterialTheme.shapes.large,
                     colors = IconButtonDefaults.filledTonalIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.onSurface,
                     ),
                     modifier = Modifier.fillMaxHeight().width(64.dp),
@@ -643,7 +643,8 @@ private fun AddConditionButton(
         onClick = { onEvent(StepEditorEvent.ConditionAdded) },
         enabled = enabled,
         shape = MaterialTheme.shapes.large,
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        color = Color.Transparent,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = .12f)),
         modifier = modifier,
     ) {
         Box(

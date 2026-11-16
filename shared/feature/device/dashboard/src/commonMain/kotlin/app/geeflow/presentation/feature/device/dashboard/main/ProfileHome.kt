@@ -142,7 +142,7 @@ internal fun ProfileHome(
                             HomeIcon(Icons.Outlined.Tune, stringResource(Res.string.free_control_screen_title)) { onEvent(DeviceDashboardEvent.FlowControlClicked) }
                             HomeIcon(Icons.Outlined.Settings, stringResource(Res.string.settings_quick_title)) { onEvent(DeviceDashboardEvent.QuickSettingsClicked) }
                             VerticalDivider(Modifier.padding(horizontal = 5.dp).height(22.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = .12f))
-                            DashboardBrewButton(state, onEvent, glassBackground = false, uniformIcons = true)
+                            DashboardBrewButton(state, onEvent, glassBackground = false)
                         }
                     }
                     Column(Modifier.width(rightWidth).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(10.dp)) {

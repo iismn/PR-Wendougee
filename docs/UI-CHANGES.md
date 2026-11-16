@@ -12,11 +12,11 @@ Profile selection, editing, adding, history, brewing, stopping, cleaning and fre
 
 ## Shared workspaces
 
-Profile editing, step editing and quick boiler control share CoffeeWorkspace: the home's 20/12dp outer padding, 20dp gaps, left list width, metric strip and blue-gray right panel. Lists use 12sp, section headings 14sp, metric values 36sp, smaller values 27sp and units 12sp with baseline alignment. Action glyphs use a 20dp box and a 42dp touch target. Settings, forms and dialogs inherit the same text roles and surfaces.
+Profile editing and step editing share CoffeeWorkspace: the home's 20/12dp outer padding, 20dp gaps, left list width, metric strip and blue-gray right panel. Lists use 12sp, section headings 14sp, metric values 36sp, smaller values 27sp and units 12sp with baseline alignment. Action glyphs use a 20dp box and a 42dp touch target. Settings, forms and dialogs inherit the same text roles and surfaces. Nested step-condition and ramp controls are transparent within their parent panel, with subtle group outlines instead of multiple fill colors.
 
-Quick boiler control is a full-screen route. Changing boiler recreates its input control so the selected boiler's range, pending input and event routing stay together. A Compose interaction test checks brew/steam switching and range clamping. Existing confirm events still apply the values.
+Quick boiler control uses the navigation dialog strategy and opens over the current screen. Brew and steam controls share one surface with no nested card fills. Each control retains its own machine-provided range and callback; interaction tests check independent routing, clamping and the disabled applying state. Existing confirm events still apply the values.
 
-The app display name is Wendougee LITA on iOS, Android and desktop. Internal namespaces and GeeFlow attribution are retained. InstrumentNumber's dot glyph renderer was removed; brew metrics use ordinary Pretendard with baseline-aligned units.
+The app display name is Wendougee LITA on iOS, Android and desktop. Internal namespaces and GeeFlow attribution are retained. InstrumentNumber's dot glyph renderer was removed; brew metrics use ordinary Pretendard with baseline-aligned units. The screensaver alone uses monochrome dot digits with radial white glow and no date.
 
 ## Typography and appearance
 
@@ -30,6 +30,10 @@ On iPadOS 26+, `NativeGlassViewController` hosts actual `UIVisualEffectView` obj
 
 The native effect views remain at full alpha. Content text and graphs are painted above the materials. Standard content surfaces and glass action groups are separated according to [Apple's material guidance](https://developer.apple.com/design/human-interface-guidelines/materials). Desktop and Android use the shared Backdrop renderer; their screenshots do not demonstrate UIKit glass.
 
+## Brew controls
+
+All brew action groups use the same 20dp glyph box, including the logo with optical inset. No screen can opt into the old oversized logo. Pressure and flow remain icon-only and expose selection semantics. Free-control fixtures cover both states; tests check icon selection, slider unit/range changes and event routing without starting a brew. Flow stays unavailable on unsupported machine models.
+
 ## Boiler controls
 
 Brew and steam controls use the supplied curved-ruler reference: a large target value, shallow arc, point marker and ticks, plus current temperature, supported range and state below. Both quick settings and full brewing settings use the same component.
@@ -38,7 +42,7 @@ Tapping or dragging snaps to machine-provided values. The large number opens the
 
 ## Verification
 
-The full-UI JVM catalog generates 92 images covering 46 screens/states at 1194×834pt, 2× density. The store renderer additionally covers 1024×768 landscape and phone layouts. These use production Compose components with demo fixtures and the Korean locale. `scripts/check-korean.ps1` verifies resource parity, types and placeholders.
+The full-UI JVM catalog generates 94 images covering 47 screens/states at 1194×834pt, 2× density. The store renderer additionally covers 1024×768 landscape and phone layouts. These use production Compose components with demo fixtures and the Korean locale. `scripts/check-korean.ps1` verifies resource parity, types and placeholders.
 
 The NativeReview XCTest scheme rotates an iPad simulator to landscape and captures home and temperature screens in day/night. `scripts/capture-native-ipad.sh` checks orientation and actual runtime `UIGlassEffect` classes. Native and JVM capture environments are labeled separately; `review/all-ui/manifest.json` identifies the current capture environment and timestamp. Native XCTest output is normalized using UIImage orientation before writing PNG pixels; it still must pass the landscape and runtime-material checks.
 

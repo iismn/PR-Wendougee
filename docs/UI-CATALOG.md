@@ -1,6 +1,6 @@
 # Wendougee LITA UI review
 
-The reference home is `profile-home-day-icons-v2.png` and `profile-home-night-icons-v2.png`. The current home captures match their decoded pixels. Other screens use the same Pretendard type roles, action-icon sizes, surfaces and spacing; editors and quick temperature control share its three-column workspace.
+The reference home is `profile-home-day-icons-v2.png` and `profile-home-night-icons-v2.png`. The current home captures match their decoded pixels. Other screens use the same Pretendard type roles, action-icon sizes, surfaces and spacing; editors share its three-column workspace. Quick temperature control opens as a popup over home.
 
 ## Open the gallery
 
@@ -15,15 +15,17 @@ These are production Compose components with local demo fixtures at 1194×834pt,
 
 ## Coverage
 
-46 states, each captured in day and night:
+47 states, each captured in day and night:
 
 | Area | Screens and states |
 | --- | --- |
-| Brewing | Profile home, profile editor, step editor, brew temperature, steam temperature, free control, pressure/flow charts, brew history |
+| Brewing | Profile home, profile editor, step editor, quick temperature popup, temperature applying, free pressure control, free flow control, pressure/flow charts, brew history |
 | Machine | Quick cleaning in progress, boiler settings, connectivity, machine settings menu, maintenance settings |
 | User | User list, about, appearance, brewing preferences, user settings menu, profile settings, add user, open-source licenses, screensaver |
 | Setup | Add device, device list, welcome, device discovered |
 | Dialogs | Bluetooth permission, cleaning reminder, profile details, finish target, grinder settings, step name/value, user name/delete/photo removal, appearance mode/theme/palette/custom color, screensaver timeout, temperature unit, profile restore, device model/name/warning |
+
+Step forms share one continuous parent background. Brew action icons use a single size across all screens. The screensaver shows only a glowing white dot clock; the date is removed.
 
 The catalog covers the main custom screens and selected dialogs, rather than every possible data or error state. Operating-system camera, photo library, permissions and language settings must be checked on their target platform.
 

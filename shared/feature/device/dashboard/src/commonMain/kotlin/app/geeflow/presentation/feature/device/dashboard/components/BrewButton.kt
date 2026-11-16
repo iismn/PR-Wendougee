@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.IntOffset
@@ -52,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import app.geeflow.ui.components.WaveDivider
+import app.geeflow.ui.components.CoffeeUi
 import app.geeflow.ui.icons.FlowControl
 import app.geeflow.ui.icons.Flush
 import app.geeflow.ui.icons.GeeFlowIcon
@@ -76,6 +78,7 @@ import geeflow.shared.feature.device.dashboard.generated.resources.Res as Dashbo
 data class BrewButtonAction(
     val contentDescription: String,
     val onClick: () -> Unit,
+    val selected: Boolean? = null,
     val icon: @Composable () -> Unit,
 )
 
@@ -88,9 +91,8 @@ fun BrewButton(
     modifier: Modifier = Modifier,
     heroContentDescription: String = stringResource(Res.string.common_start),
     glassBackground: Boolean = true,
-    uniformIcons: Boolean = false,
 ) {
-    require(sideActions.size in 1..MaxSideActions)
+    require(sideActions.size in 0..MaxSideActions)
     val coroutineScope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
@@ -134,8 +136,7 @@ fun BrewButton(
         Icon(
             painter = rememberVectorPainter(GeeFlowIcon.Logo),
             contentDescription = null,
-            modifier = Modifier.size(if (uniformIcons) 20.dp else HeroIconSize)
-                .then(if (uniformIcons) Modifier.padding(2.dp) else Modifier),
+            modifier = Modifier.size(CoffeeUi.icon).padding(2.dp),
             tint = MaterialTheme.colorScheme.onPrimary,
         )
     }
@@ -253,7 +254,13 @@ private fun BrewContent(
             BrewSideButton(
                 enabled = enabled,
                 onClick = { onActionClick(action) },
-                modifier = Modifier.semantics { contentDescription = action.contentDescription },
+                modifier = Modifier
+                    .background(if (action.selected == true) MaterialTheme.colorScheme.onSurface.copy(alpha = .08f) else Color.Transparent,
+                        MaterialTheme.shapes.large)
+                    .semantics {
+                        contentDescription = action.contentDescription
+                        action.selected?.let { selected = it }
+                    },
                 onLongClick = { onActionLongClick(action, Alignment.TopStart) },
             ) {
                 action.icon()
@@ -294,7 +301,9 @@ private fun RowScope.BrewSideButton(
             ),
         contentAlignment = Alignment.Center,
     ) {
-        content()
+        Box(Modifier.size(CoffeeUi.icon), contentAlignment = Alignment.Center, propagateMinConstraints = true) {
+            content()
+        }
     }
 }
 
@@ -330,7 +339,6 @@ private const val MaxSideActions = 3
 
 private val SideButtonMinWidth = 64.dp
 private val ButtonHeight = 50.dp
-private val HeroIconSize = 32.dp
 private val TooltipVerticalOffset = (-44).dp
 private val TooltipHorizontalOffset = 32.dp
 private val TooltipShadowElevation = 4.dp

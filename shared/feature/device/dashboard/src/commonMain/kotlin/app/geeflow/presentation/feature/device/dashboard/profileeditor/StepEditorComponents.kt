@@ -86,7 +86,7 @@ internal fun EditorButton(
     value: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    containerColor: Color = Color.Transparent,
     enabled: Boolean = true,
     icon: ImageVector? = null,
     trailing: (@Composable () -> Unit)? = null,
@@ -155,7 +155,7 @@ internal fun <T> EditorChoice(
     values: List<T>,
     selected: T,
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+    containerColor: Color = Color.Transparent,
     label: @Composable (T) -> String,
     icon: ((T) -> ImageVector)? = null,
     experimental: (T) -> Boolean = { false },
@@ -322,7 +322,7 @@ internal fun RampSelector(
             onClick = { expanded = true },
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.small,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = .055f),
+            color = Color.Transparent,
         ) {
             Row(
                 modifier = Modifier.padding(12.dp),
@@ -331,7 +331,7 @@ internal fun RampSelector(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    color = Color.Transparent,
                     modifier = Modifier.size(40.dp),
                 ) {
                     Box(
