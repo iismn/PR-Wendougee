@@ -1,41 +1,61 @@
 # Mac에서 이어서 작업하기
 
-현재 앱 기반은 **GeeFlow(Kotlin Multiplatform/Compose)**입니다. 이전 Crema Xcode 프로젝트와 웹 UI는 제거했습니다. 기존 작업 이력은 Git 기록에 남아 있습니다.
+이 앱은 GeeFlow의 Kotlin Multiplatform/Compose 기반 UI 포크입니다. iPad 가로 홈은 원형 프로파일, 왼쪽 목록, 오른쪽 추출 그래프와 중앙 하단의 통합 조작부로 구성됩니다.
+
+## 로컬 iOS 실행
 
 ```sh
 git clone https://github.com/iismn/PR-Wendougee.git
 cd PR-Wendougee
+open iosApp/iosApp.xcodeproj
 ```
 
-JDK21과 최신 Xcode를 설치합니다. Android 타깃도 포함하므로 Android SDK는 Android Studio에서 설치하고, 필요하면 `local.properties`에 `sdk.dir`를 지정합니다. 프로젝트의 Gradle wrapper를 사용하세요.
+Xcode 26 이상과 JDK 21을 설치합니다. Xcode에 맞는 macOS 버전은 [Apple 요구 사항](https://developer.apple.com/xcode/system-requirements/)을 확인하세요. Android 타깃도 포함하므로 Android Studio의 SDK Manager에서 Android SDK를 설치하고, 필요하면 저장소 루트의 `local.properties`에 `sdk.dir=/Users/사용자/Library/Android/sdk`를 지정합니다. `local.properties`는 커밋하지 않습니다.
+
+Xcode의 **iosApp** 스킴에서 iPad Simulator를 선택하고 Run을 누릅니다. 실제 iPad 설치에는 본인 Signing Team과 고유 Bundle Identifier를 설정합니다. 이 포크의 설치용 IPA나 App Store 앱은 아직 배포하지 않았습니다.
+
+Windows에서는 Xcode/iOS 빌드를 할 수 없습니다. 이 저장소의 CI는 임시 Mac에서 Kotlin/Native 프레임워크와 iOS 앱을 함께 빌드하므로 첫 빌드가 오래 걸립니다. 로컬 Mac에서는 같은 작업 폴더, Gradle 캐시와 Xcode DerivedData를 유지하고 `clean`을 반복하지 마세요. UI 수정은 아래 JVM 렌더로 먼저 확인하고, UIKit 재질과 터치는 iPad에서 확인하면 됩니다.
+
+## 빠른 UI 검토
 
 ```sh
 ./gradlew :desktopApp:run
 ./gradlew :shared:feature:device:dashboard:generateStoreScreenshots
-open iosApp/iosApp.xcodeproj
+node scripts/preview-compose.cjs docs/screenshots
 ```
 
-Xcode의 `iosApp` 스킴에서 iPad Simulator를 선택합니다. 실제 iPad 설치는 본인 Signing Team과 고유 Bundle Identifier를 설정합니다. 배포나 앱스토어 제출은 수행하지 않았습니다.
+`http://127.0.0.1:4181`에서 홈·온도·레시피·단계 화면의 낮과 밤을 비교합니다. 파일이 바뀌면 자동으로 갱신됩니다. 이 창은 실제 Compose 화면을 렌더링한 이미지 뷰어이며, 머신을 제어하는 앱은 아닙니다. JVM 이미지는 UIKit Liquid Glass의 증거가 아닙니다.
 
-한국어 iPad에서는 한국어 UI가 자동으로 표시됩니다. 다른 언어의 iPad에서는 설정 앱의 GeeFlow 언어를 한국어로 선택하세요. 앱의 `화면 → 언어`에서 시스템 설정으로 이동할 수 있습니다. Pretendard 네 가지 굵기는 앱에 포함되어 있어 별도 설치가 필요 없습니다. `화면 → 화면 모드 → 시간에 맞춰 자동`을 선택하면 현지 시간에 따라 색상이 바뀝니다.
+저장된 검토 이미지를 보려면 `node scripts/preview-compose.cjs docs/review`를 사용합니다. 소스 커밋과 렌더 환경은 `docs/review/latest.json`에 기록합니다.
 
-가로 추출 화면은 왼쪽 그래프와 세 묶음의 도트 측정값, 오른쪽 레시피 목록과 타이머·조작부로 구성됩니다. 숫자를 누르면 해당 그래프를 켜거나 끕니다. 꺼진 그래프의 숫자는 발광이 약해집니다. 레시피는 왼쪽으로 밀어 편집·복제 등에 접근하고, 길게 눌러 순서를 바꿉니다. 도트 표시와 배경의 유리 효과는 실제 공유 Compose 코드에 구현되어 있습니다.
+## 한국어와 시간 연동
 
-검증 명령:
+한국어 iPad에서는 UI가 자동으로 한국어로 표시됩니다. 다른 언어의 iPad에서는 설정 앱의 GeeFlow 언어를 한국어로 선택하세요. 앱의 **화면 → 언어**에서도 시스템 설정으로 이동할 수 있습니다. Pretendard 네 가지 굵기는 앱에 포함됩니다.
+
+**화면 → 화면 모드 → 시간에 맞춰 자동**을 선택하면 현지 06:00/12:00/18:00/23:00에 맞춰 색상이 바뀝니다. 앱이 다시 활성화될 때와 실행 중 30초마다 시간대를 확인합니다. 앱 색상만 바꾸며 디스플레이 밝기는 바꾸지 않습니다.
+
+## 네이티브 Liquid Glass
+
+`iosApp/iosApp/NativeGlassViewController.swift`가 UIKit 배경, `UIVisualEffectView`와 `UIGlassEffect`, 투명 Compose 전경을 관리합니다. iPadOS 26 이상은 실제 `UIGlassEffect`, 이전 버전은 `UIBlurEffect(.systemMaterial)`를 사용합니다. Compose 컴포넌트가 전달하는 창 좌표로 네이티브 재질의 위치를 맞추고, 제거와 터치 상태도 전달합니다.
+
+빠른 설정과 전체 추출 설정에는 같은 추출·스팀 보일러 곡선 눈금 카드를 사용합니다. 머신에서 제공한 값으로 조절되고 기존 확인·저장 동작으로 적용됩니다.
+
+Xcode의 **NativeReview** 스킴에서 iPad 시뮬레이터를 선택하고 Test를 실행하면 XCTest가 기기를 가로로 돌려 낮·밤 홈과 온도 화면을 캡처합니다. CI와 같은 파일을 추출하려면 다음 명령을 실행합니다.
 
 ```sh
-./gradlew :shared:core:ui:jvmTest :shared:feature:device:dashboard:jvmTest :shared:domain:user:jvmTest
-./gradlew :desktopApp:compileKotlin
-cd iosApp
-xcodebuild -project iosApp.xcodeproj -scheme iosApp -configuration Debug -sdk iphonesimulator build CODE_SIGNING_ALLOWED=NO
+xcodebuild -project iosApp/iosApp.xcodeproj -scheme NativeReview -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/ios-review build-for-testing CODE_SIGNING_ALLOWED=NO
+bash scripts/capture-native-ipad.sh
 ```
 
-`GeeFlow iPad UI` Actions가 같은 코드의 실제 Compose 캡처, 관련 테스트, 데스크톱 컴파일 및 iPad 시뮬레이터 빌드를 검사합니다. 캡처는 `geeflow-compose-review` 아티팩트에서 받을 수 있습니다.
+`build/native-review`에는 PNG와 런타임 재질 객체 JSON, 소스 커밋이 저장됩니다. 스크립트는 iPadOS 26 이상, 가로 이미지 크기, 실제 `UIGlassEffect` 클래스 존재를 검사합니다. 캡처 진입점은 Debug 전용이며 GeeFlow의 데모 데이터로 실제 프로덕션 UI를 구성합니다.
 
-포함된 캡처의 앱 소스 커밋은 `docs/review/latest.json`에 기록합니다. 최신 재질·배치 수정에서 관련 JVM 테스트 87개, 실제 Compose 화면 11개 렌더링과 데스크톱 컴파일이 통과했습니다. 유리 표면의 접촉 반응이 레시피 선택·스크롤을 가로막지 않는 테스트도 포함합니다. iOS 시뮬레이터는 이전 소스 `ecdb4e8d`의 [검증 실행](https://github.com/iismn/PR-Wendougee/actions/runs/43791372576)에서 통과했으며, 최신 소스의 결과는 [Actions](https://github.com/iismn/PR-Wendougee/actions/workflows/ipad-design.yml)에서 커밋을 대조해 확인하세요.
+## 검증
 
-재질은 Apple HIG의 콘텐츠/조작 계층을 따라 구분했습니다. 그래프는 테두리 없는 표면, 사이드바와 조작부는 배경 블러·굴절·접촉 반응을 사용합니다. 현재 효과는 공유 Compose 렌더러이며 iOS의 `UIGlassEffect`를 호출하는 구현은 아닙니다.
+```sh
+./gradlew :shared:core:ui:jvmTest :shared:feature:device:dashboard:jvmTest :shared:domain:user:jvmTest :shared:domain:device:jvmTest
+./gradlew :desktopApp:compileKotlin
+```
 
-포함된 캡처를 바로 비교하려면 Node.js로 `node scripts/preview-compose.cjs docs/review`를 실행하고 `http://127.0.0.1:4181`을 엽니다. 직접 다시 렌더링했다면 인수를 생략해 `docs/screenshots`를 사용합니다. Actions 아티팩트를 받았다면 그 안의 `docs/screenshots` 경로를 전달합니다. 파일이 갱신되면 검토 창도 자동으로 갱신됩니다. 이 창은 실제 Compose에서 생성된 이미지 뷰어이며 머신을 조작하는 앱은 아닙니다.
+관련 JVM 테스트 240개와 한국어 리소스 419개 검사가 통과했습니다. 프로파일 선택·편집, 온도 범위와 비활성 상태, 기기 제공 값 선택, 네이티브 재질의 좌표·제거·터치 전달을 포함합니다. 최신 iOS 빌드와 캡처 결과는 [Actions](https://github.com/iismn/PR-Wendougee/actions/workflows/ipad-design.yml)에서 확인하세요.
 
-실제 iPad에서 가로 안전 영역·큰 글자·터치·회전 및 LITA 연결·온도·프로필 전송·추출·정지·저울·기록을 확인해야 합니다. 이번 변경은 UI와 appearance 설정이며 머신 프로토콜은 GeeFlow 원본을 따릅니다.
+실제 iPad의 가로 안전 영역·큰 글자·터치·회전과 LITA의 연결·온도 적용·프로파일 전송·추출·정지·저울·기록은 하드웨어에서 확인해야 합니다. 머신 프로토콜은 GeeFlow 원본을 따릅니다.

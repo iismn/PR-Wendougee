@@ -1,18 +1,37 @@
 # GeeFlow iPad interface
 
-This repository now uses [drobekk/GeeFlow](https://github.com/drobekk/GeeFlow) as its application base. The previous Crema source and HTML reconstruction are no longer part of the application. Upstream Git ancestry, GPL-3.0 license and authorship remain preserved.
+This is a UI fork of [drobekk/GeeFlow](https://github.com/drobekk/GeeFlow). Upstream Git ancestry, authorship and GPL-3.0 licensing are preserved. The original README at the imported revision is retained in `UPSTREAM_README.md`.
 
-The primary display is a landscape iPad. GeeFlow's device status, boiler readings, charts, chart toggles, profile/history list, editing, free control, cleaning and BLE services remain the source of behavior.
+## Profile home
 
-UI changes:
+The landscape home follows the supplied reference: four large readings across the top, a narrow pressure summary and profile list on the left, one large circular profile selector in the center, and a tall graph panel on the right. The small surrounding circles have been removed. The left list uses consistent rows within one surface, with a restrained selected state and an edit action. A stronger cool blue-gray gradient colors the right panel.
 
-- Pretendard Regular/Medium/SemiBold/Bold across shared Compose screens, with tabular numerals. Fonts come from the official [Pretendard distribution](https://github.com/orioncactus/pretendard/tree/main/packages/pretendard/dist/public/static); license in `docs/licenses/Pretendard-OFL.txt`.
-- Korean resources cover every shared UI string and plural, including settings, connection errors, recipe/step editors, maintenance and onboarding. iOS and Android register Korean as an app language; iOS permission prompts are also translated. Existing user-authored recipes and names remain intact. Linked upstream terms, privacy and third-party licenses retain their original language.
-- Cool white surfaces with red-orange ambient light by day; a black base with deep navy light at night. Radial background gradients transition over 1.2 seconds at local time boundaries. The ambient layer is captured separately for [Backdrop 2.0.1](https://github.com/Kyant0/AndroidLiquidGlass/tree/2.0.1). Following [Apple's material hierarchy](https://developer.apple.com/design/human-interface-guidelines/materials), graphs and editing content use standard frosted surfaces without lens effects or outlines. The recipe sidebar and action groups use regular glass with live blur, narrow lens refraction, restrained directional highlights and contact illumination. Source-over blending replaces additive white rims. The text-bearing sidebar uses denser frosting; its selected rows and search control use flat fills, avoiding glass on glass. This is a shared Compose implementation, not Apple's UIKit Liquid Glass API. Text remains sharp and recipe swipe/drag behavior is retained.
-- Horizontal controls have a fine ruler aligned with the drag range, a contrasting indicator and a tap action for exact numeric input. Accessibility adjustments clamp to the supported range; disabled controls do not send changes.
-- Landscape follows the user's supplied layout: a compact header clusters status and actions on the left; the wider charts and recipe library share their top and bottom edges. The library uses 24% of screen width, bounded to 232–320 dp. The footer groups pressure, rates and totals with spacing and fine vertical separators, without pill backgrounds, underline bars or duplicate recipe/ratio text. Units align to the dot ink's bottom baseline. Readings and halos are monochrome (black by day, neutral white at night); chart visibility is reflected in halo strength. The timer and brew controls stay on the right. Narrow phone layouts wrap the readings into equal-size cells. Panel radii are reduced to 16–18 dp, with 14 dp recipe selection corners.
-- New **Time of day** appearance setting, enabled for new users. Local 06:00/12:00/18:00/23:00 boundaries select morning/day/evening/night. The clock is rechecked on resume and every30 seconds, including timezone changes. Existing System/Light/Dark settings remain available. This changes app colors, not hardware brightness.
-- The footer begins at the same 14 dp left edge as the graph panels. Removing its 24 dp inset and centered groups aligns the first dot to that edge. The panel-to-footer spacer is reduced from 32 to 8 dp, and the footer from 64 to 56 dp, adding 32 dp to both the graphs and recipe library. Header action targets are at least 44 dp. Metric units retain their dot-bottom baseline and readings remain grouped.
-- Screenshots are rendered from actual shared Compose components via `generateStoreScreenshots`, including dashboard, profile editor and step editor in day/night, a 1024×768 landscape dashboard in both themes, and phone layouts (11 images total). These are JVM Compose renders, not iPad simulator captures.
+The selected circle retains its reference size and position. Fine perimeter ticks and an animated needle show brew progress; tapping it opens the existing editor. Curved controls beside the circle open quick settings, free control and detailed charts. The bottom-center navigation and formerly bottom-right brew controls share one glass bar. The brew controls do not create a second glass layer inside that bar.
 
-Screenshots use the Korean locale. Demo fixtures are GeeFlow's own preview data, not measurements from the user's machine. `scripts/check-korean.ps1` checks resource parity, XML and format placeholders.
+Profile selection, editing, adding, history, brewing, stopping, cleaning and free control continue to use the existing dashboard/profile events and guards. Full charts, dot readings and the original profile/history management remain accessible from the chart icon. Compact phone layouts are preserved.
+
+## Typography and appearance
+
+Pretendard Regular/Medium/SemiBold/Bold is bundled with tabular numerals. Korean resources cover shared UI strings, plural forms, settings, permission prompts, errors and editors. User-authored names and descriptions remain unchanged. The font license is in `licenses/Pretendard-OFL.txt`.
+
+A cool white base with red-orange ambient light transitions to black and deep navy at night. The local 06:00/12:00/18:00/23:00 phases are checked on resume and every 30 seconds. System, Light and Dark modes remain available. This changes app colors, not hardware brightness.
+
+## Native materials
+
+On iPadOS 26+, `NativeGlassViewController` hosts actual `UIVisualEffectView` objects with `UIGlassEffect(style: .regular)` beneath a transparent Compose view. They sample a UIKit ambient background. Window-point coordinates, removal and pressed state are sent from shared components. A weak relay prevents a controller retain cycle. Previous iPadOS versions use `UIBlurEffect(.systemMaterial)`.
+
+The native effect views remain at full alpha. Content text and graphs are painted above the materials. Standard content surfaces and glass action groups are separated according to [Apple's material guidance](https://developer.apple.com/design/human-interface-guidelines/materials). Desktop and Android use the shared Backdrop renderer; their screenshots do not demonstrate UIKit glass.
+
+## Boiler controls
+
+Brew and steam controls use the supplied curved-ruler reference: a large target value, shallow arc, point marker and ticks, plus current temperature, supported range and state below. Both quick settings and full brewing settings use the same component.
+
+Tapping or dragging snaps to machine-provided values. The large number opens the original numeric input. Boiler-off and applying states disable adjustment. Existing confirmation actions, units and BLE use cases are retained.
+
+## Verification
+
+The JVM renderer generates 13 images, including 1194×834 and 1024×768 landscape layouts at 2× density, phone layouts and temperature controls. These use production Compose components with demo fixtures and the Korean locale. `scripts/check-korean.ps1` verifies resource parity, types and placeholders.
+
+The NativeReview XCTest scheme rotates an iPad simulator to landscape and captures home and temperature screens in day/night. `scripts/capture-native-ipad.sh` checks orientation and actual runtime `UIGlassEffect` classes. Native and JVM capture environments are labeled separately; `review/latest.json` identifies the published source and environment.
+
+Local JVM checks cover profile selection/editing without starting the machine, an empty profile library, boiler input constraints, theme behavior, native frame cleanup and touch forwarding. Actual LITA hardware and physical iPad interaction remain to be verified.
