@@ -88,6 +88,7 @@ fun BrewButton(
     modifier: Modifier = Modifier,
     heroContentDescription: String = stringResource(Res.string.common_start),
     glassBackground: Boolean = true,
+    uniformIcons: Boolean = false,
 ) {
     require(sideActions.size in 1..MaxSideActions)
     val coroutineScope = rememberCoroutineScope()
@@ -133,7 +134,8 @@ fun BrewButton(
         Icon(
             painter = rememberVectorPainter(GeeFlowIcon.Logo),
             contentDescription = null,
-            modifier = Modifier.size(HeroIconSize),
+            modifier = Modifier.size(if (uniformIcons) 20.dp else HeroIconSize)
+                .then(if (uniformIcons) Modifier.padding(2.dp) else Modifier),
             tint = MaterialTheme.colorScheme.onPrimary,
         )
     }

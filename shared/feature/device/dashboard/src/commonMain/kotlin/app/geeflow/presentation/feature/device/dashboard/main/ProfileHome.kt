@@ -142,7 +142,7 @@ internal fun ProfileHome(
                             HomeIcon(Icons.Outlined.Tune, stringResource(Res.string.free_control_screen_title)) { onEvent(DeviceDashboardEvent.FlowControlClicked) }
                             HomeIcon(Icons.Outlined.Settings, stringResource(Res.string.settings_quick_title)) { onEvent(DeviceDashboardEvent.QuickSettingsClicked) }
                             VerticalDivider(Modifier.padding(horizontal = 5.dp).height(22.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = .12f))
-                            DashboardBrewButton(state, onEvent, glassBackground = false)
+                            DashboardBrewButton(state, onEvent, glassBackground = false, uniformIcons = true)
                         }
                     }
                     Column(Modifier.width(rightWidth).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -204,7 +204,7 @@ private fun HomeMetric(label: String, value: String, unit: String, small: Boolea
 private fun HomeIcon(icon: ImageVector, label: String, selected: Boolean = false, onClick: () -> Unit) {
     IconButton(onClick, Modifier.size(42.dp).background(
         if (selected) MaterialTheme.colorScheme.onSurface else Color.Transparent, CircleShape)) {
-        Icon(icon, label, Modifier.size(19.dp), tint = if (selected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurface)
+        Icon(icon, label, Modifier.size(20.dp), tint = if (selected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurface)
     }
 }
 
