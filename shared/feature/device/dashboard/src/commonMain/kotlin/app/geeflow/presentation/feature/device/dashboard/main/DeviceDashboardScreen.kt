@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -204,7 +205,7 @@ private fun ExpandedDashboard(
                 photoFileName = viewState.user.photoFileName,
                 onEvent = onEvent,
                 compact = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).padding(start = 6.dp),
             )
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -226,7 +227,7 @@ private fun ExpandedDashboard(
                     isBrewing = viewState.device.isBrewing,
                     visibleCharts = viewState.visibleCharts,
                     onToggle = { onEvent(DeviceDashboardEvent.ToggleChartVisibility(it)) },
-                    modifier = Modifier.widthIn(max = 560.dp),
+                    modifier = Modifier.padding(start = 24.dp).widthIn(max = 540.dp),
                 )
                 Spacer(Modifier.weight(1f))
                 BrewTime(viewState.brew.time, Modifier.padding(end = 12.dp))

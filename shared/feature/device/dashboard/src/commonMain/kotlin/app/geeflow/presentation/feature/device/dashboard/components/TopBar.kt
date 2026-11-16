@@ -114,7 +114,7 @@ internal fun TopBar(
         ) {
             GeeFlowUserAvatar(
                 photoFileName = photoFileName,
-                modifier = Modifier.size(if (compact) 40.dp else 48.dp),
+                modifier = Modifier.size(if (compact) 32.dp else 48.dp),
                 onClick = { onEvent(UserClicked) },
             )
             HorizontalSpacer(8.dp)
