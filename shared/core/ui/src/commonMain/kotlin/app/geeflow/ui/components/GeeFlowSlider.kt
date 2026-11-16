@@ -21,7 +21,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
@@ -47,9 +54,12 @@ fun GeeFlowSlider(
     allowDecimal: Boolean = true,
     onClick: (() -> Unit)? = null,
 ) {
-    val fraction = ((value - valueRange.start) / (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
-    val fillColor = if (enabled) color else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-    val trackColor = if (enabled) color.copy(alpha = 0.15f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+    val span = valueRange.endInclusive - valueRange.start
+    val interactive = enabled && span > 0f
+    val fraction = if (span > 0f) ((value - valueRange.start) / span).coerceIn(0f, 1f) else 0f
+    val fillColor = if (enabled) color.copy(alpha = 0.16f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+    val trackColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.62f)
+    val tickColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.30f)
     val valueStyle = MaterialTheme.typography.titleLarge
     val unitStyle = MaterialTheme.typography.labelSmall
     val textColor = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
@@ -61,8 +71,19 @@ fun GeeFlowSlider(
         modifier = modifier
             .clip(shape)
             .background(trackColor)
+            .semantics(mergeDescendants = true) {
+                stateDescription = "$valueLabel $unit"
+                progressBarRangeInfo = ProgressBarRangeInfo(value.coerceIn(valueRange), valueRange)
+                if (!interactive) disabled()
+                setProgress { requested ->
+                    if (interactive && requested.isFinite()) {
+                        updatedOnValueChange(requested.coerceIn(valueRange))
+                        true
+                    } else false
+                }
+            }
             .then(
-                if (enabled) {
+                if (vertical && interactive) {
                     Modifier.waveBackground(
                         progress = fraction,
                         color = fillColor,
@@ -79,16 +100,31 @@ fun GeeFlowSlider(
                                 size = Size(size.width, fillHeight),
                             )
                         } else {
+                            val inset = 20.dp.toPx()
+                            val width = (size.width - 2 * inset).coerceAtLeast(1f)
+                            val position = inset + width * fraction
                             drawRect(
                                 color = fillColor,
-                                size = Size(size.width * fraction, size.height),
+                                size = Size(position, size.height),
+                            )
+                            val baseline = size.height - 9.dp.toPx()
+                            for (tick in 0..24) {
+                                val x = inset + width * tick / 24f
+                                val tickHeight = if (tick % 4 == 0) 7.dp.toPx() else 3.dp.toPx()
+                                drawLine(tickColor, Offset(x, baseline), Offset(x, baseline - tickHeight), 1.dp.toPx(), StrokeCap.Round)
+                            }
+                            drawLine(
+                                if (interactive) color else tickColor,
+                                Offset(position, baseline + 1.dp.toPx()),
+                                Offset(position, baseline - 11.dp.toPx()),
+                                3.dp.toPx(), StrokeCap.Round,
                             )
                         }
                     }
                 },
             )
             .then(
-                if (enabled) {
+                if (interactive) {
                     Modifier
                         .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
                         .pointerInput(valueRange, vertical) {
@@ -96,7 +132,8 @@ fun GeeFlowSlider(
                                 val newFraction = if (vertical) {
                                     1f - change.position.y / size.height
                                 } else {
-                                    change.position.x / size.width
+                                    val inset = 20.dp.toPx()
+                                    (change.position.x - inset) / (size.width - 2 * inset).coerceAtLeast(1f)
                                 }
                                 updatedOnValueChange(
                                     valueRange.start +
@@ -137,7 +174,7 @@ fun GeeFlowSlider(
                 color = textColor,
                 modifier = Modifier
                     .align(Alignment.CenterStart)
-                    .padding(horizontal = 20.dp),
+                    .padding(start = 20.dp, bottom = 12.dp),
             )
             Text(
                 text = unit,
@@ -145,7 +182,7 @@ fun GeeFlowSlider(
                 color = textColor,
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
-                    .padding(horizontal = 20.dp),
+                    .padding(end = 20.dp, bottom = 12.dp),
             )
         }
     }

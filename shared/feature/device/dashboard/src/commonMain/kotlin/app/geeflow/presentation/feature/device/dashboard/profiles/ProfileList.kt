@@ -62,6 +62,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
@@ -89,6 +91,7 @@ import app.geeflow.ui.icons.GeeFlowIcon
 import app.geeflow.ui.theme.GeeFlowComponentPreview
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
 import app.geeflow.ui.theme.disabled
+import app.geeflow.ui.theme.coffeeGlass
 import geeflow.shared.feature.device.dashboard.generated.resources.Res
 import geeflow.shared.feature.device.dashboard.generated.resources.brew_history_empty
 import geeflow.shared.feature.device.dashboard.generated.resources.experimental_title
@@ -133,8 +136,7 @@ private fun ProfileListContent(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surfaceContainer, MaterialTheme.shapes.large),
+            .coffeeGlass(MaterialTheme.shapes.large),
     ) {
         AnimatedContent(
             targetState = viewState.showHistory,
@@ -228,7 +230,6 @@ private fun ProfilesColumn(
                     isDragging = isDragging,
                     modifier = Modifier
                         .animateItem()
-                        .background(MaterialTheme.colorScheme.surfaceContainer)
                         .longPressDraggableHandle(
                             enabled = !profile.bound,
                             onDragStarted = { haptic.performHapticFeedback(LongPress) },
@@ -429,7 +430,7 @@ private fun SearchBar(
     }
 
     Row(
-        modifier = modifier.background(color = MaterialTheme.colorScheme.background, shape = CircleShape),
+        modifier = modifier.coffeeGlass(CircleShape),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -515,20 +516,26 @@ private fun ProfileItem(
 
     GeeFlowSwipeToRevealBox(
         state = swipeToDismissBoxState,
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().clip(RoundedCornerShape(22.dp)),
         enableDismissFromStartToEnd = false,
         gesturesEnabled = !isDragging,
         backgroundContent = {
-            ProfileItemRevealContent(
-                profile = profile,
-                modifier = Modifier.fillMaxSize(),
-                onEvent = {
-                    scope.launch {
-                        swipeToDismissBoxState.dismiss(SwipeToRevealBoxValue.Settled)
-                        onEvent(it)
-                    }
-                },
-            )
+            if (swipeToDismissBoxState.offset < -1f) {
+                ProfileItemRevealContent(
+                    profile = profile,
+                    modifier = Modifier.fillMaxSize().drawWithContent {
+                        clipRect(left = (size.width + swipeToDismissBoxState.offset).coerceIn(0f, size.width)) {
+                            this@drawWithContent.drawContent()
+                        }
+                    },
+                    onEvent = {
+                        scope.launch {
+                            swipeToDismissBoxState.dismiss(SwipeToRevealBoxValue.Settled)
+                            onEvent(it)
+                        }
+                    },
+                )
+            }
         },
     ) {
         ProfileItemContent(
@@ -548,7 +555,7 @@ private fun ProfileItemRevealContent(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.background(MaterialTheme.colorScheme.surface),
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
@@ -611,7 +618,7 @@ private fun ProfileItemContent(
     modifier: Modifier = Modifier,
 ) {
     val backgroundColor by animateColorAsState(
-        if (profile.selected) MaterialTheme.colorScheme.surfaceContainerHigh else MaterialTheme.colorScheme.surface,
+        if (profile.selected) MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.76f) else Color.Transparent,
         label = "selectedRecipe",
     )
     Row(

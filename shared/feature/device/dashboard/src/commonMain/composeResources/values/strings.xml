@@ -1,4 +1,5 @@
 <resources>
+    <string name="dashboard_tab_details">Brew</string>
     <string name="device_error_title">Device error</string>
     <string name="device_error_none">No active device errors.</string>
     <string name="device_error_code">Error code: %1$d</string>

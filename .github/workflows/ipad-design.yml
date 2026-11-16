@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: geeflow-ui-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   compose-review:
     runs-on: windows-latest

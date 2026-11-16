@@ -1,4 +1,5 @@
 <resources>
+    <string name="dashboard_tab_details">추출</string>
     <string name="device_error_title">머신 오류</string>
     <string name="device_error_none">현재 발생한 오류가 없습니다</string>
     <string name="device_error_code">오류 코드: %1$d</string>

@@ -65,6 +65,10 @@ import geeflow.shared.core.ui.generated.resources.Res
 import geeflow.shared.core.ui.generated.resources.error_generic
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
+import geeflow.shared.feature.device.dashboard.generated.resources.dashboard_tab_details
+import geeflow.shared.feature.device.dashboard.generated.resources.profile_list_show_profiles
+import geeflow.shared.feature.device.dashboard.generated.resources.Res as DashboardRes
 
 @Composable
 internal fun DeviceDashboardScreen(
@@ -360,8 +364,8 @@ private fun TabRow(
         )
         Text(
             text = when (page) {
-                CompactDashboardPage.Details -> "Details"
-                CompactDashboardPage.Profiles -> "Profiles"
+                CompactDashboardPage.Details -> stringResource(DashboardRes.string.dashboard_tab_details)
+                CompactDashboardPage.Profiles -> stringResource(DashboardRes.string.profile_list_show_profiles)
             },
             modifier = Modifier
                 .clip(MaterialTheme.shapes.large)

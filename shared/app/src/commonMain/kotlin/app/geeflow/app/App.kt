@@ -16,6 +16,7 @@ import app.geeflow.platform.ThemeModeEffect
 import app.geeflow.platform.isKeepScreenOnSupported
 import app.geeflow.platform.rememberIsConnectedToPower
 import app.geeflow.ui.theme.GeeFlowTheme
+import app.geeflow.ui.theme.CoffeeDayPhase
 import app.geeflow.ui.theme.rememberCoffeeDayPhase
 import app.geeflow.ui.theme.coffeeColorScheme
 import app.geeflow.ui.theme.ThemeMode
@@ -49,6 +50,8 @@ fun App(closeApp: () -> Unit) {
             colorScheme = if (appearance.themeMode == UserThemeMode.CLOCK) coffeeColorScheme(phase)
                 else rememberAppColorScheme(appearance, darkMode),
             modifier = Modifier.fillMaxSize(),
+            phase = if (appearance.themeMode == UserThemeMode.CLOCK) phase
+                else if (darkMode) CoffeeDayPhase.Night else CoffeeDayPhase.Day,
         ) {
             ThemeModeEffect(if (appearance.themeMode == UserThemeMode.CLOCK) {
                 if (darkMode) ThemeMode.Dark else ThemeMode.Light

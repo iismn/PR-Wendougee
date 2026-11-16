@@ -13,15 +13,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import app.geeflow.ui.isWidthExpanded
-import app.geeflow.ui.theme.colorscheme.EspressoSeed
-import com.materialkolor.PaletteStyle
-import com.materialkolor.rememberDynamicColorScheme
 
 @Composable
 fun GeeFlowTheme(
     darkMode: Boolean,
     colorScheme: ColorScheme,
     modifier: Modifier = Modifier,
+    phase: CoffeeDayPhase = if (darkMode) CoffeeDayPhase.Night else CoffeeDayPhase.Day,
     content: @Composable () -> Unit,
 ) {
     @Composable fun tone(color: Color) = animateColorAsState(color, tween(600), label = "appearance").value
@@ -43,7 +41,7 @@ fun GeeFlowTheme(
         LocalColors provides customColors,
     ) {
         MaterialTheme(
-            colorScheme = animatedColors,
+            colorScheme = animatedColors.copy(background = Color.Transparent),
             shapes = Shapes(
                 extraSmall = RoundedCornerShape(8.dp), small = RoundedCornerShape(14.dp),
                 medium = RoundedCornerShape(24.dp), large = RoundedCornerShape(28.dp),
@@ -51,11 +49,9 @@ fun GeeFlowTheme(
             ),
             typography = geeFlowTypography(),
             content = {
-                Surface(
-                    modifier = modifier,
-                    color = animatedColors.background,
-                    content = content,
-                )
+                CoffeeBackdrop(phase = phase, modifier = modifier) {
+                    Surface(color = Color.Transparent, content = content)
+                }
             },
         )
     }
@@ -68,11 +64,7 @@ fun GeeFlowThemePreview(
 ) {
     GeeFlowTheme(
         darkMode = darkMode,
-        colorScheme = rememberDynamicColorScheme(
-            seedColor = EspressoSeed,
-            isDark = darkMode,
-            style = PaletteStyle.TonalSpot,
-        ),
+        colorScheme = coffeeColorScheme(if (darkMode) CoffeeDayPhase.Night else CoffeeDayPhase.Day),
         content = content,
     )
 }

@@ -63,6 +63,7 @@ private fun render(
         GeeFlowTheme(
             darkMode = phase.dark,
             colorScheme = coffeeColorScheme(phase),
+            phase = phase,
         ) {
             Box(
                 modifier = Modifier

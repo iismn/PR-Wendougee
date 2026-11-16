@@ -47,8 +47,10 @@ import app.geeflow.ui.theme.GeeFlowComponentPreview
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
 import app.geeflow.ui.components.InstrumentNumber
 import app.geeflow.ui.theme.GeeFlowTheme
+import app.geeflow.ui.theme.coffeeGlass
 import geeflow.shared.core.ui.generated.resources.Res
 import geeflow.shared.core.ui.generated.resources.common_avg
+import geeflow.shared.core.ui.generated.resources.common_sec
 import geeflow.shared.core.ui.generated.resources.unit_bar
 import geeflow.shared.core.ui.generated.resources.unit_grams
 import geeflow.shared.core.ui.generated.resources.unit_grams_per_second
@@ -106,7 +108,7 @@ internal fun BrewHeader(
             Spacer(modifier = Modifier.weight(1f))
         }
         Text(
-            text = "${brew.time}s",
+            text = "${brew.time} ${stringResource(Res.string.common_sec)}",
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -257,8 +259,7 @@ private fun SummaryItem(
 ) {
     Row(
         modifier = modifier
-            .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surface),
+            .coffeeGlass(MaterialTheme.shapes.large),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
