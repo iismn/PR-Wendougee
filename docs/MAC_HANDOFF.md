@@ -32,7 +32,7 @@ xcodebuild -project iosApp.xcodeproj -scheme iosApp -configuration Debug -sdk ip
 
 `GeeFlow iPad UI` Actions가 같은 코드의 실제 Compose 캡처, 관련 테스트, 데스크톱 컴파일 및 iPad 시뮬레이터 빌드를 검사합니다. 캡처는 `geeflow-compose-review` 아티팩트에서 받을 수 있습니다.
 
-포함된 캡처의 앱 소스는 `ecdb4e8d`입니다. 로컬에서 관련 JVM 테스트 86개가 통과했습니다. 같은 소스의 플랫폼별 빌드 결과는 [검증 실행](https://github.com/iismn/PR-Wendougee/actions/runs/43791372576)에서 확인할 수 있습니다.
+포함된 캡처의 앱 소스는 `ecdb4e8d`입니다. 관련 JVM 테스트 86개, 실제 Compose 화면 10개 렌더링, 데스크톱 컴파일 및 iOS 시뮬레이터 빌드가 모두 통과했습니다. 로컬 캡처와 CI 캡처 10개의 SHA-256도 일치합니다. 같은 소스의 플랫폼별 빌드 결과는 [검증 실행](https://github.com/iismn/PR-Wendougee/actions/runs/43791372576)에서 확인할 수 있습니다.
 
 포함된 캡처를 바로 비교하려면 Node.js로 `node scripts/preview-compose.cjs docs/review`를 실행하고 `http://127.0.0.1:4181`을 엽니다. 직접 다시 렌더링했다면 인수를 생략해 `docs/screenshots`를 사용합니다. Actions 아티팩트를 받았다면 그 안의 `docs/screenshots` 경로를 전달합니다. 파일이 갱신되면 검토 창도 자동으로 갱신됩니다. 이 창은 실제 Compose에서 생성된 이미지 뷰어이며 머신을 조작하는 앱은 아닙니다.
 
