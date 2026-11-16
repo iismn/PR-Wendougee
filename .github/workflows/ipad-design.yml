@@ -59,7 +59,7 @@ jobs:
           from pathlib import Path
           path = Path('gradle.properties')
           overrides = {
-              'org.gradle.jvmargs': '-Xmx1536M -XX:+UseParallelGC -Dfile.encoding=UTF-8',
+              'org.gradle.jvmargs': '-Xmx3072M -XX:+UseParallelGC -Dfile.encoding=UTF-8',
               'kotlin.daemon.jvmargs': '-Xmx1536M -XX:+UseParallelGC',
               'kotlin.daemon.jvm.options': '-Xmx1536M',
               'kotlin.native.jvm.options': '-Xmx4096M -XX:+UseParallelGC',
