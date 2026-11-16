@@ -4,6 +4,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/build/native-review"
 APP="$ROOT/build/ios-review/Build/Products/Debug-iphonesimulator/GeeFlow.app"
 mkdir -p "$OUT"
+# Release compiler heaps before booting the simulator on a small CI runner.
+"$ROOT/gradlew" --stop
 RUNTIME=$(xcrun simctl list runtimes -j | python3 -c 'import sys,json; r=[r for r in json.load(sys.stdin)["runtimes"] if r.get("isAvailable") and r["name"].startswith("iOS") and int(r["version"].split(".")[0])>=26]; assert r,"iOS 26+ runtime is required"; print(sorted(r,key=lambda r:tuple(map(int,r["version"].split("."))))[-1]["identifier"])')
 TYPE=$(xcrun simctl list devicetypes -j | python3 -c 'import sys,json; d=[d for d in json.load(sys.stdin)["devicetypes"] if "iPad Pro" in d["name"] and "11-inch" in d["name"]]; assert d; print(d[-1]["identifier"])')
 UDID=$(xcrun simctl create "GeeFlow Native Review" "$TYPE" "$RUNTIME")
@@ -13,16 +15,14 @@ xcrun simctl bootstatus "$UDID" -b
 BUNDLE=$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$APP/Info.plist")
 xcrun simctl install "$UDID" "$APP"
 xcrun simctl status_bar "$UDID" override --time '9:41' --dataNetwork wifi --wifiMode active --wifiBars 3 --batteryState charged --batteryLevel 100
-for scene in dashboard temperature; do
-  for theme in day night; do
-    xcrun simctl terminate "$UDID" "$BUNDLE" >/dev/null 2>&1 || true
-    xcrun simctl launch "$UDID" "$BUNDLE" --design-review "$scene" "--$theme" -AppleLanguages '(ko)' -AppleLocale 'ko_KR'
-    sleep 12
-    xcrun simctl io "$UDID" screenshot "$OUT/ipad-$scene-$theme.png"
-    CONTAINER=$(xcrun simctl get_app_container "$UDID" "$BUNDLE" data)
-    cp "$CONTAINER/Documents/native-materials.json" "$OUT/ipad-$scene-$theme.json"
-  done
-done
+xcodebuild -project "$ROOT/iosApp/iosApp.xcodeproj" -scheme NativeReview -configuration Debug \
+  -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath "$ROOT/build/ios-review" \
+  -resultBundlePath "$ROOT/build/native-test-results" -parallel-testing-enabled NO \
+  test-without-building CODE_SIGNING_ALLOWED=NO
+CONTAINER=$(xcrun simctl get_app_container "$UDID" "$BUNDLE" data)
+TEST_CONTAINER=$(xcrun simctl get_app_container "$UDID" app.geeflow.NativeReviewUITests.xctrunner data)
+cp "$TEST_CONTAINER"/Documents/ipad-*.png "$OUT/"
+cp "$CONTAINER"/Documents/ipad-*.json "$OUT/"
 python3 - "$OUT" <<'PY'
 import json,pathlib,sys,struct
 out=pathlib.Path(sys.argv[1])

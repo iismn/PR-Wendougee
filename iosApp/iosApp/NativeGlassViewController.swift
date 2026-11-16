@@ -120,6 +120,8 @@ final class NativeGlassViewController: UIViewController, NativeGlassHost {
         if let data = try? JSONSerialization.data(withJSONObject: document, options: [.prettyPrinted, .sortedKeys]),
            let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
             try? data.write(to: directory.appendingPathComponent("native-materials.json"), options: .atomic)
+            let theme = phase == 3 ? "night" : "day"
+            try? data.write(to: directory.appendingPathComponent("ipad-\(reviewScene)-\(theme).json"), options: .atomic)
         }
         #endif
     }

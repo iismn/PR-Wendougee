@@ -53,9 +53,24 @@ jobs:
       - uses: gradle/actions/setup-gradle@v3
         with:
           cache-read-only: true
-      - name: Build iPad simulator app
+      - name: Bound compiler memory on the CI runner
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('gradle.properties')
+          overrides = {
+              'org.gradle.jvmargs': '-Xmx1536M -XX:+UseParallelGC -Dfile.encoding=UTF-8',
+              'kotlin.daemon.jvmargs': '-Xmx1536M -XX:+UseParallelGC',
+              'kotlin.daemon.jvm.options': '-Xmx1536M',
+              'kotlin.native.jvm.options': '-Xmx4096M -XX:+UseParallelGC',
+              'kotlin.native.jvmArgs': '-Xmx4096M',
+          }
+          lines = [line for line in path.read_text().splitlines() if line.partition('=')[0] not in overrides]
+          path.write_text('\n'.join(lines + [f'{key}={value}' for key,value in overrides.items()] + ['org.gradle.workers.max=2']) + '\n')
+          PY
+      - name: Build iPad simulator app and UI tests
         working-directory: iosApp
-        run: xcodebuild -project iosApp.xcodeproj -scheme iosApp -configuration Debug -sdk iphonesimulator -derivedDataPath ../build/ios-review build CODE_SIGNING_ALLOWED=NO
+        run: xcodebuild -project iosApp.xcodeproj -scheme NativeReview -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath ../build/ios-review build-for-testing CODE_SIGNING_ALLOWED=NO
       - name: Capture native Liquid Glass on iPad
         run: bash scripts/capture-native-ipad.sh
       - uses: actions/upload-artifact@v5
