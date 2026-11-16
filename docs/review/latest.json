@@ -1,8 +1,8 @@
 {
-  "height": 1668,
-  "commit": "34558080d357c4a191b2544ae09c7db3333b1950",
-  "width": 2388,
   "runtime": "JVM Compose",
+  "nativeGlassCaptured": false,
+  "width": 2388,
   "locale": "ko-KR",
-  "nativeGlassCaptured": false
+  "height": 1668,
+  "commit": "18bade385d1af46423364e25062aaf86ae9a655c"
 }
