@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -15,7 +16,14 @@ import kotlin.math.min
 
 /** A compact instrument readout. The lit cells and decimal share one optical baseline. */
 @Composable
-fun InstrumentNumber(text: String, color: Color, modifier: Modifier = Modifier, height: Dp = 24.dp) {
+fun InstrumentNumber(
+    text: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+    height: Dp = 24.dp,
+    glowColor: Color = color,
+    glowStrength: Float = 0f,
+) {
     val columns = (text.sumOf { if (it == '.') 2 else 6 } - 1).coerceAtLeast(1)
     Canvas(
         modifier.width(height * (columns / 7f)).height(height)
@@ -30,7 +38,23 @@ fun InstrumentNumber(text: String, color: Color, modifier: Modifier = Modifier, 
             rows.forEachIndexed { row, bits ->
                 bits.forEachIndexed { column, cell ->
                     if (cell == '1') {
-                        drawCircle(color, pitch * 0.28f, Offset(left + (cursor + column + 0.5f) * pitch, top + (row + 0.5f) * pitch))
+                        val center = Offset(left + (cursor + column + 0.5f) * pitch, top + (row + 0.5f) * pitch)
+                        if (glowStrength > 0f) {
+                            drawCircle(
+                                Brush.radialGradient(
+                                    colors = listOf(
+                                        glowColor.copy(alpha = 0.38f * glowStrength),
+                                        glowColor.copy(alpha = 0.08f * glowStrength),
+                                        Color.Transparent,
+                                    ),
+                                    center = center,
+                                    radius = pitch * 1.6f,
+                                ),
+                                radius = pitch * 1.6f,
+                                center = center,
+                            )
+                        }
+                        drawCircle(color, pitch * 0.28f, center)
                     }
                 }
             }

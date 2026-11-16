@@ -63,7 +63,7 @@ fun coffeeColorScheme(phase: CoffeeDayPhase): ColorScheme {
             tertiaryContainer = Color(0xFFDCECF5), onTertiaryContainer = Color(0xFF203F50),
             background = Color(0xFFFAFCFF),
             onBackground = Color(0xFF15202D), surface = Color(0xFFFCFDFF),
-            onSurface = Color(0xFF15202D), onSurfaceVariant = Color(0xFF506071),
+            onSurface = Color(0xFF15202D), onSurfaceVariant = Color(0xFF38495F),
             surfaceVariant = Color(0xFFE5EBF3), surfaceDim = Color(0xFFDDE5EF),
             surfaceBright = Color.White, surfaceContainerLowest = Color.White,
             surfaceContainerLow = Color(0xFFF6F9FD), surfaceContainer = Color(0xFFEDF2F8),

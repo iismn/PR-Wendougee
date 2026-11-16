@@ -38,9 +38,8 @@ import app.geeflow.navigation.Navigator
 import app.geeflow.navigation.NavigatorEffect
 import app.geeflow.navigation.destination.DeviceDashboard
 import app.geeflow.platform.ForegroundEffect
-import app.geeflow.presentation.feature.device.dashboard.components.BrewBar
 import app.geeflow.presentation.feature.device.dashboard.components.BrewCharts
-import app.geeflow.presentation.feature.device.dashboard.components.BrewHeader
+import app.geeflow.presentation.feature.device.dashboard.components.BrewTime
 import app.geeflow.presentation.feature.device.dashboard.components.BrewStatistics
 import app.geeflow.presentation.feature.device.dashboard.components.DashboardBrewButton
 import app.geeflow.presentation.feature.device.dashboard.components.TopBar
@@ -55,7 +54,6 @@ import app.geeflow.presentation.feature.device.dashboard.profiles.ProfileListVie
 import app.geeflow.presentation.feature.device.dashboard.profiles.ProfileListViewState
 import app.geeflow.ui.EventsDispatcher
 import app.geeflow.ui.GeeFlowInsets
-import app.geeflow.ui.components.HorizontalSpacer
 import app.geeflow.ui.isWidthExpanded
 import app.geeflow.ui.modifier.geeFlowInsetsPadding
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
@@ -197,7 +195,7 @@ private fun ExpandedDashboard(
             .background(MaterialTheme.colorScheme.background)
             .geeFlowInsetsPadding(),
     ) {
-        val libraryWidth = (maxWidth * 0.29f).coerceIn(280.dp, 360.dp)
+        val libraryWidth = (maxWidth * 0.30f).coerceIn(300.dp, 360.dp)
         Row(Modifier.fillMaxSize()) {
             Column(modifier = Modifier.weight(1f).padding(start = 24.dp)) {
                 TopBar(
@@ -214,28 +212,13 @@ private fun ExpandedDashboard(
                     modifier = Modifier.weight(1f),
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                BrewHeader(
+                BrewStatistics(
                     brew = viewState.brew,
-                    onHeaderClick = { onEvent(DeviceDashboardEvent.BrewDescriptionClicked) },
+                    isBrewing = viewState.device.isBrewing,
+                    visibleCharts = viewState.visibleCharts,
+                    onToggle = { onEvent(DeviceDashboardEvent.ToggleChartVisibility(it)) },
+                    modifier = Modifier.padding(bottom = 20.dp),
                 )
-                Spacer(Modifier.height(12.dp))
-                Row(
-                    verticalAlignment = Alignment.Bottom,
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                ) {
-                    BrewStatistics(
-                        brew = viewState.brew,
-                        isBrewing = viewState.device.isBrewing,
-                        visibleCharts = viewState.visibleCharts,
-                        onToggle = { onEvent(DeviceDashboardEvent.ToggleChartVisibility(it)) },
-                        modifier = Modifier.weight(1f),
-                    )
-                    HorizontalSpacer(16.dp)
-                    DashboardBrewButton(
-                        viewState = viewState,
-                        onEvent = onEvent,
-                    )
-                }
             }
             Column(
                 modifier = Modifier
@@ -250,6 +233,11 @@ private fun ExpandedDashboard(
                         .fillMaxSize()
                         .weight(1f),
                 )
+                Spacer(Modifier.height(16.dp))
+                Row(Modifier.fillMaxWidth().height(64.dp), verticalAlignment = Alignment.CenterVertically) {
+                    BrewTime(viewState.brew.time, Modifier.weight(1f))
+                    DashboardBrewButton(viewState = viewState, onEvent = onEvent)
+                }
             }
         }
         SnackbarHost(
@@ -288,13 +276,13 @@ private fun CompactDashboard(
             )
         },
         bottomBar = {
-            DashboardBrewButton(
-                viewState = viewState,
-                onEvent = onEvent,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-            )
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                BrewTime(viewState.brew.time, Modifier.weight(1f))
+                DashboardBrewButton(viewState = viewState, onEvent = onEvent)
+            }
         },
         snackbarHost = { SnackbarHost(hostState = snackbarState, modifier = Modifier.padding(horizontal = 16.dp)) },
     ) { paddingValues ->
@@ -321,12 +309,11 @@ private fun CompactDashboard(
                                 .weight(1f)
                                 .padding(start = 24.dp, end = 24.dp),
                         )
-                        BrewBar(
+                        BrewStatistics(
                             brew = viewState.brew,
                             isBrewing = viewState.device.isBrewing,
                             visibleCharts = viewState.visibleCharts,
                             onToggle = { onEvent(DeviceDashboardEvent.ToggleChartVisibility(it)) },
-                            onHeaderClick = { onEvent(DeviceDashboardEvent.BrewDescriptionClicked) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(start = 24.dp, top = 16.dp, end = 24.dp),

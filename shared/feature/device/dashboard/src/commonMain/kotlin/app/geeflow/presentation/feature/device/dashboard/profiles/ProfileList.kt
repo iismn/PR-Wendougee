@@ -136,7 +136,7 @@ private fun ProfileListContent(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .coffeeGlass(MaterialTheme.shapes.large),
+            .coffeeGlass(MaterialTheme.shapes.large, prominent = true),
     ) {
         AnimatedContent(
             targetState = viewState.showHistory,
@@ -618,7 +618,7 @@ private fun ProfileItemContent(
     modifier: Modifier = Modifier,
 ) {
     val backgroundColor by animateColorAsState(
-        if (profile.selected) MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.76f) else Color.Transparent,
+        if (profile.selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.10f) else Color.Transparent,
         label = "selectedRecipe",
     )
     Row(

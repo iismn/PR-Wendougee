@@ -48,6 +48,7 @@ buildKonfig = "0.23.0"
 inAppPurchase = "1.0.43"
 
 [libraries]
+backdrop = { module = "io.github.kyant0:backdrop", version = "2.0.1" }
 mockk = { module = "io.mockk:mockk-jvm", version.ref = "mockk" }
 inapppurchase = { module = "io.github.aditya-gupta99:inAppPurchase-kmp", version.ref = "inAppPurchase" }
 aboutLibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }

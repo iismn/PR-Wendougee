@@ -1,34 +1,34 @@
 package app.geeflow.presentation.feature.device.dashboard.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandIn
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkOut
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,7 +47,6 @@ import app.geeflow.ui.theme.GeeFlowComponentPreview
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
 import app.geeflow.ui.components.InstrumentNumber
 import app.geeflow.ui.theme.GeeFlowTheme
-import app.geeflow.ui.theme.coffeeGlass
 import geeflow.shared.core.ui.generated.resources.Res
 import geeflow.shared.core.ui.generated.resources.common_avg
 import geeflow.shared.core.ui.generated.resources.common_sec
@@ -99,27 +98,21 @@ internal fun BrewHeader(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f, fill = false),
         )
-        if (brew.description.isNotBlank()) {
-            BrewDescription(
-                description = brew.description,
-                modifier = Modifier.weight(1f),
-            )
-        } else {
-            Spacer(modifier = Modifier.weight(1f))
-        }
-        Text(
-            text = "${brew.time} ${stringResource(Res.string.common_sec)}",
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .background(
-                    MaterialTheme.colorScheme.surfaceContainerLow,
-                    MaterialTheme.shapes.small,
-                )
-                .padding(horizontal = 5.dp),
-        )
+        Spacer(modifier = Modifier.weight(1f))
+        BrewTime(brew.time)
     }
+}
+
+@Composable
+internal fun BrewTime(seconds: Int, modifier: Modifier = Modifier) {
+    Text(
+        text = "$seconds ${stringResource(Res.string.common_sec)}",
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Start,
+        maxLines = 1,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -153,86 +146,35 @@ internal fun BrewStatistics(
     val totalWeight = lastPoint?.weight ?: 0f
     val totalVolume = lastPoint?.volume ?: 0f
 
-    Row(
-        modifier = modifier.fillMaxWidth().height(72.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        SummaryItem(
-            modifier = Modifier.weight(1f),
-            values = listOf(
-                ValueEntry(
-                    value = currentPressure,
-                    unit = stringResource(Res.string.unit_bar),
-                    color = MaterialTheme.colorScheme.error,
-                    type = Pressure,
-                    showDivider = visibleCharts.contains(Pressure),
-                    showAvg = !isBrewing && brew.data.isNotEmpty(),
-                ),
-            ),
-            onToggle = onToggle,
-        )
-        SummaryItem(
-            modifier = Modifier.weight(2f),
-            values = listOf(
-                ValueEntry(
-                    value = currentWeightRate,
-                    unit = stringResource(Res.string.unit_grams_per_second),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    type = WeightRate,
-                    showDivider = visibleCharts.contains(WeightRate),
-                    showAvg = !isBrewing && brew.data.isNotEmpty(),
-                ),
-                ValueEntry(
-                    value = currentFlow,
-                    unit = stringResource(Res.string.unit_milliliters_per_second),
-                    color = GeeFlowTheme.colors.water,
-                    type = FlowRate,
-                    showDivider = visibleCharts.contains(FlowRate),
-                    showAvg = !isBrewing && brew.data.isNotEmpty(),
-                ),
-            ),
-            onToggle = onToggle,
-        )
-        SummaryItem(
-            modifier = Modifier.weight(2f),
-            values = listOf(
-                ValueEntry(
-                    value = totalWeight.toDouble(),
-                    unit = stringResource(Res.string.unit_grams),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    type = Weight,
-                    showDivider = visibleCharts.contains(Weight),
-                    showAvg = false,
-                ),
-                ValueEntry(
-                    value = totalVolume.toDouble(),
-                    unit = stringResource(Res.string.unit_milliliters),
-                    color = GeeFlowTheme.colors.waterVariant,
-                    type = Volume,
-                    showDivider = visibleCharts.contains(Volume),
-                    showAvg = false,
-                ),
-            ),
-            onToggle = onToggle,
-        )
+    val averaged = !isBrewing && brew.data.isNotEmpty()
+    val entries = listOf(
+        ValueEntry(currentPressure, stringResource(Res.string.unit_bar), MaterialTheme.colorScheme.error, Pressure, averaged),
+        ValueEntry(currentWeightRate, stringResource(Res.string.unit_grams_per_second), MaterialTheme.colorScheme.onSurface, WeightRate, averaged),
+        ValueEntry(currentFlow, stringResource(Res.string.unit_milliliters_per_second), GeeFlowTheme.colors.water, FlowRate, averaged),
+        ValueEntry(totalWeight.toDouble(), stringResource(Res.string.unit_grams), MaterialTheme.colorScheme.onSurface, Weight, false),
+        ValueEntry(totalVolume.toDouble(), stringResource(Res.string.unit_milliliters), GeeFlowTheme.colors.waterVariant, Volume, false),
+    )
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val columns = if (maxWidth >= 560.dp) 5 else 3
+        val numberHeight = if (columns == 5) 28.dp else 24.dp
+        Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+            entries.chunked(columns).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    row.forEach { entry ->
+                        StatisticValue(
+                            entry = entry,
+                            selected = entry.type in visibleCharts,
+                            numberHeight = numberHeight,
+                            onToggle = { onToggle(entry.type) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
+        }
     }
 }
-
-@Composable
-private fun BrewDescription(
-    description: String,
-    modifier: Modifier = Modifier,
-) {
-    Text(
-        text = description,
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = modifier.padding(horizontal = 8.dp),
-    )
-}
-
 @Composable
 private fun EditIcon() {
     Icon(
@@ -247,74 +189,53 @@ private data class ValueEntry(
     val unit: String,
     val color: Color,
     val type: DashboardChartType,
-    val showDivider: Boolean,
-    val showAvg: Boolean,
+    val averaged: Boolean,
 )
 
 @Composable
-private fun SummaryItem(
-    values: List<ValueEntry>,
-    onToggle: (DashboardChartType) -> Unit,
+private fun StatisticValue(
+    entry: ValueEntry,
+    selected: Boolean,
+    numberHeight: Dp,
+    onToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.1f
+    val emphasis by animateFloatAsState(if (selected) 1f else 0.56f, tween(220), label = "metricEmphasis")
+    val glow by animateFloatAsState(if (selected) 0.8f else 0.3f, tween(220), label = "metricGlow")
+    val value = entry.value.format()
+    val description = if (entry.averaged) {
+        "${stringResource(Res.string.common_avg)} $value ${entry.unit}"
+    } else {
+        "$value ${entry.unit}"
+    }
     Row(
         modifier = modifier
-            .coffeeGlass(MaterialTheme.shapes.large),
+            .height(64.dp)
+            .semantics(mergeDescendants = true) { contentDescription = description }
+            .clip(MaterialTheme.shapes.small)
+            .toggleable(value = selected, role = Role.Checkbox, onValueChange = { onToggle() })
+            .padding(horizontal = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
-        values.forEach { entry ->
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .clickable { onToggle(entry.type) }
-                    .padding(4.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                InstrumentNumber(
-                    text = entry.value.format(),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    height = 23.dp,
-                )
-                AnimatedVisibility(
-                    visible = entry.showDivider,
-                    enter = expandIn(expandFrom = Alignment.Center) + fadeIn(),
-                    exit = shrinkOut(shrinkTowards = Alignment.Center) + fadeOut(),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .widthIn(max = 42.dp)
-                            .padding(vertical = 2.dp, horizontal = 4.dp)
-                            .background(entry.color, CircleShape)
-                            .height(2.dp)
-                            .fillMaxWidth(),
-                    )
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = entry.unit,
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    AnimatedVisibility(
-                        visible = entry.showAvg,
-                        enter = expandIn(expandFrom = Alignment.CenterStart) + fadeIn(),
-                        exit = shrinkOut(shrinkTowards = Alignment.CenterStart) + fadeOut(),
-                    ) {
-                        Text(
-                            text = " ${stringResource(Res.string.common_avg)}",
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
-        }
+        InstrumentNumber(
+            text = value,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = emphasis),
+            glowColor = if (dark) Color(0xFF83B9FF) else entry.color,
+            glowStrength = glow,
+            height = numberHeight,
+            modifier = Modifier.weight(1f, fill = false),
+        )
+        Text(
+            text = entry.unit,
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            modifier = Modifier.padding(start = 6.dp, top = 8.dp),
+        )
     }
 }
-
 private const val DecimalScale = 10
 
 private fun Double.format() = ((this * DecimalScale).toInt() / DecimalScale.toDouble()).toString()
