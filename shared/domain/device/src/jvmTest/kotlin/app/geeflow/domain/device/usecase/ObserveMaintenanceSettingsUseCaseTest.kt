@@ -1,0 +1,68 @@
+package app.geeflow.domain.device.usecase
+
+import app.geeflow.data.device.DeviceControllerProvider
+import app.geeflow.data.device.MaintenanceSettingsRepository
+import app.geeflow.data.device.impl.controller.DemoDeviceController
+import app.geeflow.data.device.model.CleaningType
+import app.geeflow.data.device.model.Device
+import app.geeflow.data.device.model.DeviceConnection
+import app.geeflow.data.device.model.DeviceState
+import app.geeflow.data.device.model.MaintenanceSettings
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+class ObserveMaintenanceSettingsUseCaseTest {
+    @Test
+    fun `when settings initialize then respects limits and preserves programs on reconnect`() = runBlocking {
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val controller = DemoDeviceController(scope)
+        val repository = MemoryRepository()
+        val provider = object : DeviceControllerProvider {
+            override fun observeController(deviceId: Long) = flowOf(getController(deviceId))
+            override val currentDeviceId = MutableStateFlow<Long?>(1L)
+            override fun getController(deviceId: Long) = controller
+            override suspend fun disconnectCurrent() = Unit
+        }
+        try {
+            controller.connection.connect(Device(name = "Demo", connection = DeviceConnection.Ble("demo", "demo")))
+            withTimeout(3000) {
+                controller.deviceState.first { it.connectionStatus == DeviceState.ConnectionStatus.Connected }
+            }
+            controller.maintenance.setCleaningSettings(5f, 6f, 8)
+            val observe = ObserveMaintenanceSettingsUseCase(repository, provider)
+
+            val first = observe(1).first()
+
+            assertEquals(8, first.daily.cycles)
+            assertEquals(10, first.deep.cycles)
+            assertEquals(6, first.deep.restSeconds)
+
+            controller.maintenance.setCleaningSettings(1f, 1f, 1)
+            val reconnected = observe(1).first()
+
+            assertEquals(first, reconnected)
+        } finally {
+            scope.cancel()
+        }
+    }
+
+    private class MemoryRepository : MaintenanceSettingsRepository {
+        private val saved = MutableStateFlow<MaintenanceSettings?>(null)
+        override fun observe(deviceId: Long) = saved
+        override suspend fun initialize(deviceId: Long, settings: MaintenanceSettings) {
+            if (saved.value == null) saved.value = settings
+        }
+        override suspend fun save(deviceId: Long, settings: MaintenanceSettings, today: Long) = Unit
+        override suspend fun postpone(deviceId: Long, types: Set<CleaningType>, today: Long) = Unit
+        override suspend fun remove(deviceId: Long) = Unit
+    }
+}

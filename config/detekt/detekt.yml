@@ -1,0 +1,99 @@
+config:
+  validation: true
+  warningsAsErrors: true
+
+processors:
+  active: true
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated:
+      - 'Composable'
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][A-Za-z0-9]*|[A-Z][_A-Z0-9]*'
+  ObjectPropertyNaming:
+    constantPattern: '[A-Z][A-Za-z0-9]*|[A-Z][_A-Z0-9]*'
+
+complexity:
+  LongParameterList:
+    ignoreDefaultParameters: true
+    allowedFunctionParameters: 8
+    allowedConstructorParameters: 8
+  TooManyFunctions:
+    ignoreOverridden: true
+    ignoreAnnotatedFunctions:
+      - 'Preview'
+      - 'GeeFlowScreenPreview'
+  LongMethod:
+    active: true
+    allowedLines: 60
+    ignoreAnnotated: [ 'Composable' ]
+  CyclomaticComplexMethod:
+    active: true
+    allowedComplexity: 16
+    ignoreAnnotated: [ 'Composable' ]
+
+performance:
+  SpreadOperator:
+    active: false
+
+exceptions:
+  TooGenericExceptionCaught:
+    exceptionNames:
+      - Error
+      - IllegalMonitorStateException
+      - NullPointerException
+      - RuntimeException
+      - Throwable
+
+coroutines:
+  InjectDispatcher:
+    active: true
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**' ]
+
+potential-bugs:
+  UnsafeCallOnNullableType:
+    excludes: [ '**/icons/**' ]
+
+style:
+  MaxLineLength:
+    maxLineLength: 130
+  MagicNumber:
+    ignoreAnnotated:
+      - 'Preview'
+      - 'GeeFlowScreenPreview'
+      - 'GeeFlowComponentPreview'
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+  UnusedPrivateFunction:
+    ignoreAnnotated:
+      - 'Composable'
+      - 'Preview'
+      - 'GeeFlowScreenPreview'
+  ReturnCount:
+    max: 4
+
+ktlint:
+  ArgumentListWrapping:
+    maxLineLength: 130
+  ParameterListWrapping:
+    maxLineLength: 130
+  BlankLineBetweenWhenConditions:
+    active: false
+  ClassSignature:
+    active: false
+  FunctionSignature:
+    active: false
+  MaximumLineLength:
+    maxLineLength: 130
+  PropertyName:
+    active: false
+  BinaryExpressionWrapping:
+    maxLineLength: 130
+  BackingPropertyNaming:
+    active: true
+    excludes: [ '**/icons/**' ]
+  TrailingCommaOnDeclarationSite:
+    active: false
+  TrailingCommaOnCallSite:
+    active: false

@@ -1,0 +1,52 @@
+<resources>
+    <!-- Device Settings Main -->
+    <string name="device_settings_title">Machine Settings</string>
+    <string name="device_settings_placeholder">Select an item to view details</string>
+    <string name="device_settings_subtitle">Manage your brewing preferences and device setup</string>
+    <string name="device_settings_brewing">Brewing</string>
+    <string name="device_settings_brewing_description">Boiler parameters and buttons binding</string>
+    <string name="device_settings_maintenance">Maintenance</string>
+    <string name="device_settings_maintenance_description">Cleaning and water level alarm</string>
+    <string name="device_settings_connectivity">Connectivity</string>
+    <string name="device_settings_connectivity_description">External smart accessories</string>
+
+    <!-- Device Settings Maintenance -->
+    <string name="device_settings_maintenance_cleaning">Cleaning</string>
+    <string name="device_settings_maintenance_cleaning_flush_description">Flush duration per cycle</string>
+    <string name="device_settings_maintenance_cleaning_rest_description">Pause duration between cycles</string>
+    <string name="device_settings_maintenance_cleaning_cycle_description">Number of cleaning repetitions</string>
+    <string name="device_settings_maintenance_alarms">Alarms</string>
+    <string name="device_settings_maintenance_water_alarm">Water shortage alarm</string>
+    <string name="device_settings_maintenance_water_alarm_description">Low water level warning</string>
+    <string name="device_water_alarm_error">Water level is low. Please refill the water tank.</string>
+
+    <string name="device_dashboard_connecting">Connecting</string>
+
+    <!-- Device Settings Connectivity -->
+    <string name="device_settings_connectivity_smart_scale">Smart Scale</string>
+    <string name="device_settings_connectivity_smart_scale_description">Search for nearby smart scales</string>
+    <string name="device_settings_connectivity_searching">Searching for compatible devices…</string>
+    <string name="device_settings_connectivity_not_found">Not seeing your device?</string>
+    <string name="device_settings_connectivity_rescan">Scan now</string>
+
+    <!-- Device Settings Brewing -->
+    <string name="device_settings_brewing_boiler">Boiler</string>
+    <string name="device_settings_brewing_paddle">Long paddle press</string>
+    <string name="device_settings_brewing_pulse_heating">Pulse heating</string>
+    <string name="device_settings_brewing_pulse_heating_description">Longer heating time but lower power consumption</string>
+    <string name="device_settings_brewing_paddle_pressure_description">Target pressure</string>
+    <string name="device_settings_brewing_paddle_time_description">Target duration</string>
+    <string name="device_settings_auto_flush">Auto flush</string>
+    <string name="device_settings_auto_flush_delay">Delay after brewing</string>
+    <string name="device_settings_auto_flush_description">Automatically flush after brewing</string>
+    <string name="device_settings_treat_manual_as_flush">Treat as flush</string>
+    <string name="device_settings_treat_manual_as_flush_description">No history or chart</string>
+    <string name="device_settings_connectivity_enable_search">Enable search</string>
+    <string name="device_settings_connectivity_single_dose_description">Search for nearby grinders</string>
+    <string name="device_settings_connectivity_disabled_info">Enable search to find and connect a device.</string>
+    <string name="device_settings_connectivity_connection_help">Could not connect. Check that the accessory is on and nearby, then try again. If needed, restart the coffee machine.</string>
+    <string name="device_settings_connectivity_single_dose">Single dose</string>
+    <string name="device_settings_agile_ring">Agile Ring</string>
+    <string name="device_settings_agile_ring_description">Enable the control ring. Occasional interference may occur in some environments.</string>
+    <string name="device_settings_firmware_version">Firmware: %1$d</string>
+</resources>

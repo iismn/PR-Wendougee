@@ -1,22 +1,30 @@
-# Local backups + build artifacts
-*.bak
-build/
+*.iml
+.claude/
+.kotlin
+.gradle
+**/build/
+xcuserdata
+!src/**/build/
+local.properties
+.idea
 .DS_Store
-DerivedData/
-
-# Backend
-backend/node_modules/
-backend/dist/
-backend/.env
-# Cloudflare Tunnel credentials + active config — sensitive
-backend/cloudflared/*.json
-backend/cloudflared/config.yml
-
-# macOS built app artifact (lives at repo root from `cp -R …`)
-Crema.app/
-.build/
-
-# Local design-research checkpoints are not part of the Mac source handoff.
-outputs/design-audit/
-# The standalone preview already embeds this font; retain its license only.
-outputs/ui-preview/fonts/PretendardVariable.woff2
+captures
+.externalNativeBuild
+.cxx
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
+node_modules/
+app.db
+*.md
+!README.md
+!PRIVACY_POLICY.md
+!TERMS_AND_CONDITIONS.md
+*.txt
+**/aboutlibraries.json
+!docs/licenses/*.txt
+!docs/MAC_HANDOFF.md
+!docs/UI-CHANGES.md

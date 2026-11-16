@@ -1,0 +1,31 @@
+package app.geeflow.presentation.feature.device.dashboard.profileeditor
+
+import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardViewState.DashboardChartType
+
+internal sealed interface ProfileEditorEvent {
+    data object StepEditorCancelled : ProfileEditorEvent
+    data class StepEditorSaved(val step: ProfileEditorViewState.Step) : ProfileEditorEvent
+    data object ExperimentClicked : ProfileEditorEvent
+    data object ToggleGlobalGoal : ProfileEditorEvent
+    data class StepDuplicated(val id: Long) : ProfileEditorEvent
+    data object BackClicked : ProfileEditorEvent
+    data object SaveClicked : ProfileEditorEvent
+    data object TestClicked : ProfileEditorEvent
+    data object SingleDoseClicked : ProfileEditorEvent
+    data class SingleDoseToggled(val enabled: Boolean) : ProfileEditorEvent
+    data class GrindingSizeChanged(val size: Int) : ProfileEditorEvent
+    data class GrindingSpeedChanged(val speed: Int) : ProfileEditorEvent
+    data object SingleDoseSaved : ProfileEditorEvent
+    data object SetGrinderClicked : ProfileEditorEvent
+    data object StopClicked : ProfileEditorEvent
+    data class ToggleChartVisibility(val type: DashboardChartType) : ProfileEditorEvent
+    data object EditDetailsClicked : ProfileEditorEvent
+    data class DetailsConfirmed(val name: String, val description: String) : ProfileEditorEvent
+    data object AddStepClicked : ProfileEditorEvent
+    data class StepClicked(val id: Long) : ProfileEditorEvent
+    data class StepRemoved(val id: Long) : ProfileEditorEvent
+    data class StepsReordered(val from: Int, val to: Int) : ProfileEditorEvent
+    data class FinishTargetClicked(val type: FinishTargetType) : ProfileEditorEvent
+    data class FinishTargetConfirmed(val target: Float) : ProfileEditorEvent
+    data object DialogDismissed : ProfileEditorEvent
+}

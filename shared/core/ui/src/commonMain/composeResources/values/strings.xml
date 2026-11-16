@@ -1,0 +1,97 @@
+<resources>
+    <string name="app_name">GeeFlow</string>
+
+    <!-- COMMON -->
+    <string name="common_go_back">Go back</string>
+    <string name="common_close">Close</string>
+    <string name="common_confirm">Confirm</string>
+    <string name="common_ok">OK</string>
+    <string name="common_apply">Apply</string>
+    <string name="common_save">Save</string>
+    <string name="common_more">More</string>
+    <string name="common_remove">Remove</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_favourite">Favourite</string>
+    <string name="common_settings">Settings</string>
+    <string name="common_start">Start</string>
+    <string name="common_stop">Stop</string>
+    <string name="common_flush">Flush</string>
+    <string name="common_rest">Rest</string>
+    <string name="common_cycle">Cycle</string>
+    <string name="common_seconds">seconds</string>
+    <string name="common_sec">sec</string>
+    <string name="common_times">times</string>
+    <string name="common_brew_boiler">Brew Boiler</string>
+    <string name="common_steam_boiler">Steam Boiler</string>
+    <string name="common_current_temperature">Current: %1$s</string>
+    <string name="common_avg">(avg)</string>
+    <string name="common_on">ON</string>
+    <string name="common_off">OFF</string>
+    <string name="common_open_settings">Open Settings</string>
+    <string name="common_pressure">Pressure</string>
+    <string name="common_time">Time</string>
+    <string name="common_settings_applied">Settings applied</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_connect">Connect</string>
+    <string name="common_disconnect">Disconnect</string>
+    <string name="common_user_name">User name</string>
+
+    <!-- UNITS -->
+    <string name="unit_bar">bar</string>
+    <string name="unit_grams">g</string>
+    <string name="unit_grams_per_second">g/s</string>
+    <string name="unit_milliliters">ml</string>
+    <string name="unit_milliliters_per_second">ml/s</string>
+
+    <!-- PERMISSIONS -->
+    <string name="permission_bluetooth_title">Bluetooth permission</string>
+    <string name="permission_bluetooth_missing">Bluetooth permission is missing, please grant it in app settings</string>
+
+    <!-- ERRORS -->
+    <string name="error_generic">Oops, something went wrong. Please try again.</string>
+    <string name="error_connect_device">Device is not connected</string>
+    <string name="error_scale_not_connected">Smart scale is needed for profile with weight target</string>
+    <string name="error_profile_binding_not_allowed">This profile requires app control and cannot be assigned to the paddle</string>
+    <string name="profile_manual_stop_required">Machine stop could not be confirmed. Stop the brew manually on the machine. Reconnect to confirm its state.</string>
+    <string name="error_machine_busy">The machine is busy with another brew or operation.</string>
+    <string name="error_app_backgrounded_brew">Please keep the app open in the foreground to run this profile.</string>
+    <string name="error_recording_no_volume">Cannot save recording because no volume was measured.</string>
+    <string name="error_recording_too_complex">This recorded brew is too long or complex to be saved as a playback profile.</string>
+    <string name="error_machine_control_changed">Machine control was interrupted by a manual action.</string>
+    <string name="error_telemetry_timeout">Lost communication with the machine while brewing.</string>
+    <string name="error_required_measurement_lost">A sensor required by this profile was disconnected.</string>
+    <string name="error_profile_unavailable">This profile is not compatible with the machine in its current state.</string>
+
+    <!-- AGREEMENT -->
+    <string name="agreement_prefix">I accept the </string>
+    <string name="agreement_terms">Terms &amp; Conditions</string>
+    <string name="agreement_and"> and </string>
+    <string name="agreement_privacy">Privacy Policy</string>
+    <string name="maintenance_daily">Daily Cleaning</string>
+    <string name="maintenance_deep">Deep Cleaning</string>
+    <string name="maintenance_daily_description">Routine rinsing to help clear coffee residue from the brew group.</string>
+    <string name="maintenance_deep_description">A thorough cleaning with an espresso machine cleaning agent to remove coffee oils and buildup. Follow your machine and cleaner instructions.</string>
+    <string name="maintenance_reminder">Reminder</string>
+    <string name="maintenance_reminder_description">Notify when cleaning is due</string>
+    <string name="maintenance_reminder_never">Never</string>
+    <string name="maintenance_reminder_daily">Daily</string>
+    <plurals name="maintenance_reminder_interval">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <string name="maintenance_reminder_enabled">Enable reminder</string>
+    <string name="maintenance_reminder_days">Repeat every</string>
+    <string name="maintenance_days">days</string>
+    <string name="maintenance_reminder_open">Maintenance</string>
+    <string name="maintenance_reminder_skip">Skip</string>
+    <string name="maintenance_reminder_due">Time for %1$s</string>
+    <string name="maintenance_reminder_both">Deep Cleaning also counts towards your Daily Cleaning reminder.</string>
+    <string name="auto_flush_countdown_title">Auto-flush in</string>
+    <string name="auto_flush_tap_to_cancel">Tap to cancel</string>
+    <string name="error_device_fault">The machine reports an error. Resolve it before starting brewing or cleaning. Open the error button for details.</string>
+    <string name="error_grinder_not_connected">Connect the Single Dose grinder first</string>
+    <string name="common_machine_busy">Machine busy</string>
+    <string name="device_model_title">Device model</string>
+    <string name="device_model_select">Choose your machine model. This determines how GeeFlow communicates with it. Selecting the wrong model may cause communication errors.</string>
+    <string name="common_hot_water">Hot water</string>
+</resources>

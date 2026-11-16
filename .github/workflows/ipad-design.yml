@@ -1,0 +1,48 @@
+name: GeeFlow iPad UI
+
+on:
+  push:
+    branches: [master, 'codex/geeflow-ipad-ui']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compose-review:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: zulu
+      - uses: gradle/actions/setup-gradle@v3
+      - name: Render actual shared Compose screens
+        run: .\gradlew.bat :shared:feature:device:dashboard:generateStoreScreenshots --no-configuration-cache
+      - name: Test appearance and dashboard behavior
+        run: .\gradlew.bat :shared:core:ui:jvmTest :shared:feature:device:dashboard:jvmTest :shared:domain:user:jvmTest --no-configuration-cache
+      - name: Compile complete desktop app
+        run: .\gradlew.bat :desktopApp:compileKotlin --no-configuration-cache
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: geeflow-compose-review
+          path: |
+            docs/screenshots/*.png
+            shared/**/build/reports/tests/
+          retention-days: 7
+  ios-build:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: zulu
+      - uses: gradle/actions/setup-gradle@v3
+      - name: Build iPad simulator app
+        working-directory: iosApp
+        run: xcodebuild -project iosApp.xcodeproj -scheme iosApp -configuration Debug -sdk iphonesimulator build CODE_SIGNING_ALLOWED=NO

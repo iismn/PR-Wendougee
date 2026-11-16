@@ -1,0 +1,19 @@
+package app.geeflow.domain.device.usecase
+
+import app.geeflow.data.brew.model.FreeHandControlMode
+import app.geeflow.data.device.DeviceControllerProvider
+import app.geeflow.domain.device.ProfileExecutionCoordinator
+import org.koin.core.annotation.Factory
+
+@Factory
+class StartFreeVariableBrewingUseCase(
+    private val coordinator: ProfileExecutionCoordinator,
+    private val provider: DeviceControllerProvider,
+) {
+    suspend operator fun invoke(deviceId: Long, isFlow: Boolean) = coordinator.withUnownedControl(deviceId) {
+        with(provider.getController(deviceId)) {
+            requireReady(deviceId)
+            brewing.startFreeVariableBrewing(if (isFlow) FreeHandControlMode.Flow else FreeHandControlMode.Pressure)
+        }
+    }
+}

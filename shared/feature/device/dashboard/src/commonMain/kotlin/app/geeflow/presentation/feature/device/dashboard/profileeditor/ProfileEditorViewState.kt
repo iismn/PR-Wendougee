@@ -1,0 +1,95 @@
+package app.geeflow.presentation.feature.device.dashboard.profileeditor
+
+import app.geeflow.data.brew.model.ConditionOperator
+import app.geeflow.data.brew.model.ExitCondition
+import app.geeflow.data.brew.model.PhaseRamp
+import app.geeflow.data.brew.model.SingleDoseSettings
+import app.geeflow.data.device.model.ProfileIssueCode
+import app.geeflow.data.device.model.ProfilingCapabilities
+import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardViewState.Brew
+import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardViewState.DashboardChartType
+import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardViewState.DashboardChartType.FlowRate
+import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardViewState.DashboardChartType.Pressure
+import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardViewState.DashboardChartType.WeightRate
+import app.geeflow.presentation.feature.device.dashboard.model.ChartData
+
+internal data class ProfileEditorViewState(
+    val stepEditor: StepEditorRequest? = null,
+    val profilingCapabilities: ProfilingCapabilities = ProfilingCapabilities(),
+    val experimental: Boolean = false,
+    val supportIssues: List<ProfileIssueCode> = emptyList(),
+    val isRecording: Boolean = false,
+    val profileName: String = "",
+    val description: String = "",
+    val displayDescription: String = "",
+    val steps: List<Step> = emptyList(),
+    val finishTarget: FinishTarget = FinishTarget(),
+    val singleDoseSettings: SingleDoseSettings = SingleDoseSettings(),
+    val singleDoseGrinderReady: Boolean = false,
+    val targetData: Map<Float, ChartData> = emptyMap(),
+    val pressureRange: ClosedFloatingPointRange<Float> = 0f..0f,
+    val flowRange: ClosedFloatingPointRange<Float> = 0f..0f,
+    val brew: Brew = Brew(),
+    val visibleCharts: Set<DashboardChartType> = setOf(Pressure, FlowRate, WeightRate),
+    val isBrewing: Boolean = false,
+    val dialog: ProfileEditorDialog? = null,
+) {
+    /** A profile made up of nothing but waits would never brew, so it can be neither tested nor saved. */
+    private val hasProgram: Boolean = (isRecording && targetData.isNotEmpty()) || steps.any { it.type != StepType.Wait }
+    val canTest: Boolean = supportIssues.isEmpty() && hasProgram
+    val canSave: Boolean = profileName.isNotBlank() && hasProgram
+    val experimentalControlType: StepType? get() = if (steps.any { it.experimental }) {
+        steps.firstOrNull { it.experimental && it.type != StepType.Wait }?.type
+            ?: steps.firstOrNull { it.type != StepType.Wait }?.type
+    } else {
+        null
+    }
+
+    data class Step(
+        val id: Long,
+        val type: StepType,
+        val timeSec: Int,
+        val value: Float,
+        val phaseId: String = id.toString(),
+        val phaseName: String = "",
+        val ramp: PhaseRamp = PhaseRamp(),
+        val minimumDurationMillis: Long = 0,
+        val exitConditions: List<ExitCondition> = emptyList(),
+        val conditionOperator: ConditionOperator = ConditionOperator.Or,
+        val experimental: Boolean = false,
+
+    )
+
+    /** Both targets are kept so switching type does not lose the value entered for the other one. */
+    data class FinishTarget(
+        val enabled: Boolean = true,
+        val type: FinishTargetType = FinishTargetType.Volume,
+        val volume: Float = ProfileEditorDefaults.VolumeMl,
+        val weight: Float = ProfileEditorDefaults.WeightG,
+    ) {
+        val target: Float = when (type) {
+            FinishTargetType.Volume -> volume
+            FinishTargetType.Weight -> weight
+        }
+    }
+}
+
+internal enum class StepType {
+    Flow,
+    Pressure,
+    Wait,
+}
+
+internal enum class FinishTargetType {
+    Volume,
+    Weight,
+}
+
+internal sealed interface ProfileEditorDialog {
+    data object Details : ProfileEditorDialog
+    data class SingleDose(val settings: SingleDoseSettings) : ProfileEditorDialog
+
+    data class FinishTargetValue(val type: FinishTargetType, val target: Float) : ProfileEditorDialog
+}
+
+internal data class StepEditorRequest(val key: String, val step: ProfileEditorViewState.Step, val isNew: Boolean)

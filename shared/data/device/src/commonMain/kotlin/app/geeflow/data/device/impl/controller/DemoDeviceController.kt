@@ -1,0 +1,656 @@
+@file:Suppress("TooManyFunctions")
+
+package app.geeflow.data.device.impl.controller
+
+import app.geeflow.data.brew.model.BrewDataPoint
+import app.geeflow.data.brew.model.BrewProfile
+import app.geeflow.data.brew.model.Condition
+import app.geeflow.data.brew.model.FreeHandControlMode
+import app.geeflow.data.brew.model.PhaseControl
+import app.geeflow.data.brew.model.ProfileStep
+import app.geeflow.data.device.DeviceAccessoryControl
+import app.geeflow.data.device.DeviceBrewingControl
+import app.geeflow.data.device.DeviceConnectionControl
+import app.geeflow.data.device.DeviceController
+import app.geeflow.data.device.DeviceHotWaterControl
+import app.geeflow.data.device.DeviceMaintenanceControl
+import app.geeflow.data.device.DeviceProfileControl
+import app.geeflow.data.device.DeviceSettingsControl
+import app.geeflow.data.device.TimedPumpProfileSupport
+import app.geeflow.data.device.model.Device
+import app.geeflow.data.device.model.DeviceCapability
+import app.geeflow.data.device.model.DeviceConnection
+import app.geeflow.data.device.model.DeviceConstraints
+import app.geeflow.data.device.model.DeviceState
+import app.geeflow.data.device.model.SingleDoseGrinder
+import app.geeflow.data.device.model.SmartScale
+import app.geeflow.data.device.model.pumpTelemetry
+import app.geeflow.data.device.openFreeHandSession
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import org.koin.core.annotation.Singleton
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
+
+@Singleton
+class DemoDeviceController(
+    private val scope: CoroutineScope
+) : DeviceController,
+    DeviceConnectionControl,
+    DeviceSettingsControl,
+    DeviceBrewingControl,
+    DeviceMaintenanceControl,
+    DeviceProfileControl,
+    DeviceAccessoryControl {
+    override var connectionGeneration: Long = 0
+        private set
+    override val connection: DeviceConnectionControl get() = this
+    override val settings: DeviceSettingsControl get() = this
+    override val hotWater: DeviceHotWaterControl = object : DeviceHotWaterControl {
+        override suspend fun start() {
+            _deviceState.update { state ->
+                check(state.connectionStatus == DeviceState.ConnectionStatus.Connected)
+                check(!state.hasError && state.brewStatus == DeviceState.BrewStatus.Idle)
+                state.copy(statusTime = Clock.System.now(), brewStatus = DeviceState.BrewStatus.WaterFlow)
+            }
+        }
+
+        override suspend fun stop() {
+            _deviceState.update { state ->
+                if (state.brewStatus == DeviceState.BrewStatus.WaterFlow) {
+                    state.copy(statusTime = Clock.System.now(), brewStatus = DeviceState.BrewStatus.Idle)
+                } else {
+                    state
+                }
+            }
+        }
+    }
+    override val brewing: DeviceBrewingControl get() = this
+    override val maintenance: DeviceMaintenanceControl get() = this
+    override val profiles: DeviceProfileControl get() = this
+    override val accessories: DeviceAccessoryControl get() = this
+
+    override suspend fun stopLiveSession() = stopFreeVariableBrewing()
+    override fun isLiveSessionActive(state: DeviceState) = state.brewStatus == DeviceState.BrewStatus.FreeVariable
+    override val profilingCapabilities = TimedPumpProfileSupport.capabilities
+    override fun assessNativeProfile(profile: BrewProfile) = TimedPumpProfileSupport.assessNative(profile)
+    override fun telemetry() = deviceState.value.let { state ->
+        // A connected simulator has working pump sensors even before the first brew.
+        // Idle counters are zero; nullable display values must not imply missing hardware.
+        if (state.connectionStatus == DeviceState.ConnectionStatus.Connected &&
+            state.brewStatus == DeviceState.BrewStatus.Idle
+        ) {
+            state.copy(pressure = 0f, flowRate = 0f, volume = 0f, weight = 0f).pumpTelemetry()
+        } else {
+            state.pumpTelemetry()
+        }
+    }
+    override suspend fun openLiveSession(initial: PhaseControl) = openFreeHandSession(initial)
+
+    private val _deviceState = MutableStateFlow(defaultDeviceState())
+    override val deviceState: StateFlow<DeviceState> = _deviceState.asStateFlow()
+
+    private val _foundSingleDoseGrinders = MutableStateFlow<List<SingleDoseGrinder>>(emptyList())
+    override val foundSingleDoseGrinders = _foundSingleDoseGrinders.asStateFlow()
+    private var grinderSearchJob: Job? = null
+    private var grinderConnectionGeneration = 0
+
+    private val _foundScales = MutableStateFlow(listOfNotNull(_deviceState.value.smartScale))
+    override val foundScales: StateFlow<List<SmartScale>> = _foundScales.asStateFlow()
+
+    override val constraints: DeviceConstraints = DeviceConstraints(
+        brewTempRange = 0..BREW_MAX_TEMP,
+        steamTempRange = 0..STEAM_MAX_TEMP,
+        manualBrewPressureRange = 1..PADDLE_PRESSURE_MAX_INT,
+        manualBrewTimeRange = 0..PADDLE_TIME_MAX,
+        cleaningTimeRange = 1..CLEANING_TIME_MAX,
+        cleaningRestRange = 1..CLEANING_REST_MAX,
+        cleaningCountRange = 1..CLEANING_COUNT_MAX,
+        pressureRange = 0f..BREW_PRESSURE_MAX,
+        flowRange = 0f..BREW_FLOW_MAX,
+    )
+
+    override val capabilities: Set<DeviceCapability> = setOf(
+        DeviceCapability.SteamBoiler,
+        DeviceCapability.BrewBoiler,
+        DeviceCapability.HeatingMode,
+        DeviceCapability.WaterAlarm,
+        DeviceCapability.ManualBrewing,
+        DeviceCapability.ProfileBrewing,
+        DeviceCapability.CleaningMode,
+        DeviceCapability.CleaningSettings,
+        DeviceCapability.SmartScaleConnectivity,
+        DeviceCapability.SingleDoseGrinderConnectivity,
+        DeviceCapability.CommercialGrinderConnectivity,
+        DeviceCapability.PressureProfiling,
+        DeviceCapability.FlowProfiling,
+        DeviceCapability.HotWaterDispensing,
+    )
+
+    override suspend fun connect(device: Device): DeviceConnection {
+        connectionGeneration++
+        run {
+            _deviceState.update { it.copy(connectionStatus = DeviceState.ConnectionStatus.Connecting) }
+            delay(CONNECT_DELAY_MS.milliseconds)
+            _deviceState.update {
+                it.copy(
+                    connectionStatus = DeviceState.ConnectionStatus.Connected,
+                    brewBoilerTemp = 93f,
+                    steamBoilerTemp = 125f,
+                    pressure = 0.0f,
+                    smartScale = it.smartScale,
+                    smartScaleEnabled = it.smartScaleEnabled,
+                    smartScaleSearchActive = it.smartScaleSearchActive,
+                    waterLevelAlarm = it.waterLevelAlarm,
+                    error = it.error,
+                    config = DeviceState.Config(
+                        targetBrewTemp = it.config?.targetBrewTemp ?: 93f,
+                        targetSteamTemp = it.config?.targetSteamTemp ?: 125f,
+                        brewBoilerEnabled = it.config?.brewBoilerEnabled ?: true,
+                        steamBoilerEnabled = it.config?.steamBoilerEnabled ?: true,
+                        manualBrewTimeSec = it.config?.manualBrewTimeSec ?: 5f,
+                        manualBrewPressure = it.config?.manualBrewPressure ?: 9f,
+                        cleaningTimeSec = it.config?.cleaningTimeSec ?: 5f,
+                        cleaningStandbySec = it.config?.cleaningStandbySec ?: 5f,
+                        cleaningCount = it.config?.cleaningCount ?: 3,
+                        heatingMode = it.config?.heatingMode ?: DeviceState.HeatingMode.FullSpeed,
+                        waterAlarmEnabled = it.config?.waterAlarmEnabled ?: false,
+                    ),
+                )
+            }
+        }
+        return device.connection
+    }
+
+    override suspend fun disconnect() {
+        connectionGeneration++
+        brewJob?.cancel()
+        grinderSearchJob?.cancel()
+        grinderConnectionGeneration++
+        _foundSingleDoseGrinders.value = emptyList()
+        _deviceState.update { defaultDeviceState() }
+        _foundScales.value = listOfNotNull(_deviceState.value.smartScale)
+    }
+
+    override suspend fun refreshAccessories() {
+        requestSmartScaleList()
+        requestSingleDoseGrinderList()
+    }
+
+    private var brewJob: Job? = null
+
+    override suspend fun startManualBrewing() {
+        brewJob?.cancel()
+        _deviceState.update {
+            it.copy(
+                statusTime = Clock.System.now(),
+                brewStatus = DeviceState.BrewStatus.Manual,
+                pressure = 0f,
+                weight = 0f,
+                volume = 0f,
+            )
+        }
+        brewJob = scope.launch {
+            val simulation = DemoBrewSimulation()
+            val durationMs =
+                ((_deviceState.value.config?.manualBrewTimeSec ?: DEFAULT_BREW_TIME_SEC) * MS_PER_SECOND).toLong()
+            var elapsedMs = 0L
+            while (_deviceState.value.brewStatus == DeviceState.BrewStatus.Manual) {
+                delay(BREW_TICK_MS.milliseconds)
+                elapsedMs += BREW_TICK_MS
+                if (elapsedMs >= durationMs) {
+                    stopManualBrewing()
+                    break
+                }
+                val target = _deviceState.value.config?.manualBrewPressure ?: DEFAULT_FREE_VAR_PRESSURE
+                val point = simulation.advance(PhaseControl.Pressure(target), BREW_TICK_MS / MS_PER_SECOND)
+                _deviceState.update { it.withBrewPoint(point = point, elapsedMs = elapsedMs) }
+            }
+        }
+    }
+
+    override suspend fun stopManualBrewing() {
+        brewJob?.cancel()
+        _deviceState.update {
+            it.copy(
+                statusTime = Clock.System.now(),
+                brewStatus = DeviceState.BrewStatus.Idle,
+                pressure = 0f,
+                weight = null,
+                volume = null,
+                flowRate = null,
+                weightRate = null,
+            )
+        }
+    }
+
+    override suspend fun stopProfileBrewing() {
+        brewJob?.cancel()
+        _deviceState.update {
+            it.copy(
+                statusTime = Clock.System.now(),
+                brewStatus = DeviceState.BrewStatus.Idle,
+                pressure = 0f,
+                weight = null,
+                volume = null,
+                flowRate = null,
+                weightRate = null,
+            )
+        }
+    }
+
+    @Suppress("LongMethod")
+    override suspend fun startProfileBrewing(profile: BrewProfile) {
+        brewJob?.cancel()
+        val recordingPoints = profile.recording?.playbackPoints()
+        delay(500.milliseconds)
+        _deviceState.update {
+            it.copy(
+                statusTime = Clock.System.now(),
+                brewStatus = DeviceState.BrewStatus.Profile,
+                pressure = 0f,
+                weight = 0f,
+                volume = 0f
+            )
+        }
+        brewJob = scope.launch {
+            val simulation = DemoBrewSimulation()
+            var elapsedMs = 0L
+            while (_deviceState.value.brewStatus == DeviceState.BrewStatus.Profile) {
+                delay(BREW_TICK_MS.milliseconds)
+                elapsedMs += BREW_TICK_MS
+                val currentStep = findCurrentStep(profile.steps, elapsedMs / MS_PER_SECOND)
+                    ?: profile.steps.lastOrNull().takeIf { profile.finishCondition != null }
+                if (currentStep == null && recordingPoints == null) {
+                    stopProfileBrewing()
+                    break
+                }
+                val recorded = recordingPoints?.let { it[(elapsedMs / 500L).toInt().coerceAtMost(it.lastIndex)] }
+                val control = when {
+                    recorded == null -> requireNotNull(currentStep).toControl()
+                    profile.recording?.controlMode == FreeHandControlMode.Flow -> PhaseControl.Flow(recorded.flowRate)
+                    else -> PhaseControl.Pressure(recorded.pressure)
+                }
+                val point = simulation.advance(control, BREW_TICK_MS / MS_PER_SECOND)
+                val finished = profile.reachedGoal(volume = point.volume, weight = point.weight)
+                _deviceState.update { state ->
+                    val measured = state.withBrewPoint(point = point, elapsedMs = elapsedMs)
+                    if (finished) {
+                        measured.copy(
+                            statusTime = measured.telemetryTime,
+                            brewStatus = DeviceState.BrewStatus.Idle,
+                            pressure = 0f,
+                            flowRate = 0f,
+                            weightRate = 0f,
+                        )
+                    } else {
+                        measured
+                    }
+                }
+            }
+        }
+    }
+
+    private fun findCurrentStep(steps: List<ProfileStep>, elapsedSec: Float): ProfileStep? {
+        var stepStartSec = 0f
+        for (step in steps) {
+            val stepEndSec = stepStartSec + step.time
+            if (elapsedSec < stepEndSec) return step
+            stepStartSec += step.time
+        }
+        return null
+    }
+
+    private fun ProfileStep.toControl(): PhaseControl = when (this) {
+        is ProfileStep.Pressure -> PhaseControl.Pressure(pressure)
+        is ProfileStep.Flow -> PhaseControl.Flow(flow)
+        is ProfileStep.Wait -> PhaseControl.PumpPause
+    }
+
+    private fun DeviceState.withBrewPoint(point: BrewDataPoint, elapsedMs: Long): DeviceState = copy(
+        telemetryTime = Clock.System.now(),
+        pressure = point.pressure,
+        flowRate = point.flowRate,
+        weightRate = point.weightRate,
+        volume = point.volume,
+        weight = point.weight,
+        time = (elapsedMs / BREW_TICK_MS).toInt(),
+    )
+
+    override suspend fun startCleaning() {
+        delay(DEMO_SETTER_DELAY_MS.milliseconds)
+        _deviceState.update {
+            it.copy(
+                statusTime = Clock.System.now(),
+                brewStatus = DeviceState.BrewStatus.Cleaning,
+                time = 1
+            )
+        }
+        scope.launch {
+            val config = _deviceState.value.config ?: return@launch
+            val totalSeconds = (config.cleaningTimeSec + config.cleaningStandbySec).toInt() * config.cleaningCount
+            while (_deviceState.value.brewStatus == DeviceState.BrewStatus.Cleaning) {
+                delay(CLEANING_TICK_MS.milliseconds)
+                val current = _deviceState.value.time ?: 1
+                if (current >= totalSeconds) {
+                    _deviceState.update {
+                        it.copy(
+                            statusTime = Clock.System.now(),
+                            brewStatus = DeviceState.BrewStatus.Idle,
+                            time = null
+                        )
+                    }
+                } else {
+                    _deviceState.update { it.copy(time = current + 1) }
+                }
+            }
+        }
+    }
+
+    override suspend fun stopCleaning() {
+        _deviceState.update {
+            it.copy(
+                statusTime = Clock.System.now(),
+                brewStatus = DeviceState.BrewStatus.Idle,
+                time = null
+            )
+        }
+    }
+
+    override suspend fun setBoilerState(boilerType: DeviceState.BoilerType, enabled: Boolean) {
+        delay(DEMO_SETTER_DELAY_MS.milliseconds)
+        _deviceState.update { state ->
+            val config = state.config ?: return
+            state.copy(
+                config = when (boilerType) {
+                    DeviceState.BoilerType.Steam -> config.copy(steamBoilerEnabled = enabled)
+                    DeviceState.BoilerType.Brew -> config.copy(brewBoilerEnabled = enabled)
+                },
+            )
+        }
+    }
+
+    override suspend fun setBrewTemperature(temp: Int) {
+        delay(DEMO_SETTER_DELAY_MS.milliseconds)
+        _deviceState.update { state ->
+            val config = state.config ?: return
+            state.copy(config = config.copy(targetBrewTemp = temp.toFloat()))
+        }
+    }
+
+    override suspend fun setSteamTemperature(temp: Int) {
+        delay(DEMO_SETTER_DELAY_MS.milliseconds)
+        _deviceState.update { state ->
+            val config = state.config ?: return
+            state.copy(config = config.copy(targetSteamTemp = temp.toFloat()))
+        }
+    }
+
+    override suspend fun setHeatingMode(heatingMode: DeviceState.HeatingMode) {
+        delay(DEMO_SETTER_DELAY_MS.milliseconds)
+        _deviceState.update { state ->
+            val config = state.config ?: return
+            state.copy(config = config.copy(heatingMode = heatingMode))
+        }
+    }
+
+    override suspend fun setManualBrewPressure(pressure: Float) {
+        delay(DEMO_SETTER_DELAY_MS.milliseconds)
+        _deviceState.update { state ->
+            val config = state.config ?: return
+            state.copy(config = config.copy(manualBrewPressure = pressure))
+        }
+    }
+
+    override suspend fun setManualBrewTime(timeSec: Float) {
+        delay(DEMO_SETTER_DELAY_MS.milliseconds)
+        _deviceState.update { state ->
+            val config = state.config ?: return
+            state.copy(config = config.copy(manualBrewTimeSec = timeSec))
+        }
+    }
+
+    override suspend fun setCleaningSettings(timeSec: Float, standbySec: Float, count: Int) {
+        delay(DEMO_SETTER_DELAY_MS.milliseconds)
+        _deviceState.update { state ->
+            val config = state.config ?: return
+            state.copy(
+                config = config.copy(cleaningTimeSec = timeSec, cleaningStandbySec = standbySec, cleaningCount = count),
+            )
+        }
+    }
+
+    override suspend fun setAgileRing(enabled: Boolean) {
+        error("Agile Ring is not available on this device")
+    }
+
+    override suspend fun setWaterAlarm(enabled: Boolean) {
+        delay(DEMO_SETTER_DELAY_MS.milliseconds)
+        _deviceState.update { state ->
+            val config = state.config ?: return
+            state.copy(
+                config = config.copy(waterAlarmEnabled = enabled),
+            )
+        }
+    }
+
+    private var freeVarFlowTarget = DEFAULT_FREE_VAR_FLOW
+
+    override suspend fun startFreeVariableBrewing(mode: FreeHandControlMode) {
+        val isFlow = mode == FreeHandControlMode.Flow
+        brewJob?.cancel()
+        _deviceState.update {
+            it.copy(
+                statusTime = Clock.System.now(),
+                brewStatus = DeviceState.BrewStatus.FreeVariable,
+                pressure = 0f,
+                weight = 0f,
+                volume = 0f,
+                freeHandStopRequested = false,
+                freeHandControlMode = if (isFlow) FreeHandControlMode.Flow else FreeHandControlMode.Pressure,
+            )
+        }
+        brewJob = scope.launch {
+            val simulation = DemoBrewSimulation()
+            var elapsedMs = 0L
+            while (_deviceState.value.brewStatus == DeviceState.BrewStatus.FreeVariable) {
+                delay(BREW_TICK_MS.milliseconds)
+                elapsedMs += BREW_TICK_MS
+                val control = if (isFlow) {
+                    PhaseControl.Flow(freeVarFlowTarget)
+                } else {
+                    PhaseControl.Pressure(_deviceState.value.config?.manualBrewPressure ?: DEFAULT_FREE_VAR_PRESSURE)
+                }
+                val point = simulation.advance(control, BREW_TICK_MS / MS_PER_SECOND)
+                _deviceState.update { it.withBrewPoint(point = point, elapsedMs = elapsedMs) }
+            }
+        }
+    }
+
+    override suspend fun stopFreeVariableBrewing() {
+        brewJob?.cancel()
+        _deviceState.update { it.copy(freeHandStopRequested = true) }
+        _deviceState.update {
+            it.copy(
+                statusTime = Clock.System.now(),
+                brewStatus = DeviceState.BrewStatus.Idle,
+                pressure = 0f,
+                weight = null,
+                volume = null,
+                flowRate = null,
+                weightRate = null,
+            )
+        }
+    }
+
+    override suspend fun setFreeBrewPressureTarget(pressure: Float) {
+        _deviceState.update { state ->
+            val config = state.config ?: return
+            state.copy(config = config.copy(manualBrewPressure = pressure))
+        }
+    }
+
+    override suspend fun setFreeBrewFlowTarget(flow: Float) {
+        freeVarFlowTarget = flow
+    }
+
+    override suspend fun bindProfile(profile: BrewProfile) = Unit
+
+    override suspend fun setSingleDoseGrinderConnectivity(enabled: Boolean) {
+        grinderSearchJob?.cancel()
+        grinderConnectionGeneration++
+        _deviceState.update {
+            it.copy(
+                singleDoseGrinderEnabled = enabled,
+                singleDoseGrinderSearchActive = false,
+                singleDoseGrinder = if (enabled) it.singleDoseGrinder else null,
+            )
+        }
+        _foundSingleDoseGrinders.value = listOfNotNull(_deviceState.value.singleDoseGrinder)
+        if (enabled) requestSingleDoseGrinderList()
+    }
+
+    override suspend fun requestSingleDoseGrinderList() {
+        if (!_deviceState.value.singleDoseGrinderEnabled) return
+        grinderSearchJob?.cancel()
+        _foundSingleDoseGrinders.value = listOfNotNull(_deviceState.value.singleDoseGrinder)
+        _deviceState.update { it.copy(singleDoseGrinderSearchActive = true) }
+        grinderSearchJob = scope.launch {
+            delay(SCALE_SEARCH_DELAY_MS)
+            val connectedName = _deviceState.value.singleDoseGrinder?.name
+            _foundSingleDoseGrinders.value = listOf("Milo Demo", "BGM_Demo").map {
+                SingleDoseGrinder(it, isConnected = it == connectedName)
+            }
+            delay(SCALE_SEARCH_DURATION_MS)
+            _deviceState.update { it.copy(singleDoseGrinderSearchActive = false) }
+        }
+    }
+
+    override suspend fun connectSingleDoseGrinder(name: String) {
+        if (!_deviceState.value.singleDoseGrinderEnabled) return
+        val generation = ++grinderConnectionGeneration
+        delay(SCALE_CONNECT_DELAY_MS)
+        if (generation != grinderConnectionGeneration || !_deviceState.value.singleDoseGrinderEnabled) return
+        val grinder = SingleDoseGrinder(name, isConnected = true, standing = 0xFFFF, operationStatus = 0)
+        _foundSingleDoseGrinders.update { grinders -> grinders.map { it.copy(isConnected = it.name == name) } }
+        _deviceState.update { it.copy(singleDoseGrinder = grinder) }
+    }
+
+    override suspend fun disconnectSingleDoseGrinder() {
+        grinderConnectionGeneration++
+        _foundSingleDoseGrinders.update { grinders -> grinders.map { it.copy(isConnected = false) } }
+        _deviceState.update { it.copy(singleDoseGrinder = null) }
+    }
+
+    override suspend fun runSingleDoseGrinder(grindingSize: Int, grindingSpeed: Int) {
+        require(
+            grindingSize in MIN_GRINDING_SIZE..MAX_GRINDING_SIZE &&
+                grindingSpeed in MIN_GRINDING_SPEED..MAX_GRINDING_SPEED,
+        )
+        val grinder = _deviceState.value.singleDoseGrinder
+        require(grinder?.isConnected == true)
+        _deviceState.update { it.copy(singleDoseGrinder = grinder.copy(operationStatus = 1)) }
+        delay(SCALE_CONNECT_DELAY_MS)
+        _deviceState.update { state ->
+            if (state.singleDoseGrinder?.name == grinder.name) {
+                state.copy(singleDoseGrinder = state.singleDoseGrinder.copy(operationStatus = 0))
+            } else {
+                state
+            }
+        }
+    }
+
+    override suspend fun setSmartScaleConnectivity(enabled: Boolean) {
+        _deviceState.update { it.copy(smartScaleEnabled = enabled) }
+        if (enabled) {
+            _foundScales.value = listOfNotNull(_deviceState.value.smartScale)
+            simulateScaleSearch()
+        } else {
+            _deviceState.update { it.copy(smartScaleSearchActive = false, smartScale = null) }
+            _foundScales.value = emptyList()
+        }
+    }
+
+    override suspend fun requestSmartScaleList() {
+        if (!_deviceState.value.smartScaleEnabled) return
+        simulateScaleSearch()
+    }
+
+    private fun simulateScaleSearch() {
+        scope.launch {
+            _deviceState.update { it.copy(smartScaleSearchActive = true) }
+            delay(SCALE_SEARCH_DELAY_MS.milliseconds)
+            if (!_deviceState.value.smartScaleEnabled) return@launch
+            val connectedScaleName = _deviceState.value.smartScale?.takeIf { it.isConnected }?.name
+            _foundScales.value = listOf(
+                SmartScale(DEFAULT_SCALE_NAME, isConnected = false),
+                SmartScale(SLOW_SCALE_NAME, isConnected = false),
+            ).map { scale ->
+                scale.copy(isConnected = scale.name == connectedScaleName)
+            }
+            delay(SCALE_SEARCH_DURATION_MS.milliseconds)
+            if (_deviceState.value.smartScaleEnabled) {
+                _deviceState.update { it.copy(smartScaleSearchActive = false) }
+            }
+        }
+    }
+
+    override suspend fun connectSmartScale(name: String) {
+        // The second scale is deliberately slow to pair so the connection help hint can be exercised.
+        delay((if (name == SLOW_SCALE_NAME) SLOW_SCALE_CONNECT_DELAY_MS else SCALE_CONNECT_DELAY_MS).milliseconds)
+        val scale = SmartScale(name, isConnected = true)
+        _foundScales.update { scales -> scales.map { it.copy(isConnected = it.name == name) } }
+        _deviceState.update { it.copy(smartScale = scale) }
+    }
+
+    override suspend fun disconnectSmartScale() {
+        val name = _deviceState.value.smartScale?.name ?: return
+        _foundScales.update { scales -> scales.map { if (it.name == name) it.copy(isConnected = false) else it } }
+        _deviceState.update { it.copy(smartScale = null) }
+    }
+
+    companion object {
+        private const val BREW_MAX_TEMP = 110
+        private const val STEAM_MAX_TEMP = 140
+        private const val PADDLE_PRESSURE_MAX_INT = 120
+        private const val PADDLE_TIME_MAX = 60
+        private const val BREW_PRESSURE_MAX = 12f
+        private const val BREW_FLOW_MAX = 12f
+        private const val CLEANING_TIME_MAX = 60
+        private const val CLEANING_REST_MAX = 60
+        private const val CLEANING_COUNT_MAX = 10
+
+        private const val CONNECT_DELAY_MS = 500L
+        private const val BREW_TICK_MS = 100L
+        private const val MS_PER_SECOND = 1000f
+        private const val DEFAULT_BREW_TIME_SEC = 5f
+        private const val DEMO_SETTER_DELAY_MS = 100L
+        private const val CLEANING_TICK_MS = 1000L
+        private const val SCALE_SEARCH_DELAY_MS = 2000L
+        private const val SCALE_SEARCH_DURATION_MS = 8000L
+        private const val SCALE_CONNECT_DELAY_MS = 1500L
+        private const val DEFAULT_SCALE_NAME = "Bookoo Themis"
+        private const val SLOW_SCALE_NAME = "Bookoo Themis Ultra"
+
+        private fun defaultDeviceState() = DeviceState(
+            smartScaleEnabled = true,
+            smartScale = SmartScale(DEFAULT_SCALE_NAME, isConnected = true),
+        )
+        private const val SLOW_SCALE_CONNECT_DELAY_MS = 8000L
+
+        private const val DEFAULT_FREE_VAR_PRESSURE = 6f
+        private const val DEFAULT_FREE_VAR_FLOW = 6f
+    }
+}
+
+private fun BrewProfile.reachedGoal(volume: Float, weight: Float): Boolean = when (val goal = finishCondition) {
+    is Condition.Weight -> weight >= goal.target
+    is Condition.Volume -> volume >= goal.target
+    null -> false
+}
