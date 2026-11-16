@@ -54,7 +54,11 @@ final class NativeGlassViewController: UIViewController, NativeGlassHost {
         guard self.phase != phase else { return }
         let initial = self.phase == -1
         self.phase = phase
-        overrideUserInterfaceStyle = phase >= 2 ? .dark : .light
+        // Style the materials without overriding Compose's system-theme observer.
+        materials.overrideUserInterfaceStyle = phase >= 2 ? .dark : .light
+        #if DEBUG
+        if !reviewScene.isEmpty { overrideUserInterfaceStyle = materials.overrideUserInterfaceStyle }
+        #endif
         let changes = { self.ambient.phase = phase; self.ambient.setNeedsDisplay() }
         if initial || UIAccessibility.isReduceMotionEnabled { changes() }
         else { UIView.transition(with: ambient, duration: 1.2, options: .transitionCrossDissolve, animations: changes) }
