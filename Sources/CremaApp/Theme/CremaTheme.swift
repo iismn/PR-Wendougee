@@ -156,47 +156,47 @@ struct CremaPalette: Sendable, Equatable {
         switch phase {
         case .morning:
             return Self(
-                bg: 0xF3F0E9, surface: 0xFFFFFF, surfaceWarm: 0xE9E3D8,
-                hairline: 0xDDD6CA, cream: 0x29251F, secondary: 0x756E63,
-                crema: 0xA76231, cremaBright: 0xCE8650,
-                matcha: 0x4E7A68, matchaBright: 0x77A58A,
+                bg: 0xF1F0EB, surface: 0xFAFAF7, surfaceWarm: 0xE7E7DF,
+                hairline: 0xDBDDD5, cream: 0x282C26, secondary: 0x73766D,
+                crema: 0xB9693C, cremaBright: 0xD58E59,
+                matcha: 0x56775D, matchaBright: 0x86A47A,
                 connected: 0x346D4D, danger: 0xA74133,
-                pressureTileStart: 0xF9E2C7, pressureTileEnd: 0xEFCFAA,
-                flowTileStart: 0xE9F1E9, flowTileEnd: 0xD6E6DB,
-                primarySurface: 0x29251F, heroSurface: 0x29251F, heroInk: 0xF8F3EA
+                pressureTileStart: 0xE7A875, pressureTileEnd: 0xEBD2AB,
+                flowTileStart: 0xB5CAA9, flowTileEnd: 0xDFE6D2,
+                primarySurface: 0x282C26, heroSurface: 0x282C26, heroInk: 0xF8F7EF
             )
         case .day:
             return Self(
-                bg: 0xEEF1ED, surface: 0xFCFDFC, surfaceWarm: 0xE3E9E1,
-                hairline: 0xD5DDD2, cream: 0x252C26, secondary: 0x647063,
-                crema: 0x8D623F, cremaBright: 0xBA8559,
-                matcha: 0x4D7766, matchaBright: 0x7AA38B,
+                bg: 0xF0F1EC, surface: 0xFCFCF9, surfaceWarm: 0xE5E8DF,
+                hairline: 0xDADDD4, cream: 0x252B25, secondary: 0x70776D,
+                crema: 0xAC603B, cremaBright: 0xCE8958,
+                matcha: 0x4F7358, matchaBright: 0x7C9D74,
                 connected: 0x346D4D, danger: 0xA74133,
-                pressureTileStart: 0xEFE2CF, pressureTileEnd: 0xE6D4BC,
-                flowTileStart: 0xE4EEE3, flowTileEnd: 0xD2E1D3,
-                primarySurface: 0x29251F, heroSurface: 0x253129, heroInk: 0xEEF4EA
+                pressureTileStart: 0xE7AC7D, pressureTileEnd: 0xEED8B8,
+                flowTileStart: 0xADC9A6, flowTileEnd: 0xDCE6D2,
+                primarySurface: 0x252B25, heroSurface: 0x253129, heroInk: 0xEEF4EA
             )
         case .evening:
             return Self(
-                bg: 0x241F1A, surface: 0x302A23, surfaceWarm: 0x3B332A,
-                hairline: 0x51473B, cream: 0xF1E6D5, secondary: 0xBAAB95,
-                crema: 0xE1A264, cremaBright: 0xE6B47E,
-                matcha: 0x9DB898, matchaBright: 0xB2C7A4,
+                bg: 0x20221D, surface: 0x292C25, surfaceWarm: 0x34372E,
+                hairline: 0x44473D, cream: 0xE3E4D6, secondary: 0xA7AA9B,
+                crema: 0xDAAA78, cremaBright: 0xE4B98B,
+                matcha: 0xA6BC93, matchaBright: 0xBED0AC,
                 connected: 0x8FB89A, danger: 0xE8957C,
-                pressureTileStart: 0x4B3827, pressureTileEnd: 0x3D2E22,
-                flowTileStart: 0x303E33, flowTileEnd: 0x29332B,
-                primarySurface: 0x4C3A28, heroSurface: 0x272019, heroInk: 0xE6D5BB
+                pressureTileStart: 0x574330, pressureTileEnd: 0x3A3428,
+                flowTileStart: 0x3E5039, flowTileEnd: 0x303A2C,
+                primarySurface: 0xD8DBC9, heroSurface: 0x23271F, heroInk: 0xE3E4D6
             )
         case .night:
             return Self(
-                bg: 0x141310, surface: 0x201E19, surfaceWarm: 0x2B2720,
-                hairline: 0x3D372C, cream: 0xD5C7B0, secondary: 0x9D907B,
-                crema: 0xC39360, cremaBright: 0xD4A877,
-                matcha: 0x87A08D, matchaBright: 0xA3B49B,
+                bg: 0x151713, surface: 0x20231C, surfaceWarm: 0x2A2E24,
+                hairline: 0x373C30, cream: 0xC7CCB9, secondary: 0x929B85,
+                crema: 0xBD986E, cremaBright: 0xCAA77E,
+                matcha: 0x91A77D, matchaBright: 0xA7BA94,
                 connected: 0x81A087, danger: 0xC98573,
-                pressureTileStart: 0x322A20, pressureTileEnd: 0x29231B,
-                flowTileStart: 0x252D26, flowTileEnd: 0x1F251F,
-                primarySurface: 0x352D21, heroSurface: 0x181510, heroInk: 0xC9B89B
+                pressureTileStart: 0x3D3325, pressureTileEnd: 0x2C281F,
+                flowTileStart: 0x303D29, flowTileEnd: 0x242D20,
+                primarySurface: 0xAFB79F, heroSurface: 0x181C15, heroInk: 0xC7CCB9
             )
         }
     }
@@ -244,7 +244,7 @@ enum CremaColor {
     static var flowTileStart: Color { Color(hex: palette.flowTileStart) }
     static var flowTileEnd: Color { Color(hex: palette.flowTileEnd) }
     static var primarySurface: Color { Color(hex: palette.primarySurface) }
-    static var onPrimary: Color { appearance.phase.isDark ? cream : onEspresso }
+    static var onPrimary: Color { appearance.phase.isDark ? espresso : onEspresso }
     static var onAccent: Color { appearance.phase.isDark ? espresso : .white }
     static var onDanger: Color { onAccent }
     static var heroSurface: Color { Color(hex: palette.heroSurface) }
@@ -306,8 +306,7 @@ struct CremaGlassBackground<S: InsettableShape>: ViewModifier {
                         )
                     )
                 }
-                .overlay(shape.strokeBorder(CremaColor.hairline.opacity(0.75), lineWidth: 0.8))
-                .shadow(color: CremaColor.espresso.opacity(0.045), radius: 18, x: 0, y: 7)
+                .overlay(shape.strokeBorder(CremaColor.cream.opacity(0.045), lineWidth: 0.6))
         }
     }
 }

@@ -35,6 +35,8 @@ xcodebuild build -project Crema.xcodeproj -scheme Crema-macOS \
 
 ## 현재 UI와 확인할 항목
 
+- 주 사용 환경은 **가로로 거치한 iPad**입니다. 820pt 이상에서는 상단 정보와 도구를 한 줄에 정리하고, 차트·네 측정값·단계·조작부 높이를 가용 창 높이에 맞춥니다.
+- 가로 편집 화면은 왼쪽의 노드 그래프와 오른쪽의 단계 선택·다이얼·눈금자가 함께 보입니다. 기본 레시피와 그라인더 항목은 왼쪽 그래프 아래에 있습니다.
 - 메인 순서는 기존 앱의 **헤더 → 추출 차트 → 측정값 → 단계 타임라인 → 추출/재생 조작부**입니다.
 - 프로필과 추출 기록은 기존 세로 목록과 시트로 열립니다. 프로필 선택·생성·편집·공유·커뮤니티·설정, 기록의 수율·시간·맛·메모·삭제 경로를 유지했습니다.
 - Pretendard Regular/Medium/SemiBold/Bold를 iOS·macOS에 포함하고 등록했습니다. 글자 누락과 시스템 폰트로 대체되는 곳을 실제 앱에서 확인합니다.
@@ -59,7 +61,7 @@ xcodebuild build -project Crema.xcodeproj -scheme Crema-macOS \
 
 ## 남은 실제 기기 확인
 
-Windows에서는 Xcode/SwiftUI 네이티브 실행을 검증하지 못했습니다. HTML 미리보기는 네이티브 렌더링 결과가 아닙니다. Mac에서는 Actions 빌드 결과와 별개로 앱을 실행해 창·시트·작은 화면·폰트·접근성을 확인해야 합니다.
+Windows에서는 Xcode/SwiftUI 네이티브 실행을 검증하지 못했습니다. HTML 미리보기는 네이티브 렌더링 결과가 아닙니다. Actions의 Apple 빌드와 별도로, `landscape-preview`가 1194×834(낮/밤), 1024×768, 390×844의 HTML 배치 및 편집 조작을 검사하고 `ipad-landscape-preview` 스크린샷을 남깁니다. 실제 iPad에서는 안전 영역·가로 회전·손가락 조작·큰 글자 설정을 확인해야 합니다.
 
 실제 LITA의 BLE 검색·연결·프로필 전송·추출·중단·추출 후 기록 저장은 실기기 확인이 남아 있습니다. 자동 튜닝의 실제 BLE 저울 연동은 기존 코드에도 없으며, 시뮬레이터는 StubScale, 실제 기기는 ManualScale을 사용합니다. UI 작업에서 `Data/`와 `CremaKit/`의 전송·추출 로직은 바꾸지 않았습니다.
 

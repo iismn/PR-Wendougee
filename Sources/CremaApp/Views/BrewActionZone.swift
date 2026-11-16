@@ -22,18 +22,17 @@ struct BrewActionZone: View {
                             onAutoTune: onAutoTune)
             }
         }
-        .padding(14)
+        .padding(16)
         .background {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
                 .fill(CremaColor.surface)
                 .overlay {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .strokeBorder(CremaColor.hairline, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 30, style: .continuous)
+                        .strokeBorder(CremaColor.cream.opacity(0.05), lineWidth: 0.5)
                 }
-                .shadow(color: CremaColor.espresso.opacity(0.06), radius: 20, x: 0, y: 8)
         }
-        .padding(.horizontal, 12)
-        .padding(.bottom, 10)
+        .padding(.horizontal, 20)
+        .padding(.bottom, 16)
         .animation(reduceMotion ? nil : .smooth(duration: 0.25), value: mode)
     }
 }
@@ -234,19 +233,6 @@ private struct ReplayPlaybackBar: View {
             .accessibilityLabel("Reset playback")
             .help("Reset playback")
 
-            Button(action: { playback.toggle() }) {
-                Image(systemName: playback.isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(CremaColor.onPrimary)
-                    .offset(x: playback.isPlaying ? 0 : 1)
-                    .frame(width: 54, height: 54)
-                    .background(CremaColor.primarySurface, in: Circle())
-                    .contentTransition(.symbolEffect(.replace))
-            }
-            .buttonStyle(PressDownStyle())
-            .accessibilityLabel(playback.isPlaying ? "Pause playback" : "Play recording")
-            .help(playback.isPlaying ? "Pause playback" : "Play recording")
-
             VStack(spacing: 0) {
                 Text(String(format: "%.1f / %.1f s", playback.t, playback.totalDuration))
                     .font(CremaTypography.font(size: 10, weight: .medium))
@@ -274,7 +260,23 @@ private struct ReplayPlaybackBar: View {
             .accessibilityLabel("Playback speed")
             .accessibilityValue(speedLabel(playback.speed))
             .help("Playback speed")
+            playButton
         }
+    }
+
+    private var playButton: some View {
+        Button(action: { playback.toggle() }) {
+            Image(systemName: playback.isPlaying ? "pause.fill" : "play.fill")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(CremaColor.onPrimary)
+                .offset(x: playback.isPlaying ? 0 : 1)
+                .frame(width: 54, height: 54)
+                .background(CremaColor.primarySurface, in: Circle())
+                .contentTransition(.symbolEffect(.replace))
+        }
+        .buttonStyle(PressDownStyle())
+        .accessibilityLabel(playback.isPlaying ? "Pause playback" : "Play recording")
+        .help(playback.isPlaying ? "Pause playback" : "Play recording")
     }
 
     private func speedLabel(_ speed: Double) -> String {

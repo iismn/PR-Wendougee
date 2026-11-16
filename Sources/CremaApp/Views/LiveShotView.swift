@@ -103,27 +103,29 @@ struct LiveShotView: View {
 
     private func shotSections(size: CGSize) -> some View {
         VStack(spacing: 16) {
-            header.cremaMeasureHeight(.header)
+            header(wide: size.width >= 820).cremaMeasureHeight(.header)
             chart(height: chartHeight(in: size))
-            measurements.cremaMeasureHeight(.metrics)
+            measurements(wide: size.width >= 820).cremaMeasureHeight(.metrics)
             StageTimeline(profile: playback.profile, playhead: playback.t)
                 .frame(height: 56)
                 .cremaMeasureHeight(.stages)
         }
-        .padding(.horizontal, size.width >= 820 ? 24 : 16)
-        .padding(.vertical, 16)
-        .frame(maxWidth: 1400)
+        .padding(.horizontal, size.width >= 820 ? 36 : 20)
+        .padding(.top, 16)
+        .padding(.bottom, 8)
+        .frame(maxWidth: 1180)
         .frame(maxWidth: .infinity)
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 5)
     }
 
-    private var measurements: some View {
+    private func measurements(wide: Bool) -> some View {
         MetricHUD(pressure: playback.currentSample?.pressureBar ?? 0,
                   flow: playback.currentSample?.flowMlPerSec ?? 0,
                   volume: playback.currentSample?.volumeMl ?? 0,
                   elapsed: playback.t,
-                  hasReading: playback.currentSample != nil)
+                  hasReading: playback.currentSample != nil,
+                  landscape: wide)
     }
 
     private var actions: some View {
@@ -131,44 +133,84 @@ struct LiveShotView: View {
                        library: library, history: history, tipPreferences: tipPreferences,
                        onAutoTune: { startAutoTune() })
             .padding(.top, 8)
-            .frame(maxWidth: 1400)
+            .frame(maxWidth: 1180)
             .frame(maxWidth: .infinity)
             .background(CremaColor.bg.opacity(0.98))
             .cremaMeasureHeight(.actions)
     }
 
     private func chartHeight(in size: CGSize) -> CGFloat {
-        let headerHeight: CGFloat = sectionHeights[.header] ?? 52
-        let metricHeight: CGFloat = sectionHeights[.metrics] ?? 110
+        let headerHeight: CGFloat = sectionHeights[.header] ?? 72
+        let metricHeight: CGFloat = sectionHeights[.metrics] ?? 128
         let stageHeight: CGFloat = sectionHeights[.stages] ?? 56
         let actionHeight: CGFloat = sectionHeights[.actions] ?? 102
         // Content padding, three gaps, and chart legend/padding.
-        let usedHeight: CGFloat = headerHeight + metricHeight + stageHeight + actionHeight + 136
+        let usedHeight: CGFloat = headerHeight + metricHeight + stageHeight + actionHeight + 132
         return max(210, size.height - usedHeight)
     }
 
-    private var header: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 18) {
-                profileSelector.fixedSize(horizontal: true, vertical: false)
+    @ViewBuilder
+    private func header(wide: Bool) -> some View {
+        if wide {
+            HStack(alignment: .center, spacing: 24) {
+                VStack(alignment: .leading, spacing: 4) {
+                    wordmark
+                    profileSelector
+                }
                 Spacer(minLength: 12)
+                recipeSummary
                 headerTools
             }
-            VStack(alignment: .leading, spacing: 8) {
+        } else {
+            compactHeader
+        }
+    }
+
+    private var wordmark: some View {
+        Text("crema")
+            .font(CremaTypography.font(size: 19, weight: .semibold))
+            .tracking(-0.8)
+    }
+
+    private var compactHeader: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 8) {
+                wordmark
+                Spacer(minLength: 8)
+                headerTools
+            }
+            HStack(alignment: .bottom, spacing: 14) {
                 profileSelector
-                HStack { Spacer(minLength: 0); headerTools }
+                Spacer(minLength: 0)
+                recipeSummary
             }
         }
+        .padding(.bottom, 6)
+    }
+
+    private var recipeSummary: some View {
+        VStack(alignment: .trailing, spacing: 6) {
+            if playback.profile.target == .weight, let weight = playback.profile.targetWeightG {
+                Text("\(weight) g")
+            } else if let volume = playback.profile.targetVolumeMl {
+                Text("\(volume) mL")
+            }
+            Text(String(format: "%.0f s", playback.profile.totalDuration))
+        }
+        .font(CremaTypography.font(size: 12).monospacedDigit())
+        .foregroundStyle(CremaColor.secondary)
+        .fixedSize()
+        .accessibilityLabel("Recipe target and duration")
     }
 
     private var profileSelector: some View {
         Button { showLibrary = true } label: {
             HStack(spacing: 10) {
-                Circle().fill(connectionColor).frame(width: 6, height: 6)
                 Text(profileName)
-                    .font(CremaTypography.font(size: 23, weight: .medium))
-                    .tracking(-0.5).lineLimit(1)
-                Image(systemName: "chevron.down").font(.system(size: 10, weight: .semibold))
+                    .font(CremaTypography.font(size: 34, weight: .regular))
+                    .tracking(-1.3).lineLimit(2).minimumScaleFactor(0.7)
+                    .multilineTextAlignment(.leading)
+                Image(systemName: "chevron.down").font(.system(size: 12, weight: .medium))
                     .foregroundStyle(CremaColor.secondary)
             }
             .frame(minHeight: 44)
@@ -179,7 +221,7 @@ struct LiveShotView: View {
     }
 
     private var headerTools: some View {
-        HStack(spacing: 7) {
+        HStack(spacing: 4) {
             utility("clock.arrow.circlepath", label: "Journal", availableWhileBrewing: true) { showHistory = true }
             utility("antenna.radiowaves.left.and.right", label: statusLabel) { showMachines = true }
             appearanceMenu
@@ -193,6 +235,7 @@ struct LiveShotView: View {
             Image(systemName: symbol).font(.system(size: 16))
                 .foregroundStyle(CremaColor.secondary)
                 .frame(width: 44, height: 44)
+                .background(CremaColor.surface, in: Circle())
                 .contentShape(Circle())
         }
         .buttonStyle(CremaHeaderPressStyle()).disabled(isBrewing && !availableWhileBrewing)
@@ -211,6 +254,7 @@ struct LiveShotView: View {
             Image(systemName: appearance.phase.symbol).font(.system(size: 16))
                 .foregroundStyle(CremaColor.secondary)
                 .frame(width: 44, height: 44)
+                .background(CremaColor.surface, in: Circle())
         }
         .menuStyle(.borderlessButton)
         .accessibilityLabel("Time appearance, \(appearance.phase.title)")
@@ -261,8 +305,8 @@ struct LiveShotView: View {
                       playhead: playback.t, totalDuration: playback.totalDuration)
                 .frame(height: height)
         }
-        .padding(16)
-        .background(CremaColor.surface, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .padding(18)
+        .background(CremaColor.surface, in: RoundedRectangle(cornerRadius: 30, style: .continuous))
     }
 
     private func chartKey(_ symbol: String, unit: String, color: Color) -> some View {

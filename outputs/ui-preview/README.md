@@ -4,6 +4,8 @@ Open `index.html` in a browser, or use `http://127.0.0.1:4180` while the local r
 
 This is an HTML review companion, not a rendered native build. Native presentation, platform accessibility, haptics and drawing still require Xcode/device validation.
 
+The primary layout is an iPad in landscape: a single header band, full-width extraction chart, four readings in one row, stages, and a bottom action dock. Above820px the editor puts the graph and recipe fields on the left and stage controls on the right. The editable style source is `crema.css`; run `node outputs/rebuild-ui-preview.cjs` at the repository root to embed it into the offline HTML.
+
 The original Crema composition is preserved:
 
 1. Profile selector, journal, machine, appearance and Live/Demo controls in the header.

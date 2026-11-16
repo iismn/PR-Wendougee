@@ -43,6 +43,9 @@ struct ProfileEditView: View {
         #if os(macOS)
         .frame(minWidth: 980, idealWidth: 1180, minHeight: 640, idealHeight: 760)
         #endif
+        .onAppear {
+            if selectedStageID == nil { selectedStageID = editing.stages.first?.id }
+        }
     }
 
     /// Stacked vertical scroll — iPhone, iPad portrait, and List mode.
@@ -51,7 +54,7 @@ struct ProfileEditView: View {
             VStack(alignment: .leading, spacing: 24) {
                 modePicker
                 if mode == .visual {
-                    visualEditor
+                    visualEditor(showControls: true)
                 } else {
                     preview
                 }
@@ -73,7 +76,9 @@ struct ProfileEditView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
                     modePicker
-                    visualEditor
+                    visualEditor(showControls: false)
+                    recipeSection
+                    grinderSection
                 }
                 .padding(.leading, 16)
                 .padding(.bottom, 24)
@@ -82,13 +87,35 @@ struct ProfileEditView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    recipeSection
-                    grinderSection
+                    stageSelector
+                    selectedStageControls(compact: true)
                 }
                 .padding(.trailing, 16)
                 .padding(.bottom, 24)
             }
-            .frame(width: 380)
+            .frame(width: 400)
+        }
+    }
+
+    private var stageSelector: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(Array(editing.stages.enumerated()), id: \.element.id) { index, stage in
+                    Button {
+                        withAnimation(reduceMotion ? nil : .smooth(duration: 0.2)) { selectedStageID = stage.id }
+                    } label: {
+                        Text(String(format: "%02d", index + 1))
+                            .font(CremaTypography.font(size: 12, weight: .medium))
+                            .foregroundStyle(selectedStageID == stage.id ? CremaColor.onPrimary : CremaColor.secondary)
+                            .frame(width: 48, height: 48)
+                            .background(selectedStageID == stage.id ? CremaColor.primarySurface : CremaColor.surface,
+                                        in: Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(stage.label.isEmpty ? "Stage \(index + 1)" : stage.label)
+                    .accessibilityAddTraits(selectedStageID == stage.id ? .isSelected : [])
+                }
+            }
         }
     }
 
@@ -103,7 +130,7 @@ struct ProfileEditView: View {
     }
 
     @ViewBuilder
-    private var visualEditor: some View {
+    private func visualEditor(showControls: Bool) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
                 Spacer()
@@ -125,11 +152,11 @@ struct ProfileEditView: View {
                 .help("Add stage")
             }
             ProfileNodeEditor(editing: editing, selectedStageID: $selectedStageID)
-                .frame(height: 280)
+                .frame(height: showControls ? 280 : 320)
                 .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
                         .fill(CremaColor.surface)
-                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .overlay(RoundedRectangle(cornerRadius: 26, style: .continuous)
                             .strokeBorder(CremaColor.hairline.opacity(0.5), lineWidth: 0.5))
                 )
 
@@ -141,20 +168,22 @@ struct ProfileEditView: View {
             .font(CremaTypography.font(size: 10, weight: .medium))
             .padding(.horizontal, 6)
 
-            if let selected = editing.stages.first(where: { $0.id == selectedStageID }) {
-                SelectedStageBar(
-                    stage: selected,
-                    canDelete: editing.canRemoveAnyStage,
-                    onDelete: {
-                        let id = selected.id
-                        editing.remove(stageID: id)
-                        selectedStageID = nil
-                    },
-                    onDeselect: { selectedStageID = nil }
-                )
+            if showControls {
+                selectedStageControls(compact: false)
             }
         }
         .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: selectedStageID)
+    }
+
+    @ViewBuilder
+    private func selectedStageControls(compact: Bool) -> some View {
+        if let selected = editing.stages.first(where: { $0.id == selectedStageID }) {
+            SelectedStageBar(stage: selected, canDelete: editing.canRemoveAnyStage,
+                             onDelete: {
+                                 editing.remove(stageID: selected.id)
+                                 selectedStageID = editing.stages.first?.id
+                             }, onDeselect: { selectedStageID = nil }, compact: compact)
+        }
     }
 
     // MARK: - Header / preview / recipe

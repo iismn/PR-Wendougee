@@ -68,7 +68,8 @@ struct ShotHistoryView: View {
     private var header: some View {
         HStack(spacing: 12) {
             Text("Shot history")
-                .font(CremaTypography.font(size: 18, weight: .semibold))
+                .font(CremaTypography.font(size: 28, weight: .regular))
+                .tracking(-0.8)
                 .foregroundStyle(CremaColor.cream)
             Spacer()
             Button(action: { dismiss() }) {
@@ -83,8 +84,8 @@ struct ShotHistoryView: View {
             .accessibilityLabel("Close brew journal")
             .help("Close brew journal")
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 16)
+        .padding(.horizontal, 24)
+        .padding(.top, 24)
         .padding(.bottom, 12)
     }
 

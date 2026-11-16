@@ -25,7 +25,7 @@ struct ProfilesView: View {
             header
                 .safeAreaPadding(.top)   // iPhone Dynamic Island / notch
             ScrollView {
-                LazyVStack(spacing: 8) {
+                LazyVStack(spacing: 12) {
                     ForEach(library.profiles) { profile in
                         ProfileRow(
                             profile: profile,
@@ -47,7 +47,7 @@ struct ProfilesView: View {
                         )
                     }
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 20)
                 .padding(.vertical, 12)
             }
             footer
@@ -109,7 +109,8 @@ struct ProfilesView: View {
     private var header: some View {
         HStack(spacing: 12) {
             Text("Profiles")
-                .font(CremaTypography.font(size: 18, weight: .semibold))
+                .font(CremaTypography.font(size: 28, weight: .regular))
+                .tracking(-0.8)
                 .foregroundStyle(CremaColor.cream)
             Spacer()
             Button(action: { dismiss() }) {
@@ -124,8 +125,8 @@ struct ProfilesView: View {
             .accessibilityLabel("Close recipe library")
             .help("Close recipe library")
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 16)
+        .padding(.horizontal, 24)
+        .padding(.top, 24)
         .padding(.bottom, 12)
     }
 
@@ -210,9 +211,9 @@ private struct ProfileRow: View {
             Button(action: onTap) {
                 HStack(spacing: 12) {
                     ProfilePreviewMini(profile: profile)
-                        .frame(width: 80, height: 56)
-                        .background(CremaColor.surfaceWarm.opacity(0.55),
-                                    in: RoundedRectangle(cornerRadius: 8))
+                        .frame(width: 86, height: 60)
+                        .background(CremaColor.bg,
+                                    in: RoundedRectangle(cornerRadius: 15))
                         .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 6) {
@@ -223,7 +224,7 @@ private struct ProfileRow: View {
                                     .accessibilityHidden(true)
                             }
                             Text(profile.name)
-                                .font(CremaTypography.font(size: 14, weight: .semibold))
+                                .font(CremaTypography.font(size: 16, weight: .medium))
                                 .foregroundStyle(CremaColor.cream)
                                 .lineLimit(2)
                         }
@@ -251,12 +252,11 @@ private struct ProfileRow: View {
             .help("Edit profile")
             rowMenu
         }
-        .padding(12)
-        .frame(minHeight: 96)
-        .background(RoundedRectangle(cornerRadius: 12).fill(CremaColor.surface))
-        .overlay(RoundedRectangle(cornerRadius: 12)
-            .strokeBorder(isActive ? CremaColor.crema.opacity(0.45) : CremaColor.hairline.opacity(0.7),
-                          lineWidth: isActive ? 1 : 0.5))
+        .padding(14)
+        .frame(minHeight: 110)
+        .background(RoundedRectangle(cornerRadius: 24).fill(CremaColor.surface))
+        .overlay(RoundedRectangle(cornerRadius: 24)
+            .strokeBorder(isActive ? CremaColor.matcha.opacity(0.5) : Color.clear, lineWidth: 1))
     }
 
     private var rowMenu: some View {

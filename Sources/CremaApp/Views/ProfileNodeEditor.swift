@@ -340,6 +340,7 @@ struct SelectedStageBar: View {
     let canDelete: Bool
     let onDelete: () -> Void
     let onDeselect: () -> Void
+    var compact: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -358,8 +359,8 @@ struct SelectedStageBar: View {
 
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .top, spacing: 12) {
-                    setpointDial.frame(width: 190)
-                    timingRulers.frame(minWidth: 190)
+                    setpointDial.frame(width: compact ? 150 : 190)
+                    timingRulers.frame(minWidth: compact ? 150 : 190)
                 }
                 VStack(spacing: 12) {
                     setpointDial
@@ -405,19 +406,19 @@ struct SelectedStageBar: View {
     @ViewBuilder private var setpointDial: some View {
         if stage.priority == .pressure {
             CremaDialControl(value: $stage.pressureBar, range: 0...9, step: 0.1,
-                             label: "Pressure", unit: "bar", accent: CremaColor.crema)
+                             label: "Pressure", unit: "bar", accent: CremaColor.crema, compact: compact)
         } else {
             CremaDialControl(value: $stage.flowMlPerSec, range: 0.1...8, step: 0.1,
-                             label: "Pump flow", unit: "mL/s", accent: CremaColor.matcha)
+                             label: "Pump flow", unit: "mL/s", accent: CremaColor.matcha, compact: compact)
         }
     }
 
     private var timingRulers: some View {
         VStack(spacing: 12) {
             CremaRulerControl(value: $stage.duration, range: 1...60, step: 0.5,
-                              label: "Duration", unit: "s")
+                              label: "Duration", unit: "s", compact: compact)
             CremaRulerControl(value: $stage.waitAfter, range: 0...30, step: 0.5,
-                              label: "Pause after", unit: "s", accent: CremaColor.matcha)
+                              label: "Pause after", unit: "s", accent: CremaColor.matcha, compact: compact)
         }
     }
 }

@@ -5,11 +5,12 @@ import CremaKit
 struct StageTimeline: View {
     let profile: BrewProfile
     let playhead: Double
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
+                HStack(spacing: 10) {
                     ForEach(Array(profile.stages.enumerated()), id: \.element.id) { index, stage in
                         stagePill(stage, index: index)
                             .id(index)
@@ -19,23 +20,26 @@ struct StageTimeline: View {
             }
             .onChange(of: currentIndex) { _, index in
                 guard profile.stages.indices.contains(index) else { return }
-                proxy.scrollTo(index, anchor: .center)
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
+                    proxy.scrollTo(index, anchor: .center)
+                }
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Brew stages")
+        .animation(reduceMotion ? nil : .smooth(duration: 0.25), value: currentIndex)
     }
 
     private func stagePill(_ stage: BrewStage, index: Int) -> some View {
         let state = stateFor(index)
         let isCurrent = state == .current
         let isWaiting = isCurrent && playhead >= startTime(for: index) + stage.duration
-        let foreground = isCurrent ? CremaColor.onPrimary : CremaColor.cream
+        let foreground = CremaColor.cream
 
         return HStack(spacing: 9) {
             ZStack {
                 Circle()
-                    .fill(isCurrent ? CremaColor.amber : CremaColor.surfaceWarm)
+                    .fill(isCurrent ? CremaColor.primarySurface : CremaColor.surface)
                 if state == .past {
                     Image(systemName: "checkmark")
                         .font(.system(size: 10, weight: .semibold))
@@ -43,11 +47,11 @@ struct StageTimeline: View {
                 } else if isWaiting {
                     Image(systemName: "pause.fill")
                         .font(.system(size: 9, weight: .semibold))
-                        .foregroundStyle(CremaColor.espresso)
+                        .foregroundStyle(CremaColor.onPrimary)
                 } else {
                     Text("\(index + 1)")
                         .font(CremaTypography.font(size: 11, weight: .semibold).monospacedDigit())
-                        .foregroundStyle(isCurrent ? CremaColor.espresso : CremaColor.secondary)
+                        .foregroundStyle(isCurrent ? CremaColor.onPrimary : CremaColor.secondary)
                 }
             }
             .frame(width: 26, height: 26)
@@ -58,23 +62,17 @@ struct StageTimeline: View {
                     .foregroundStyle(foreground)
                     .lineLimit(1)
                 Text(detail(for: stage, index: index, isWaiting: isWaiting))
-                    .font(CremaTypography.font(size: 9, weight: .regular).monospacedDigit())
-                    .foregroundStyle(isCurrent ? CremaColor.onPrimary.opacity(0.65) : CremaColor.secondary)
+                    .font(CremaTypography.font(size: 10, weight: .regular).monospacedDigit())
+                    .foregroundStyle(CremaColor.secondary)
                     .lineLimit(1)
             }
         }
-        .padding(.horizontal, 11)
-        .padding(.vertical, 9)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
         .background(
-            isCurrent ? CremaColor.primarySurface : CremaColor.surface.opacity(state == .past ? 0.65 : 1),
-            in: Capsule()
+            isCurrent ? CremaColor.surfaceWarm : Color.clear,
+            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
         )
-        .overlay {
-            Capsule().strokeBorder(
-                isCurrent ? Color.clear : CremaColor.hairline.opacity(0.7),
-                lineWidth: 0.75
-            )
-        }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("Stage \(index + 1), \(stage.label.isEmpty ? "unnamed" : stage.label)"))
         .accessibilityValue(Text(accessibilityDetail(for: stage, state: state, isWaiting: isWaiting)))
