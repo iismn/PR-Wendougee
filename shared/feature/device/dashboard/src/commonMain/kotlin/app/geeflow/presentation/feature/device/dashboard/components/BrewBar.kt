@@ -26,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -46,7 +47,6 @@ import app.geeflow.presentation.feature.device.dashboard.model.ChartData
 import app.geeflow.ui.theme.GeeFlowComponentPreview
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
 import app.geeflow.ui.components.InstrumentNumber
-import app.geeflow.ui.theme.GeeFlowTheme
 import geeflow.shared.core.ui.generated.resources.Res
 import geeflow.shared.core.ui.generated.resources.common_avg
 import geeflow.shared.core.ui.generated.resources.common_sec
@@ -148,11 +148,11 @@ internal fun BrewStatistics(
 
     val averaged = !isBrewing && brew.data.isNotEmpty()
     val entries = listOf(
-        ValueEntry(currentPressure, stringResource(Res.string.unit_bar), MaterialTheme.colorScheme.error, Pressure, averaged),
-        ValueEntry(currentWeightRate, stringResource(Res.string.unit_grams_per_second), MaterialTheme.colorScheme.onSurface, WeightRate, averaged),
-        ValueEntry(currentFlow, stringResource(Res.string.unit_milliliters_per_second), GeeFlowTheme.colors.water, FlowRate, averaged),
-        ValueEntry(totalWeight.toDouble(), stringResource(Res.string.unit_grams), MaterialTheme.colorScheme.onSurface, Weight, false),
-        ValueEntry(totalVolume.toDouble(), stringResource(Res.string.unit_milliliters), GeeFlowTheme.colors.waterVariant, Volume, false),
+        ValueEntry(currentPressure, stringResource(Res.string.unit_bar), Pressure, averaged),
+        ValueEntry(currentWeightRate, stringResource(Res.string.unit_grams_per_second), WeightRate, averaged),
+        ValueEntry(currentFlow, stringResource(Res.string.unit_milliliters_per_second), FlowRate, averaged),
+        ValueEntry(totalWeight.toDouble(), stringResource(Res.string.unit_grams), Weight, false),
+        ValueEntry(totalVolume.toDouble(), stringResource(Res.string.unit_milliliters), Volume, false),
     )
     BoxWithConstraints(modifier.fillMaxWidth()) {
         val columns = if (maxWidth >= 560.dp) 5 else 3
@@ -175,6 +175,7 @@ internal fun BrewStatistics(
         }
     }
 }
+
 @Composable
 private fun EditIcon() {
     Icon(
@@ -187,7 +188,6 @@ private fun EditIcon() {
 private data class ValueEntry(
     val value: Double,
     val unit: String,
-    val color: Color,
     val type: DashboardChartType,
     val averaged: Boolean,
 )
@@ -222,20 +222,21 @@ private fun StatisticValue(
         InstrumentNumber(
             text = value,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = emphasis),
-            glowColor = if (dark) Color(0xFF83B9FF) else entry.color,
+            glowColor = if (dark) Color(0xFF83B9FF) else Color(0xFF639DDF),
             glowStrength = glow,
             height = numberHeight,
-            modifier = Modifier.weight(1f, fill = false),
+            modifier = Modifier.weight(1f, fill = false).clearAndSetSemantics {},
         )
         Text(
             text = entry.unit,
             style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
-            modifier = Modifier.padding(start = 6.dp, top = 8.dp),
+            modifier = Modifier.padding(start = 6.dp, top = 8.dp).clearAndSetSemantics {},
         )
     }
 }
+
 private const val DecimalScale = 10
 
 private fun Double.format() = ((this * DecimalScale).toInt() / DecimalScale.toDouble()).toString()

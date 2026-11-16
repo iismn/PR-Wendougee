@@ -68,6 +68,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -617,8 +618,11 @@ private fun ProfileItemContent(
     onGrinderClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.1f
     val backgroundColor by animateColorAsState(
-        if (profile.selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.10f) else Color.Transparent,
+        if (!profile.selected) Color.Transparent
+        else if (dark) MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+        else Color.White.copy(alpha = 0.38f),
         label = "selectedRecipe",
     )
     Row(
@@ -626,7 +630,7 @@ private fun ProfileItemContent(
             .fillMaxWidth()
             .clip(RoundedCornerShape(22.dp))
             .background(backgroundColor)
-            .border(1.dp, if (profile.selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f) else Color.Transparent, RoundedCornerShape(22.dp))
+            .border(1.dp, if (profile.selected) Color.White.copy(alpha = if (dark) 0.25f else 0.70f) else Color.Transparent, RoundedCornerShape(22.dp))
             .clickable { onProfileClick(profile.id) }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
