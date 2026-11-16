@@ -3,6 +3,9 @@
 package app.geeflow.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Arrangement
+import app.geeflow.ui.theme.coffeeSurface
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -144,19 +147,19 @@ internal fun GeeFlowScaffoldFrame(
             Box(Modifier.fillMaxSize().consumeWindowInsets(padding)) { currentContent(padding) }
         }
     }
-    Row(modifier.fillMaxSize()) {
+    CoffeeWorkspaceTheme {
+    Row(modifier.fillMaxSize().padding(if (isWidthExpanded()) 20.dp else 12.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         if (sideHeader && header != null) {
             Box(
                 Modifier.fillMaxHeight()
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .coffeeSurface(MaterialTheme.shapes.large)
                     .windowInsetsPadding(contentWindowInsets.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start))
                     .width(SideHeaderWidth),
             ) { header() }
-            WaveDivider(MaterialTheme.colorScheme.surfaceContainer, orientation = WaveOrientation.Vertical)
         }
         Scaffold(
-            modifier = Modifier.weight(1f).fillMaxHeight(),
-            containerColor = containerColor,
+            modifier = Modifier.weight(1f).fillMaxHeight().coffeeSurface(MaterialTheme.shapes.large),
+            containerColor = Color.Transparent,
             contentColor = contentColor,
             contentWindowInsets = if (sideHeader) {
                 contentWindowInsets.only(WindowInsetsSides.Vertical + WindowInsetsSides.End)
@@ -168,18 +171,11 @@ internal fun GeeFlowScaffoldFrame(
                     Column {
                         Box(
                             Modifier
-                                .background(MaterialTheme.colorScheme.surfaceContainer)
                                 .windowInsetsPadding(
                                     contentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                                 ),
                         ) { header() }
-                        if (horizontalWave) {
-                            WaveDivider(
-                                MaterialTheme.colorScheme.surfaceContainer,
-                                orientation = WaveOrientation.Horizontal,
-                                reversed = true,
-                            )
-                        }
+
                     }
                 }
             },
@@ -190,6 +186,7 @@ internal fun GeeFlowScaffoldFrame(
             content = { stableContent(it) },
         )
     }
+    }
 }
 
-private val SideHeaderWidth = 300.dp
+private val SideHeaderWidth = 220.dp

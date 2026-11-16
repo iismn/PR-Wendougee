@@ -86,7 +86,7 @@ internal fun EditorButton(
     value: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
     enabled: Boolean = true,
     icon: ImageVector? = null,
     trailing: (@Composable () -> Unit)? = null,
@@ -94,7 +94,7 @@ internal fun EditorButton(
     Button(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
+        shape = MaterialTheme.shapes.small,
         contentPadding = PaddingValues(12.dp),
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
@@ -297,7 +297,7 @@ internal fun StepInputDialog(state: StepEditorViewState, onEvent: (StepEditorEve
         is StepInput.Condition -> state.conditions.first { it.id == input.id }.metric.thresholdLabel()
         null -> return
     }
-    Dialog(onDismissRequest = { onEvent(StepEditorEvent.InputDismissed) }) {
+    GeeFlowDialog(onDismissRequest = { onEvent(StepEditorEvent.InputDismissed) }) {
         Surface(shape = MaterialTheme.shapes.large) {
             GeeFlowInputPad(
                 valueRange = state.inputRange(),
@@ -321,8 +321,8 @@ internal fun RampSelector(
         Surface(
             onClick = { expanded = true },
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            shape = MaterialTheme.shapes.small,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = .055f),
         ) {
             Row(
                 modifier = Modifier.padding(12.dp),

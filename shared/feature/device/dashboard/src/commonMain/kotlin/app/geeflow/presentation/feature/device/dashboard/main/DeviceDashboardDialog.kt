@@ -104,7 +104,7 @@ private fun BluetoothPermissionMissingDialog(onEvent: (DeviceDashboardEvent) -> 
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun DeviceDashboardDesignPreview() {
     DeviceDashboardDialog(
         model = Dialog.BluetoothPermissionMissing,
         onEvent = {},

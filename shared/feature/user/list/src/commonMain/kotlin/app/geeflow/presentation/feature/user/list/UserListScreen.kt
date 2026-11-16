@@ -168,7 +168,7 @@ private fun ListEmptyItem(modifier: Modifier = Modifier) {
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun UserListDesignPreview() {
     UserListContent(
         UserListViewState(
             users = listOf(

@@ -22,7 +22,7 @@ fun GeeFlowListItem(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(
         horizontal = GeeFlowTheme.spacing.contentHorizontal,
-        vertical = 16.dp,
+        vertical = 14.dp,
     ),
     trailingContent: (@Composable () -> Unit)? = null,
 ) {
@@ -30,15 +30,17 @@ fun GeeFlowListItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            VerticalSpacer(4.dp)
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (subtitle.isNotBlank()) {
+                VerticalSpacer(4.dp)
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         if (trailingContent != null) {
             HorizontalSpacer(16.dp)

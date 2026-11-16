@@ -22,11 +22,25 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import app.geeflow.ui.components.*
+import app.geeflow.ui.theme.coffeeSurface
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Thermostat
+import androidx.compose.material.icons.outlined.Air
+import androidx.compose.material3.Icon
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +66,8 @@ import geeflow.shared.feature.device.dashboard.generated.resources.Res
 import geeflow.shared.feature.device.dashboard.generated.resources.settings_quick_more
 import geeflow.shared.feature.device.dashboard.generated.resources.settings_quick_title
 import kotlinx.coroutines.launch
+import geeflow.shared.feature.device.dashboard.generated.resources.workspace_temperature
+import geeflow.shared.feature.device.dashboard.generated.resources.workspace_target
 import org.jetbrains.compose.resources.stringResource
 import geeflow.shared.core.ui.generated.resources.Res as CoreRes
 
@@ -91,11 +107,14 @@ internal fun QuickSettingsScreen(
 }
 
 @Composable
-private fun QuickSettingsContent(
+internal fun QuickSettingsContent(
     viewState: QuickSettingsViewState,
     onEvent: (QuickSettingsEvent) -> Unit,
     isExpanded: Boolean = isWidthExpanded(),
-) = Column(
+    initialSteamSelected: Boolean = false,
+) {
+    if (isExpanded) { ExpandedTemperatureWorkspace(viewState, onEvent, initialSteamSelected); return }
+    CoffeeWorkspaceTheme { Column(
     modifier = Modifier
         .widthIn(max = 940.dp)
         .background(MaterialTheme.colorScheme.surfaceContainerLow, MaterialTheme.shapes.large)
@@ -130,6 +149,9 @@ private fun QuickSettingsContent(
     }
     VerticalSpacer(24.dp)
     Buttons(viewState.applying, isExpanded, onEvent)
+}
+
+    }
 }
 
 @Composable
@@ -186,13 +208,13 @@ private fun Preview() {
 
 /** Interactive fixture; events update local state and never call a machine. */
 @Composable
-internal fun QuickSettingsReviewContent() {
+internal fun QuickSettingsReviewContent(steam: Boolean = false) {
     var state by remember { mutableStateOf(QuickSettingsViewState(
         brewBoiler = Boiler(true, 93.5f, "94", (80..100).map { it.toString() }),
         steamBoiler = Boiler(true, 122f, "125", (110..140).map { it.toString() }),
     )) }
-    Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-        QuickSettingsContent(state, onEvent = { event ->
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        QuickSettingsContent(state, initialSteamSelected = steam, onEvent = { event ->
             state = when (event) {
                 is QuickSettingsEvent.BrewTempChanged -> state.copy(brewBoiler = state.brewBoiler.copy(selectedTemp = event.temp))
                 is QuickSettingsEvent.SteamTempChanged -> state.copy(steamBoiler = state.steamBoiler.copy(selectedTemp = event.temp))
@@ -201,5 +223,60 @@ internal fun QuickSettingsReviewContent() {
                 else -> state
             }
         })
+    }
+}
+
+@Composable
+private fun ExpandedTemperatureWorkspace(state: QuickSettingsViewState, onEvent: (QuickSettingsEvent) -> Unit, initialSteamSelected: Boolean) {
+    var steamSelected by remember { mutableStateOf(initialSteamSelected) }
+    val brewTitle = stringResource(CoreRes.string.common_brew_boiler)
+    val steamTitle = stringResource(CoreRes.string.common_steam_boiler)
+    val boiler = if (steamSelected) state.steamBoiler else state.brewBoiler
+    CoffeeWorkspace(
+        title = "Wendougee LITA", subtitle = stringResource(Res.string.workspace_temperature),
+        onBack = { onEvent(QuickSettingsEvent.CloseClicked) },
+        actions = { Button(onClick = { onEvent(QuickSettingsEvent.ConfirmClicked) }, enabled = !state.applying, modifier = Modifier.height(40.dp)) {
+            Text(stringResource(CoreRes.string.common_confirm))
+        } },
+        metrics = {
+            CoffeeMetric(brewTitle, state.brewBoiler.actualTemp.toString(), "°")
+            CoffeeMetric(steamTitle, state.steamBoiler.actualTemp.toString(), "°")
+            CoffeeMetric(stringResource(Res.string.workspace_target), boiler.selectedTemp, "°")
+        },
+        left = {
+            Text(stringResource(Res.string.workspace_temperature), style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp))
+            listOf(false, true).forEach { steam ->
+                Row(Modifier.testTag(if (steam) "boiler-select-steam" else "boiler-select-brew").fillMaxWidth().heightIn(min = 52.dp).clip(MaterialTheme.shapes.small)
+                    .background(if (steam == steamSelected) MaterialTheme.colorScheme.onSurface.copy(alpha = .075f) else Color.Transparent)
+                    .clickable { steamSelected = steam }.padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Icon(if (steam) Icons.Outlined.Air else Icons.Outlined.Thermostat, null, Modifier.size(20.dp))
+                    Text(if (steam) steamTitle else brewTitle, style = MaterialTheme.typography.labelMedium)
+                }
+            }
+        },
+        right = {
+            Text(stringResource(Res.string.workspace_target), style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(32.dp))
+            CoffeeMetric(brewTitle, state.brewBoiler.selectedTemp, "°", small = true)
+            Spacer(Modifier.height(28.dp))
+            CoffeeMetric(steamTitle, state.steamBoiler.selectedTemp, "°", small = true)
+            Spacer(Modifier.weight(1f))
+            Buttons(state.applying, true, onEvent)
+        },
+    ) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            // A boiler switch starts a fresh control and dismisses any input for the previous boiler.
+            key(steamSelected) {
+                val steam = steamSelected
+                BoilerControlCard(title = if (steamSelected) steamTitle else brewTitle,
+                    actualTemp = boiler.actualTemp, selectedTemp = boiler.selectedTemp, values = boiler.tempList,
+                    checked = boiler.enabled, enabled = !state.applying,
+                    onCheckedChanged = { onEvent(if (steam) QuickSettingsEvent.SteamBoilerToggled(it) else QuickSettingsEvent.BrewBoilerToggled(it)) },
+                    onValueChanged = { onEvent(if (steam) QuickSettingsEvent.SteamTempChanged(it) else QuickSettingsEvent.BrewTempChanged(it)) },
+                    modifier = Modifier.fillMaxWidth())
+            }
+        }
     }
 }

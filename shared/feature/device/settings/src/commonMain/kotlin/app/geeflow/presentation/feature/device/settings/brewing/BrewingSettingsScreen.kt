@@ -156,7 +156,7 @@ private fun AdaptiveContent(
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(modifier) {
-        if (isWidthLarge()) {
+        if (maxWidth >= 840.dp) {
             Row(
                 Modifier.padding(
                     vertical = GeeFlowTheme.spacing.contentVertical,
@@ -319,7 +319,7 @@ private fun SectionTitle(
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun BrewingSettingsDesignPreview() {
     BrewSettingsContent(
         viewState = BrewingSettingsViewState(
             applyButtonVisible = true,

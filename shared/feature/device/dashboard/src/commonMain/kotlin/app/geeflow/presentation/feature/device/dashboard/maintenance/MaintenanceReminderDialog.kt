@@ -96,7 +96,7 @@ internal fun MaintenanceReminderDialog(
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun MaintenanceReminderDesignPreview() {
     MaintenanceReminderDialog(
         state = MaintenanceReminderViewState(dueTypes = CleaningType.entries.toSet()),
         onOpen = {},

@@ -157,6 +157,6 @@ private fun AboutContent(
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun AboutDesignPreview() {
     Content()
 }

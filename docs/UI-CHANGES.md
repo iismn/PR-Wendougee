@@ -1,4 +1,4 @@
-# GeeFlow iPad interface
+# Wendougee LITA iPad interface
 
 This is a UI fork of [drobekk/GeeFlow](https://github.com/drobekk/GeeFlow). Upstream Git ancestry, authorship and GPL-3.0 licensing are preserved. The original README at the imported revision is retained in `UPSTREAM_README.md`.
 
@@ -8,7 +8,15 @@ The landscape home follows the supplied reference: four large readings across th
 
 The selected circle retains its reference size and position. Fine perimeter ticks and an animated needle show brew progress; tapping it opens the existing editor. Curved controls beside the circle open quick settings, free control and detailed charts. The bottom-center navigation and formerly bottom-right brew controls share one glass bar. The brew controls do not create a second glass layer inside that bar.
 
-Profile selection, editing, adding, history, brewing, stopping, cleaning and free control continue to use the existing dashboard/profile events and guards. Full charts, dot readings and the original profile/history management remain accessible from the chart icon. Compact phone layouts are preserved.
+Profile selection, editing, adding, history, brewing, stopping, cleaning and free control continue to use the existing dashboard/profile events and guards. Full charts, regular Pretendard readings and the original profile/history management remain accessible from the chart icon. Compact phone layouts are preserved.
+
+## Shared workspaces
+
+Profile editing, step editing and quick boiler control share CoffeeWorkspace: the home's 20/12dp outer padding, 20dp gaps, left list width, metric strip and blue-gray right panel. Lists use 12sp, section headings 14sp, metric values 36sp, smaller values 27sp and units 12sp with baseline alignment. Action glyphs use a 20dp box and a 42dp touch target. Settings, forms and dialogs inherit the same text roles and surfaces.
+
+Quick boiler control is a full-screen route. Changing boiler recreates its input control so the selected boiler's range, pending input and event routing stay together. A Compose interaction test checks brew/steam switching and range clamping. Existing confirm events still apply the values.
+
+The app display name is Wendougee LITA on iOS, Android and desktop. Internal namespaces and GeeFlow attribution are retained. InstrumentNumber's dot glyph renderer was removed; brew metrics use ordinary Pretendard with baseline-aligned units.
 
 ## Typography and appearance
 
@@ -30,8 +38,8 @@ Tapping or dragging snaps to machine-provided values. The large number opens the
 
 ## Verification
 
-The JVM renderer generates 13 images, including 1194×834 and 1024×768 landscape layouts at 2× density, phone layouts and temperature controls. These use production Compose components with demo fixtures and the Korean locale. `scripts/check-korean.ps1` verifies resource parity, types and placeholders.
+The full-UI JVM catalog generates 92 images covering 46 screens/states at 1194×834pt, 2× density. The store renderer additionally covers 1024×768 landscape and phone layouts. These use production Compose components with demo fixtures and the Korean locale. `scripts/check-korean.ps1` verifies resource parity, types and placeholders.
 
-The NativeReview XCTest scheme rotates an iPad simulator to landscape and captures home and temperature screens in day/night. `scripts/capture-native-ipad.sh` checks orientation and actual runtime `UIGlassEffect` classes. Native and JVM capture environments are labeled separately; `review/latest.json` identifies the published source and environment.
+The NativeReview XCTest scheme rotates an iPad simulator to landscape and captures home and temperature screens in day/night. `scripts/capture-native-ipad.sh` checks orientation and actual runtime `UIGlassEffect` classes. Native and JVM capture environments are labeled separately; `review/all-ui/manifest.json` identifies the current capture environment and timestamp. Native XCTest output is normalized using UIImage orientation before writing PNG pixels; it still must pass the landscape and runtime-material checks.
 
 Local JVM checks cover profile selection/editing without starting the machine, an empty profile library, boiler input constraints, theme behavior, native frame cleanup and touch forwarding. Actual LITA hardware and physical iPad interaction remain to be verified.

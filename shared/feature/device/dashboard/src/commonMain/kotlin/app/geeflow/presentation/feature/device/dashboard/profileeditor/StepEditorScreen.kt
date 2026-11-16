@@ -49,6 +49,13 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import app.geeflow.ui.components.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -56,7 +63,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -121,6 +127,10 @@ import geeflow.shared.feature.device.dashboard.generated.resources.step_editor_t
 import geeflow.shared.feature.device.dashboard.generated.resources.step_unit_flow
 import geeflow.shared.feature.device.dashboard.generated.resources.step_unit_pressure
 import kotlinx.coroutines.launch
+import geeflow.shared.feature.device.dashboard.generated.resources.workspace_step
+import geeflow.shared.feature.device.dashboard.generated.resources.workspace_target
+import geeflow.shared.feature.device.dashboard.generated.resources.workspace_ramp
+import geeflow.shared.feature.device.dashboard.generated.resources.workspace_conditions
 import org.jetbrains.compose.resources.stringResource
 import geeflow.shared.core.ui.generated.resources.Res as CoreRes
 
@@ -193,10 +203,17 @@ internal fun StepEditorContent(
     state: StepEditorViewState,
     snackbar: SnackbarHostState,
     onEvent: (StepEditorEvent) -> Unit,
-) {
+) = CoffeeWorkspaceTheme {
     val title = state.name.ifBlank { stringResource(Res.string.step_editor_default_name, state.stepNumber) }
     if (state.renaming) RenameStepDialog(name = title, onEvent = onEvent)
     if (state.input != null) StepInputDialog(state = state, onEvent = onEvent)
+    if (isWidthExpanded()) {
+        Box(Modifier.fillMaxSize()) {
+            ExpandedStepWorkspace(state, onEvent)
+            SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).windowInsetsPadding(GeeFlowInsets.bottom))
+        }
+        return@CoffeeWorkspaceTheme
+    }
     Scaffold(
         contentWindowInsets = GeeFlowInsets.content,
         topBar = {
@@ -242,39 +259,6 @@ internal fun StepEditorContent(
         },
         snackbarHost = { SnackbarHost(hostState = snackbar) },
     ) { padding ->
-        if (isWidthExpanded()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-            ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(2f)
-                        .fillMaxHeight(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                ) {
-                    item {
-                        ControlPane(
-                            state = state,
-                            onEvent = onEvent,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
-                }
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                ) {
-                    conditionItems(
-                        state = state,
-                        onEvent = onEvent,
-                    )
-                }
-            }
-        } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -294,7 +278,6 @@ internal fun StepEditorContent(
                     onEvent = onEvent,
                 )
             }
-        }
     }
 }
 
@@ -304,11 +287,13 @@ private fun ControlPane(
     state: StepEditorViewState,
     onEvent: (StepEditorEvent) -> Unit,
     modifier: Modifier,
+    showTypeSelector: Boolean = true,
 ) {
     Column(modifier = modifier) {
+        if (showTypeSelector) {
         Text(
             text = stringResource(Res.string.step_editor_pump_control),
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         VerticalSpacer(16.dp)
@@ -331,16 +316,9 @@ private fun ControlPane(
                     },
                     shape = SegmentedButtonDefaults.itemShape(index, types.size, baseShape = MaterialTheme.shapes.large),
                     colors = SegmentedButtonDefaults.colors(
-                        activeContainerColor = when (type) {
-                            StepType.Pressure, StepType.Flow -> type.color()
-                            StepType.Wait -> MaterialTheme.colorScheme.primary
-                        },
-                        activeContentColor = when (type) {
-                            StepType.Pressure -> MaterialTheme.colorScheme.onError
-                            StepType.Flow -> MaterialTheme.colorScheme.surface
-                            StepType.Wait -> MaterialTheme.colorScheme.onPrimary
-                        },
-                        inactiveContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        activeContainerColor = MaterialTheme.colorScheme.primary,
+                        activeContentColor = MaterialTheme.colorScheme.onPrimary,
+                        inactiveContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                         activeBorderColor = Color.Transparent,
                         inactiveBorderColor = Color.Transparent,
                     ),
@@ -358,7 +336,9 @@ private fun ControlPane(
             }
         }
         VerticalSpacer(24.dp)
+        }
         if (state.type != StepType.Wait) {
+            if (showTypeSelector) {
             GeeFlowSlider(
                 value = state.target.toFloatOrNull() ?: state.targetRange.start,
                 onValueChange = { onEvent(StepEditorEvent.TargetChanged(it.toString())) },
@@ -366,12 +346,21 @@ private fun ControlPane(
                 unit = stringResource(
                     if (state.type == StepType.Pressure) Res.string.step_unit_pressure else Res.string.step_unit_flow,
                 ),
-                color = state.type.color(),
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(SliderHeight),
                 onClick = { onEvent(StepEditorEvent.InputClicked(StepInput.Target)) },
             )
+            } else {
+                val unit = stringResource(if (state.type == StepType.Pressure) Res.string.step_unit_pressure else Res.string.step_unit_flow)
+                CoffeeMetric(state.type.label(), state.target, unit,
+                    Modifier.clickable { onEvent(StepEditorEvent.InputClicked(StepInput.Target)) })
+                Spacer(Modifier.height(28.dp))
+                ArcTemperatureDial(state.target.toFloatOrNull() ?: state.targetRange.start, state.targetRange,
+                    state.type.label(), { onEvent(StepEditorEvent.TargetChanged(it.toString())) },
+                    Modifier.fillMaxWidth().height(160.dp), unit = unit)
+            }
             VerticalSpacer(24.dp)
 
             RampPane(state, onEvent)
@@ -394,7 +383,7 @@ private fun RampPane(
 ) {
     Text(
         text = stringResource(Res.string.experimental_ramp),
-        style = MaterialTheme.typography.titleLarge,
+        style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     VerticalSpacer(16.dp)
@@ -434,7 +423,7 @@ private fun LazyListScope.conditionItems(
     item(key = "time-limit-heading") {
         Text(
             text = stringResource(Res.string.step_editor_time_limit),
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         VerticalSpacer(16.dp)
@@ -484,7 +473,7 @@ private fun ConditionsHeading(
     ) {
         Text(
             text = stringResource(Res.string.step_editor_conditions),
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f),
         )
@@ -577,7 +566,7 @@ private fun ConditionContent(
             },
             selected = condition.measure,
             modifier = Modifier.fillMaxWidth(),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = .06f),
             label = { it.conditionLabel() },
             icon = { it.metric.icon() },
             experimental = { state.conditionExperimental(it) },
@@ -628,7 +617,7 @@ private fun ConditionContent(
                                 ThresholdComparison.Below -> GeeFlowIcon.LessThanOrEqual
                             },
                             contentDescription = enumLabel(comparison),
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(20.dp),
                         )
                     }
                 }
@@ -665,7 +654,7 @@ private fun AddConditionButton(
                 imageVector = Icons.Filled.Add,
                 contentDescription = stringResource(Res.string.experimental_add_condition),
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(20.dp),
             )
         }
     }
@@ -674,9 +663,11 @@ private fun AddConditionButton(
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-internal fun StepEditorPreviewContent() {
+internal fun StepEditorPreviewContent(scene: String = "") {
     StepEditorContent(
         state = StepEditorViewState(
+            renaming = scene == "step-rename",
+            input = if (scene == "step-value") StepInput.Target else null,
             source = ProfileEditorViewState.Step(
                 id = 1,
                 type = StepType.Flow,
@@ -711,3 +702,42 @@ internal fun StepEditorPreviewContent() {
 }
 
 private val SliderHeight = 64.dp
+
+@Composable
+private fun ExpandedStepWorkspace(state: StepEditorViewState, onEvent: (StepEditorEvent) -> Unit) {
+    val title = state.name.ifBlank { stringResource(Res.string.step_editor_default_name, state.stepNumber) }
+    CoffeeWorkspace(
+        title = title, subtitle = stringResource(Res.string.workspace_step),
+        onBack = { onEvent(StepEditorEvent.Cancel) },
+        actions = {
+            CoffeeAction(Icons.Filled.Edit, stringResource(Res.string.step_editor_rename), { onEvent(StepEditorEvent.RenameClicked) })
+            if (state.isExperimental) ExperimentButton(tonal = true, onClick = { onEvent(StepEditorEvent.ExperimentClicked) })
+            Button(onClick = { onEvent(StepEditorEvent.Save) }, enabled = state.toStep() != null, modifier = Modifier.height(40.dp)) { Text(stringResource(CoreRes.string.common_save)) }
+        },
+        metrics = {
+            CoffeeMetric(stringResource(Res.string.workspace_target), if (state.type == StepType.Wait) "—" else state.target,
+                if (state.type == StepType.Pressure) "bar" else if (state.type == StepType.Flow) "ml/s" else "")
+            CoffeeMetric(stringResource(Res.string.workspace_ramp), state.rampSeconds, "s")
+            CoffeeMetric(stringResource(Res.string.workspace_conditions), state.conditions.size.toString(), "")
+        },
+        left = {
+            Text(stringResource(Res.string.step_editor_pump_control), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp))
+            listOf(StepType.Pressure, StepType.Flow, StepType.Wait).forEach { type ->
+                val selected = state.type == type
+                Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).clip(MaterialTheme.shapes.small)
+                    .background(if (selected) MaterialTheme.colorScheme.onSurface.copy(alpha = .075f) else Color.Transparent)
+                    .clickable(enabled = selected || state.controlAvailable(type)) {
+                        onEvent(if (state.lockedControlType != null && (selected || !state.controlSupported(type))) StepEditorEvent.ControlLockClicked else StepEditorEvent.TypeChanged(type))
+                    }.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Icon(type.icon(), null, Modifier.size(20.dp))
+                    Text(type.label(), style = MaterialTheme.typography.labelMedium)
+                }
+            }
+        },
+        right = { LazyColumn(Modifier.fillMaxSize()) { conditionItems(state, onEvent) } },
+    ) {
+        ControlPane(state, onEvent, Modifier.fillMaxSize().coffeeSurface(MaterialTheme.shapes.medium)
+            .verticalScroll(rememberScrollState()).padding(20.dp), showTypeSelector = false)
+    }
+}

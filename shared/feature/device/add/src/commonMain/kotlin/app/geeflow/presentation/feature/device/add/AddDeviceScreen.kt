@@ -384,12 +384,12 @@ private fun AddDemoDeviceButton(
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun AddDeviceDesignPreview(found: Boolean = false) {
     AddDeviceContent(
         viewState = AddDeviceViewState(
             method = NearbyDevices(
                 changeMethodButtonVisible = true,
-                devices = listOf(),
+                devices = if (found) listOf(AddDeviceViewState.DeviceItem("review-device", "Wendougee LITA")) else emptyList(),
             ),
         ),
     )

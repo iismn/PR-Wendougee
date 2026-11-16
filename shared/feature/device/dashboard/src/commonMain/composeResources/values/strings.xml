@@ -187,4 +187,12 @@
     <string name="profile_editor_grinding_speed">Grinding speed</string>
     <string name="profile_editor_single_dose_set_grinder">Set grinder</string>
     <string name="profile_list_grinder_settings_sent">Grinder settings sent</string>
+    <string name="workspace_profile">Profile editor</string>
+    <string name="workspace_steps">Steps</string>
+    <string name="workspace_step">Step editor</string>
+    <string name="workspace_temperature">Temperature</string>
+    <string name="workspace_target">Target</string>
+    <string name="workspace_ramp">Ramp</string>
+    <string name="workspace_conditions">Conditions</string>
+    <string name="workspace_duration">Duration</string>
 </resources>

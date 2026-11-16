@@ -334,6 +334,6 @@ private fun previewViewState() = MaintenanceSettingsViewState(
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun MaintenanceSettingsDesignPreview() {
     MaintenanceSettingsContent(previewViewState())
 }

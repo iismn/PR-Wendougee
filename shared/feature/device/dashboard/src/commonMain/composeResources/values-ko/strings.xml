@@ -170,4 +170,12 @@
     <string name="profile_editor_grinding_speed">분쇄 속도</string>
     <string name="profile_editor_single_dose_set_grinder">그라인더에 적용</string>
     <string name="profile_list_grinder_settings_sent">그라인더 설정을 전송했습니다</string>
+    <string name="workspace_profile">프로파일 편집</string>
+    <string name="workspace_steps">추출 단계</string>
+    <string name="workspace_step">단계 편집</string>
+    <string name="workspace_temperature">온도 조절</string>
+    <string name="workspace_target">목표</string>
+    <string name="workspace_ramp">변화 시간</string>
+    <string name="workspace_conditions">종료 조건</string>
+    <string name="workspace_duration">추출 시간</string>
 </resources>

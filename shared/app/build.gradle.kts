@@ -108,3 +108,14 @@ aboutLibraries {
         duplicationMode = com.mikepenz.aboutlibraries.plugin.DuplicateMode.MERGE
     }
 }
+
+val reviewCompilation = kotlin.targets.getByName("jvm").compilations.getByName("main")
+tasks.register<JavaExec>("generateAllScreens") {
+    group = "documentation"
+    description = "Render the complete production UI catalog in Korean, day and night."
+    dependsOn(reviewCompilation.compileTaskProvider)
+    classpath = files(reviewCompilation.output.allOutputs, reviewCompilation.runtimeDependencyFiles)
+    mainClass.set("app.geeflow.app.review.AllScreensGeneratorKt")
+    args(rootProject.layout.projectDirectory.dir("docs/review/all-ui").asFile.absolutePath)
+    providers.gradleProperty("reviewScenes").orNull?.let { args(it) }
+}

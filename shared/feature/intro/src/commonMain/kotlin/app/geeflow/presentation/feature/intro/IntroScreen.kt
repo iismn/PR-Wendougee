@@ -106,18 +106,18 @@ private fun Logo(expanded: Boolean, modifier: Modifier = Modifier) {
         VerticalSpacer(24.dp)
         Icon(
             painter = rememberVectorPainter(GeeFlowIcon.Logo),
-            modifier = Modifier.size(120.dp),
+            modifier = Modifier.size(72.dp),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
         )
         VerticalSpacer(24.dp)
         Text(
-            text = stringResource(UiRes.string.app_name),
+            text = stringResource(UiRes.string.app_name).replace(" ", "\n"),
             style = MaterialTheme.typography.displayMedium,
-            maxLines = 1,
+            maxLines = 2,
             autoSize = TextAutoSize.StepBased(
                 minFontSize = 24.sp,
-                maxFontSize = 48.sp,
+                maxFontSize = 28.sp,
             ),
         )
         Text(
@@ -182,6 +182,6 @@ private fun Form(
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun IntroDesignPreview() {
     IntroScreenContent()
 }

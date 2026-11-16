@@ -33,6 +33,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
 import app.geeflow.ui.isHeightCompact
 import app.geeflow.ui.theme.GeeFlowComponentPreview
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
@@ -130,9 +132,12 @@ private fun InputHeader(input: String, unit: String, color: Color, onDelete: () 
         ) {
             Text(
                 text = input.ifEmpty { "0" },
-                style = MaterialTheme.typography.headlineMedium,
+                fontSize = 36.sp,
+                lineHeight = 40.sp,
+                fontWeight = FontWeight.Light,
                 color = color,
                 maxLines = 1,
+                modifier = Modifier.alignByBaseline(),
             )
             HorizontalSpacer(4.dp)
             Text(
@@ -140,7 +145,7 @@ private fun InputHeader(input: String, unit: String, color: Color, onDelete: () 
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
-                modifier = Modifier.padding(bottom = 4.dp),
+                modifier = Modifier.alignByBaseline(),
             )
         }
         HorizontalSpacer(KeySpacing)
@@ -175,7 +180,7 @@ private fun PadIconKey(painter: Painter, contentDescription: String, onClick: ()
             painter = painter,
             contentDescription = contentDescription,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(20.dp),
         )
     }
 
@@ -190,6 +195,7 @@ private fun ConfirmKey(onClick: () -> Unit, enabled: Boolean, modifier: Modifier
         Icon(
             painter = rememberVectorPainter(Icons.Filled.Check),
             contentDescription = stringResource(Res.string.common_confirm),
+            modifier = Modifier.size(20.dp),
         )
     }
 }

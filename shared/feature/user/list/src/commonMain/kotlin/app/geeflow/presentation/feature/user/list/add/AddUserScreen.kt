@@ -80,3 +80,7 @@ private fun Content(
         }
     }
 }
+
+/** Production form, without navigation or persistence, for the design catalog. */
+@Composable
+fun AddUserDesignPreview() = Content()

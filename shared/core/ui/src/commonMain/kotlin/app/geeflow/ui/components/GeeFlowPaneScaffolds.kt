@@ -64,9 +64,6 @@ fun GeeFlowListScaffold(
             floatingActionButton = floatingActionButton,
             content = content,
         )
-        if (expanded) {
-            WaveDivider(MaterialTheme.colorScheme.surfaceContainer, orientation = WaveOrientation.Vertical)
-        }
     }
 }
 
@@ -91,19 +88,16 @@ fun GeeFlowDetailScaffold(
             modifier
         },
         contentWindowInsets = if (expanded) GeeFlowInsets.endPane else GeeFlowInsets.content,
-        header = if (expanded) {
-            null
-        } else {
-            {
+        header = {
                 GeeFlowTopBar(
                     title = title,
                     subtitle = subtitle,
                     navIconClick = navIconClick,
+                    navIconPainter = if (expanded) null else rememberVectorPainter(Icons.AutoMirrored.Filled.ArrowBack),
                     scrollBehavior = scrollBehavior,
                     windowInsets = WindowInsets(0, 0, 0, 0),
                     modifier = Modifier.fillMaxWidth(),
                 )
-            }
         },
         snackbarHost = snackbarHost,
         floatingActionButton = floatingActionButton,

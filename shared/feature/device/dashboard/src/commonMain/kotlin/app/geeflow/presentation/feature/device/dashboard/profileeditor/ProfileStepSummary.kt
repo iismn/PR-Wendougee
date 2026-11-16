@@ -86,8 +86,10 @@ internal fun ProfileStepSummary(step: Step, number: Int, modifier: Modifier = Mo
                 maxLines = 1,
             )
         }
-        VerticalSpacer(4.dp)
-        StepIndicators(step = step)
+        if (step.ramp.style != RampStyle.Instant || step.exitConditions.any { it.metric != BrewMetric.PhaseTime }) {
+            VerticalSpacer(4.dp)
+            StepIndicators(step = step)
+        }
     }
 }
 

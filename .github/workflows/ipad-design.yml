@@ -1,4 +1,4 @@
-name: GeeFlow iPad UI
+name: Wendougee LITA iPad UI
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
       - name: Check Korean resources
         run: ./scripts/check-korean.ps1
       - name: Render actual shared Compose screens
-        run: .\gradlew.bat :shared:feature:device:dashboard:generateStoreScreenshots --no-configuration-cache
+        run: .\gradlew.bat :shared:feature:device:dashboard:generateStoreScreenshots :shared:app:generateAllScreens --no-configuration-cache
       - name: Test appearance and dashboard behavior
         run: .\gradlew.bat :shared:core:ui:jvmTest :shared:feature:device:dashboard:jvmTest :shared:domain:user:jvmTest :shared:domain:device:jvmTest --no-configuration-cache
       - name: Compile complete desktop app
@@ -43,6 +43,8 @@ jobs:
           name: geeflow-compose-review
           path: |
             docs/screenshots/*.png
+            docs/review/all-ui/*.png
+            docs/review/all-ui/manifest.json
             shared/**/build/reports/tests/
           retention-days: 7
   ios-build:

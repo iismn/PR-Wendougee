@@ -6,6 +6,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import app.geeflow.data.brew.model.BrewMetric
@@ -55,12 +57,12 @@ internal fun ExperimentButton(
     onClick: () -> Unit,
 ) {
     if (tonal) {
-        FilledTonalIconButton(onClick = onClick, modifier = modifier) {
-            Icon(GeeFlowIcon.Experiment, contentDescription = stringResource(Res.string.experimental_title))
+        FilledTonalIconButton(onClick = onClick, modifier = modifier.size(42.dp)) {
+            Icon(GeeFlowIcon.Experiment, contentDescription = stringResource(Res.string.experimental_title), modifier = Modifier.size(20.dp))
         }
     } else {
-        IconButton(onClick = onClick, modifier = modifier) {
-            Icon(GeeFlowIcon.Experiment, contentDescription = stringResource(Res.string.experimental_title))
+        IconButton(onClick = onClick, modifier = modifier.size(42.dp)) {
+            Icon(GeeFlowIcon.Experiment, contentDescription = stringResource(Res.string.experimental_title), modifier = Modifier.size(20.dp))
         }
     }
 }

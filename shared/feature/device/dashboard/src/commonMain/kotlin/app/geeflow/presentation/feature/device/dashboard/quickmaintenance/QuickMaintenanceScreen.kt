@@ -26,6 +26,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import app.geeflow.ui.theme.coffeeSurface
+import app.geeflow.ui.components.CoffeeWorkspaceTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -98,10 +100,10 @@ private fun QuickMaintenanceContent(
     onEvent: (QuickMaintenanceEvent) -> Unit,
     isExpanded: Boolean = isWidthExpanded(),
     snackbar: SnackbarHostState = remember { SnackbarHostState() },
-) {
+) = CoffeeWorkspaceTheme {
     Column(
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.background, MaterialTheme.shapes.large)
+            .coffeeSurface(MaterialTheme.shapes.large)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp, vertical = 16.dp)
             .fillMaxWidth(),
@@ -290,7 +292,7 @@ private fun Buttons(
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun QuickMaintenanceDesignPreview() {
     QuickMaintenanceContent(
         viewState = QuickMaintenanceViewState(
             isCleaning = true,

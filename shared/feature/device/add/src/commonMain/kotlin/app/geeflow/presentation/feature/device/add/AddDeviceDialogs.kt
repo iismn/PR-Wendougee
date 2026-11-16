@@ -100,7 +100,7 @@ private fun ExperimentalWarningDialog(
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun DeviceWarningDesignPreview() {
     AddDeviceDialogs(
         dialog = ExperimentalWarning(
             device = Device(

@@ -154,6 +154,12 @@ private fun SettingsContent(
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun ProfileSettingsDesignPreview(scene: String = "") {
+    ProfileSettingsDialogs(when (scene) {
+        "user-rename" -> ProfileSettingsViewState.Dialog.Rename
+        "user-delete" -> ProfileSettingsViewState.Dialog.Delete
+        "remove-photo" -> ProfileSettingsViewState.Dialog.RemovePhoto
+        else -> null
+    }, "Barista", {})
     Content(ProfileSettingsViewState(name = "Barista"))
 }

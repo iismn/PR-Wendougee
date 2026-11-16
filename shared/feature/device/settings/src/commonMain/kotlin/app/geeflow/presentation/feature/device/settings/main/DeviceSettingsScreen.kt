@@ -103,7 +103,9 @@ private fun Content(
                 SettingsItem(
                     item = item,
                     onEvent = onEvent,
-                    backgroundColor = if (expanded) {
+                    backgroundColor = if (selected) {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.075f)
+                    } else if (expanded) {
                         MaterialTheme.colorScheme.background
                     } else {
                         MaterialTheme.colorScheme.surfaceContainerLow
@@ -111,7 +113,7 @@ private fun Content(
                     modifier = Modifier
                         .then(
                             if (selected) {
-                                Modifier.border(2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.large)
+                                Modifier
                             } else {
                                 Modifier
                             },
@@ -140,7 +142,7 @@ private fun SettingsItem(
     ) {
         Text(
             text = item.name,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall,
             color = contentColor,
         )
         Text(
@@ -173,6 +175,6 @@ private fun previewViewState() = DeviceSettingsViewState(
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
-    Content(previewViewState())
+fun DeviceSettingsDesignPreview(selected: Int? = null) {
+    Content(previewViewState(), selectedIndex = selected)
 }

@@ -55,16 +55,16 @@ fun BoilerControlCard(
     val secondary = MaterialTheme.colorScheme.onSurfaceVariant
     Column(modifier.coffeeSurface(MaterialTheme.shapes.large).padding(24.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+            Text(title, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
             Switch(checked = checked, onCheckedChange = onCheckedChanged, enabled = enabled,
                 modifier = Modifier.semantics { contentDescription = title })
         }
         Spacer(Modifier.height(10.dp))
         Row(Modifier.clickable(enabled = interactive) { inputShown = true }.padding(vertical = 4.dp),
             verticalAlignment = Alignment.Bottom) {
-            Text(selectedTemp, fontSize = 48.sp, lineHeight = 56.sp, fontWeight = FontWeight.Normal,
+            Text(selectedTemp, fontSize = 36.sp, lineHeight = 40.sp, fontWeight = FontWeight.Light,
                 color = if (checked) ink else secondary, modifier = Modifier.alignByBaseline())
-            Text("°", fontSize = 22.sp, color = secondary, modifier = Modifier.padding(start = 4.dp).alignByBaseline())
+            Text("°", fontSize = 12.sp, color = secondary, modifier = Modifier.padding(start = 4.dp).alignByBaseline())
             Text(stringResource(Res.string.boiler_target), style = MaterialTheme.typography.bodySmall,
                 color = secondary, modifier = Modifier.padding(start = 12.dp).alignByBaseline())
         }
@@ -105,6 +105,7 @@ fun ArcTemperatureDial(
     onValueChange: (Float) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    unit: String = "°",
 ) {
     val span = valueRange.endInclusive - valueRange.start
     val interactive = enabled && span > 0f
@@ -117,7 +118,7 @@ fun ArcTemperatureDial(
     val textStyle = MaterialTheme.typography.bodySmall
     Canvas(modifier.semantics {
         contentDescription = label
-        stateDescription = "${bounded.roundToInt()}°"
+        stateDescription = "${(bounded * 10).roundToInt() / 10f} $unit"
         progressBarRangeInfo = ProgressBarRangeInfo(bounded, valueRange, (span.toInt() - 1).coerceAtLeast(0))
         if (!interactive) disabled()
         setProgress { requested ->

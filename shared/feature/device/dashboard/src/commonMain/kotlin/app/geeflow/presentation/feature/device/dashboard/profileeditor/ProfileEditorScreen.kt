@@ -39,6 +39,12 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import app.geeflow.ui.components.*
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -84,6 +90,9 @@ import geeflow.shared.feature.device.dashboard.generated.resources.Res
 import geeflow.shared.feature.device.dashboard.generated.resources.profile_editor_single_dose_title
 import geeflow.shared.feature.device.dashboard.generated.resources.profile_editor_test
 import kotlinx.coroutines.launch
+import geeflow.shared.feature.device.dashboard.generated.resources.workspace_profile
+import geeflow.shared.feature.device.dashboard.generated.resources.workspace_steps
+import geeflow.shared.feature.device.dashboard.generated.resources.workspace_duration
 import org.jetbrains.compose.resources.stringResource
 import geeflow.shared.core.ui.generated.resources.Res as CoreRes
 
@@ -153,7 +162,7 @@ internal fun ProfileEditorContent(
     viewState: ProfileEditorViewState,
     snackbarState: SnackbarHostState,
     onEvent: (ProfileEditorEvent) -> Unit,
-) {
+) = CoffeeWorkspaceTheme {
     if (isWidthExpanded()) {
         Box(Modifier.fillMaxSize()) {
             ExpandedLayout(viewState, onEvent)
@@ -174,52 +183,39 @@ private fun ExpandedLayout(
     viewState: ProfileEditorViewState,
     onEvent: (ProfileEditorEvent) -> Unit,
 ) {
-    // Taken as padding values rather than inset modifiers: the steps list needs them in its content
-    // padding to avoid being clipped, and both panes have to agree on the top inset for the save
-    // button and the first step to stay aligned. Each pane takes only the outer edge it touches.
-    val chartInsets = WindowInsets.geeFlowInsets
-        .only(WindowInsetsSides.Top + WindowInsetsSides.Start + WindowInsetsSides.Bottom)
-        .asPaddingValues()
-    val stepsInsets = WindowInsets.geeFlowInsets
-        .only(WindowInsetsSides.Top + WindowInsetsSides.End + WindowInsetsSides.Bottom)
-        .asPaddingValues()
-
-    Row(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .padding(chartInsets)
-                .padding(start = 16.dp),
-        ) {
-            ProfileEditorTopBar(
-                viewState = viewState,
-                onEvent = onEvent,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-            )
-            BrewCharts(
-                model = viewState.chartModel(),
-                visibleCharts = viewState.visibleCharts,
-                modifier = Modifier.weight(1f),
-            )
-            EditorBrewBar(
-                viewState = viewState,
-                onEvent = onEvent,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-            )
-        }
-        ProfileStepsColumn(
-            steps = viewState.steps,
-            allowAdd = !viewState.isRecording,
-            finishTarget = viewState.finishTarget,
-            onEvent = onEvent,
-            modifier = Modifier
-                .width(StepsColumnWidth)
-                .fillMaxHeight(),
-            contentPadding = stepsInsets + PaddingValues(16.dp),
-        )
+    CoffeeWorkspace(
+        title = viewState.profileName,
+        subtitle = stringResource(Res.string.workspace_profile),
+        onBack = { onEvent(BackClicked) },
+        actions = {
+            CoffeeAction(Icons.Outlined.Edit, stringResource(Res.string.workspace_profile), { onEvent(EditDetailsClicked) })
+            if (viewState.experimental) ExperimentButton(onClick = { onEvent(ProfileEditorEvent.ExperimentClicked) })
+            FilledTonalButton(onClick = { onEvent(ProfileEditorEvent.SingleDoseClicked) }, modifier = Modifier.height(40.dp), contentPadding = PaddingValues(horizontal = 12.dp)) { GrinderButtonIcon() }
+            TestButton(viewState.isBrewing, viewState.canTest, onEvent)
+            Button(onClick = { onEvent(SaveClicked) }, enabled = viewState.canSave, modifier = Modifier.height(40.dp)) { Text(stringResource(CoreRes.string.common_save)) }
+        },
+        metrics = {
+            CoffeeMetric(stringResource(Res.string.workspace_duration), viewState.steps.sumOf { it.timeSec }.toString(), "s")
+            CoffeeMetric(stringResource(Res.string.workspace_steps), viewState.steps.size.toString(), "")
+            CoffeeMetric(viewState.finishTarget.type.label(), viewState.finishTarget.target.toString(), if (viewState.finishTarget.type == FinishTargetType.Weight) "g" else "ml")
+        },
+        left = {
+            Text(stringResource(Res.string.workspace_steps), style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 10.dp, vertical = 12.dp))
+            ProfileStepsColumn(viewState.steps, viewState.finishTarget, onEvent,
+                allowAdd = !viewState.isRecording, showFinishTarget = false, modifier = Modifier.fillMaxSize())
+        },
+        right = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                Text(viewState.profileName, style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.height(24.dp))
+                EndStepCard(viewState.finishTarget, { onEvent(ProfileEditorEvent.FinishTargetClicked(it)) },
+                    { onEvent(ProfileEditorEvent.ToggleGlobalGoal) }, Modifier.fillMaxWidth(), embedded = true)
+            }
+        },
+    ) {
+        BrewCharts(model = viewState.chartModel(), visibleCharts = viewState.visibleCharts, modifier = Modifier.weight(1f))
+        EditorBrewBar(viewState, onEvent, Modifier.fillMaxWidth().padding(top = 12.dp))
     }
 }
 
@@ -397,4 +393,15 @@ internal fun ProfileEditorPreviewContent() {
         snackbarState = remember { SnackbarHostState() },
         onEvent = {},
     )
+}
+
+@Composable
+internal fun ProfileEditorDialogDesignPreview(scene: String) {
+    ProfileEditorPreviewContent()
+    val dialog = when (scene) {
+        "finish-target" -> ProfileEditorDialog.FinishTargetValue(FinishTargetType.Weight, 36f)
+        "single-dose" -> ProfileEditorDialog.SingleDose(app.geeflow.data.brew.model.SingleDoseSettings(enabled = true))
+        else -> ProfileEditorDialog.Details
+    }
+    ProfileEditorDialogs(dialog, ProfileEditorViewState(profileName = "Preinfusion", description = "3 bar → 6 bar · 36 g"), {})
 }

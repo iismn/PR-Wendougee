@@ -405,3 +405,13 @@ internal fun DeviceDashboardPreviewContent() {
         pagerState = pagerState,
     )
 }
+
+@Composable
+internal fun DashboardChartsDesignPreview(history: Boolean = false) {
+    val profiles = getMockProfileListViewState().copy(showHistory = history, history = listOf(
+        ProfileListViewState.HistoryBrew("1", "Preinfusion", "40 s · 36.7 g", selected = true),
+        ProfileListViewState.HistoryBrew("2", "Blooming Espresso", "35 s · 42.0 g"),
+        ProfileListViewState.HistoryBrew("3", "Gentle & Sweet", "32 s · 36.0 g"),
+    ))
+    ChartDashboard(getMockDeviceDashboardViewState(), profiles, remember { SnackbarHostState() }, onProfileListEvent = {})
+}

@@ -24,6 +24,12 @@ import org.jetbrains.compose.resources.stringResource
 internal fun LicensesListScreen(
     navigator: Navigator,
 ) {
+    Content(onBack = { navigator.navigate(NavEvent.Back) })
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun Content(onBack: () -> Unit = {}) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val libraries by produceLibraries {
         Res.readBytes("files/aboutlibraries.json").decodeToString()
@@ -32,7 +38,7 @@ internal fun LicensesListScreen(
     GeeFlowScaffold(
         title = stringResource(Res.string.user_settings_about_licenses),
         subtitle = null,
-        navIconClick = { navigator.navigate(NavEvent.Back) },
+        navIconClick = onBack,
         scrollBehavior = scrollBehavior,
         modifier = modifier,
         content = { paddingValues ->
@@ -45,3 +51,6 @@ internal fun LicensesListScreen(
         },
     )
 }
+
+@Composable
+fun LicensesDesignPreview() = Content()

@@ -305,7 +305,13 @@ private fun ListEmptyItem(
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun DeviceListDesignPreview(scene: String = "") {
+    val device = DeviceListViewState.Device(1, "Data-S", "AA:BB:CC:DD:EE:FF", true)
+    DeviceListDialogs(when (scene) {
+        "device-model" -> DeviceListViewState.Dialog.Model(device)
+        "device-rename" -> DeviceListViewState.Dialog.Rename(device)
+        else -> null
+    }, {})
     DevicesListContent(
         DeviceListViewState(
             devices = listOf(

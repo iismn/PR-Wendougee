@@ -26,6 +26,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import app.geeflow.ui.components.CoffeeWorkspaceTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -129,7 +130,7 @@ private fun FreeControlContent(
     viewState: FreeControlViewState,
     snackbarState: SnackbarHostState,
     onEvent: (FreeControlEvent) -> Unit,
-) {
+) = CoffeeWorkspaceTheme {
     if (isWidthExpanded()) {
         Box(Modifier.fillMaxSize()) {
             ExpandedLayout(viewState, onEvent)
@@ -218,7 +219,7 @@ private fun ExpandedLayout(
                             Icon(
                                 painter = rememberVectorPainter(GeeFlowIcon.Pressure),
                                 contentDescription = stringResource(CoreRes.string.common_pressure),
-                                modifier = Modifier.size(24.dp),
+                                modifier = Modifier.size(20.dp),
                                 tint = if (isPressure) pressureColor else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         },
@@ -230,7 +231,7 @@ private fun ExpandedLayout(
                                 Icon(
                                     painter = rememberVectorPainter(GeeFlowIcon.Flow),
                                     contentDescription = stringResource(Res.string.free_control_mode_flow),
-                                    modifier = Modifier.size(24.dp),
+                                    modifier = Modifier.size(20.dp),
                                     tint = if (!isPressure) flowColor else MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
@@ -306,7 +307,7 @@ private fun CompactLayout(
                         Icon(
                             painter = rememberVectorPainter(GeeFlowIcon.Pressure),
                             contentDescription = stringResource(CoreRes.string.common_pressure),
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(20.dp),
                             tint = if (isPressure) pressureColor else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     },
@@ -318,7 +319,7 @@ private fun CompactLayout(
                             Icon(
                                 painter = rememberVectorPainter(GeeFlowIcon.Flow),
                                 contentDescription = stringResource(Res.string.free_control_mode_flow),
-                                modifier = Modifier.size(24.dp),
+                                modifier = Modifier.size(20.dp),
                                 tint = if (!isPressure) flowColor else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
@@ -441,7 +442,7 @@ private val SliderHeight = 72.dp
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun FreeControlDesignPreview() {
     FreeControlContent(
         viewState = FreeControlViewState(
             deviceName = "GeeFlow Pro",

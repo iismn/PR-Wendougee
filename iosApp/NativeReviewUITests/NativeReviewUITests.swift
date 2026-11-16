@@ -22,7 +22,15 @@ final class NativeReviewUITests: XCTestCase {
                 let screenshot = XCUIScreen.main.screenshot()
                 XCTAssertGreaterThan(screenshot.image.size.width, screenshot.image.size.height)
                 let name = "ipad-\(scene)-\(theme)"
-                try screenshot.pngRepresentation.write(to: directory.appendingPathComponent(name + ".png"))
+                // XCTest can store a portrait pixel buffer with landscape orientation metadata.
+                // Drawing the UIImage applies that metadata to the pixels without changing the UI.
+                let format = UIGraphicsImageRendererFormat()
+                format.scale = screenshot.image.scale
+                let renderer = UIGraphicsImageRenderer(size: screenshot.image.size, format: format)
+                let png = renderer.pngData { _ in
+                    screenshot.image.draw(in: CGRect(origin: .zero, size: screenshot.image.size))
+                }
+                try png.write(to: directory.appendingPathComponent(name + ".png"))
                 let attachment = XCTAttachment(screenshot: screenshot)
                 attachment.name = name
                 attachment.lifetime = .keepAlways

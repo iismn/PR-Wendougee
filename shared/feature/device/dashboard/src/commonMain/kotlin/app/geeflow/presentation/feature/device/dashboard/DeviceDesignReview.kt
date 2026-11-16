@@ -9,6 +9,13 @@ import app.geeflow.presentation.feature.device.dashboard.quicksettings.QuickSett
 fun DeviceDesignReviewContent(scene: String) {
     when (scene) {
         "temperature" -> QuickSettingsReviewContent()
+        "temperature-steam" -> QuickSettingsReviewContent(steam = true)
+        "profile-editor" -> app.geeflow.presentation.feature.device.dashboard.profileeditor.ProfileEditorPreviewContent()
+        "step-editor" -> app.geeflow.presentation.feature.device.dashboard.profileeditor.StepEditorPreviewContent()
+        "charts" -> app.geeflow.presentation.feature.device.dashboard.main.DashboardChartsDesignPreview()
+        "history" -> app.geeflow.presentation.feature.device.dashboard.main.DashboardChartsDesignPreview(history = true)
+        "profile-details", "finish-target", "single-dose" -> app.geeflow.presentation.feature.device.dashboard.profileeditor.ProfileEditorDialogDesignPreview(scene)
+        "step-rename", "step-value" -> app.geeflow.presentation.feature.device.dashboard.profileeditor.StepEditorPreviewContent(scene)
         else -> DeviceDashboardPreviewContent()
     }
 }

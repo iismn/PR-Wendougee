@@ -61,7 +61,7 @@ internal class DeviceDashboardNavFeature : NavFeature {
                 DeviceDashboardScreen(viewModel, profileListViewModel, navigator)
             }
         }
-        entry<QuickSettings>(metadata = DialogSceneStrategy.dialog(DialogProperties(usePlatformDefaultWidth = false))) {
+        entry<QuickSettings> {
             val viewModel = koinViewModel<QuickSettingsViewModel> { parametersOf(it) }
             QuickSettingsScreen(viewModel, navigator)
         }

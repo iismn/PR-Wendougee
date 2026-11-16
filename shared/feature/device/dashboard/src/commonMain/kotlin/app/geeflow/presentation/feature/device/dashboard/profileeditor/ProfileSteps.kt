@@ -34,6 +34,12 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.MoreHoriz
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -77,6 +83,7 @@ import app.geeflow.ui.theme.GeeFlowComponentPreview
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
 import geeflow.shared.core.ui.generated.resources.common_off
 import geeflow.shared.core.ui.generated.resources.common_on
+import geeflow.shared.core.ui.generated.resources.common_more
 import geeflow.shared.feature.device.dashboard.generated.resources.Res
 import geeflow.shared.feature.device.dashboard.generated.resources.experimental_copy
 import geeflow.shared.feature.device.dashboard.generated.resources.profile_editor_add_step
@@ -96,7 +103,7 @@ private val BadgeIconOffset = 8.dp
 private val BadgeIconPadding = 3.dp
 private val DraggingElevation = 6.dp
 private const val EndToggleIconFraction = 0.4f
-private val SelectedBorderWidth = 2.dp
+private val SelectedBorderWidth = 1.dp
 
 private const val AddStepKey = "add_step"
 private const val EndStepKey = "end_step"
@@ -114,6 +121,7 @@ internal fun ProfileStepsColumn(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
     allowAdd: Boolean = true,
+    showFinishTarget: Boolean = true,
 ) {
     val haptic = LocalHapticFeedback.current
     val lazyListState = rememberLazyListState()
@@ -151,7 +159,7 @@ internal fun ProfileStepsColumn(
                 )
             }
         }
-        item(key = EndStepKey) {
+        if (showFinishTarget) item(key = EndStepKey) {
             EndStepCard(
                 finishTarget = finishTarget,
                 onTypeClick = { onEvent(FinishTargetClicked(it)) },
@@ -170,6 +178,7 @@ internal fun ProfileStepsRow(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
     allowAdd: Boolean = true,
+    showFinishTarget: Boolean = true,
 ) {
     val haptic = LocalHapticFeedback.current
     val lazyListState = rememberLazyListState()
@@ -208,7 +217,7 @@ internal fun ProfileStepsRow(
                 )
             }
         }
-        item(key = EndStepKey) {
+        if (showFinishTarget) item(key = EndStepKey) {
             EndStepCard(
                 finishTarget = finishTarget,
                 onTypeClick = { onEvent(FinishTargetClicked(it)) },
@@ -242,7 +251,7 @@ internal fun StepCard(
                 .height(IntrinsicSize.Min)
                 .shadow(elevation, shape = MaterialTheme.shapes.medium)
                 .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.surfaceContainer),
+                .background(Color.Transparent),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
@@ -250,13 +259,13 @@ internal fun StepCard(
                     .weight(1f)
                     .fillMaxHeight()
                     .clip(MaterialTheme.shapes.medium)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .background(Color.Transparent)
                     .clickable { onEvent(StepClicked(step.id)) }
                     .padding(start = 16.dp, top = 6.dp, end = 12.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                StepBadge(number = number, icon = icon, color = color)
-                HorizontalSpacer(16.dp)
+                Text(number.toString().padStart(2, '0'), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(26.dp))
+                HorizontalSpacer(4.dp)
                 ProfileStepSummary(
                     step = step,
                     number = number,
@@ -284,7 +293,7 @@ internal fun StepCard(
                     .weight(1f)
                     .fillMaxSize()
                     .clip(MaterialTheme.shapes.medium)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .background(Color.Transparent)
                     .clickable { onEvent(StepClicked(step.id)) }
                     .padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 12.dp),
             ) {
@@ -310,30 +319,14 @@ private fun StepActions(
     onDuplicate: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.SpaceEvenly,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        IconButton(
-            onClick = onRemove,
-        ) {
-            Icon(
-                painter = rememberVectorPainter(Icons.Filled.Close),
-                contentDescription = stringResource(Res.string.profile_editor_remove_step),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp),
-            )
+    var expanded by remember { mutableStateOf(false) }
+    Box(modifier) {
+        IconButton(onClick = { expanded = true }, modifier = Modifier.size(42.dp)) {
+            Icon(Icons.Outlined.MoreHoriz, stringResource(CoreRes.string.common_more), Modifier.size(20.dp))
         }
-        IconButton(
-            onClick = onDuplicate,
-        ) {
-            Icon(
-                painter = rememberVectorPainter(Icons.Filled.ContentCopy),
-                contentDescription = stringResource(Res.string.experimental_copy),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp),
-            )
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(text = { Text(stringResource(Res.string.experimental_copy)) }, onClick = { expanded = false; onDuplicate() }, leadingIcon = { Icon(Icons.Filled.ContentCopy, null, Modifier.size(20.dp)) })
+            DropdownMenuItem(text = { Text(stringResource(Res.string.profile_editor_remove_step)) }, onClick = { expanded = false; onRemove() }, leadingIcon = { Icon(Icons.Filled.Close, null, Modifier.size(20.dp)) })
         }
     }
 }
@@ -344,11 +337,12 @@ internal fun EndStepCard(
     onTypeClick: (FinishTargetType) -> Unit,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
+    embedded: Boolean = false,
 ) {
     Column(
         modifier = modifier
-            .background(color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = MaterialTheme.shapes.medium)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .background(color = if (embedded) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.medium)
+            .padding(horizontal = if (embedded) 0.dp else 16.dp, vertical = 12.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -393,14 +387,14 @@ internal fun EndStepCard(
         VerticalSpacer(16.dp)
         AnimatedContent(targetState = finishTarget.enabled) { enabled ->
             if (enabled) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     FinishTargetType.entries.forEach { type ->
                         FinishTargetButton(
                             type = type,
                             selected = finishTarget.type == type,
                             value = finishTarget.valueLabel(type),
                             onClick = { onTypeClick(type) },
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
                 }
@@ -441,8 +435,8 @@ private fun FinishTargetButton(
 
     Surface(
         onClick = onClick,
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = .035f),
         border = BorderStroke(SelectedBorderWidth, borderColor),
         modifier = modifier.height(EndToggleHeight),
     ) {
@@ -493,7 +487,7 @@ private fun AddStepButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
                 painter = rememberVectorPainter(Icons.Filled.Add),
                 contentDescription = stringResource(Res.string.profile_editor_add_step),
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(20.dp),
             )
         }
     }

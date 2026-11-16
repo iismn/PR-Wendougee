@@ -120,6 +120,11 @@ private fun BrewingContent(
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun BrewingPreferencesDesignPreview(scene: String = "") {
+    BrewingPreferencesDialogs(when (scene) {
+        "temperature-unit" -> BrewingPreferencesViewState.Dialog.TemperatureUnit
+        "restore-profiles" -> BrewingPreferencesViewState.Dialog.RestoreDefaultProfiles
+        else -> null
+    }, BrewingPreferencesViewState().temperatureUnit, {})
     Content(viewState = BrewingPreferencesViewState())
 }

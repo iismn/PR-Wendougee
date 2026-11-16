@@ -50,7 +50,6 @@ import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardVie
 import app.geeflow.presentation.feature.device.dashboard.model.ChartData
 import app.geeflow.ui.theme.GeeFlowComponentPreview
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
-import app.geeflow.ui.components.InstrumentNumber
 import geeflow.shared.core.ui.generated.resources.Res
 import geeflow.shared.core.ui.generated.resources.common_avg
 import geeflow.shared.core.ui.generated.resources.common_sec
@@ -220,7 +219,7 @@ private fun StatisticValue(
 ) {
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.1f
     val ink = if (dark) Color(0xFFF0F0F0) else Color.Black
-    val glow by animateFloatAsState(if (selected) 0.55f else 0.18f, tween(220), label = "metricGlow")
+    val opacity by animateFloatAsState(if (selected) 1f else 0.48f, tween(220), label = "metricSelection")
     val value = entry.value.format()
     val description = if (entry.averaged) {
         "${stringResource(Res.string.common_avg)} $value ${entry.unit}"
@@ -236,12 +235,12 @@ private fun StatisticValue(
         contentAlignment = Alignment.Center,
     ) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            InstrumentNumber(
+            Text(
                 text = value,
-                color = ink,
-                glowColor = ink,
-                glowStrength = glow,
-                height = numberHeight,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = opacity),
+                fontSize = numberHeight.value.sp,
+                fontWeight = FontWeight.Light,
+                maxLines = 1,
                 modifier = Modifier.weight(1f, fill = false).alignByBaseline().clearAndSetSemantics {},
             )
             Text(

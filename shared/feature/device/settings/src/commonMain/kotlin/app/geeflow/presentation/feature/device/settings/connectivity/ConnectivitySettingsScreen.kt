@@ -377,6 +377,6 @@ private fun AccessoryConnectionButton(
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun ConnectivitySettingsDesignPreview() {
     ConnectivitySettingsContent(ConnectivitySettingsViewState())
 }

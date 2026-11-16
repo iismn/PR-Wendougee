@@ -259,7 +259,16 @@ private fun AppearanceContent(
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable
 @GeeFlowScreenPreview
-private fun Preview() {
+fun AppearanceSettingsDesignPreview(scene: String = "") {
+    val state = AppearanceSettingsViewState()
+    AppearanceDialogs(when (scene) {
+        "theme-mode" -> AppearanceSettingsViewState.Dialog.DarkMode
+        "theme-picker" -> AppearanceSettingsViewState.Dialog.AppTheme
+        "palette-picker" -> AppearanceSettingsViewState.Dialog.PaletteStyle
+        "custom-color" -> AppearanceSettingsViewState.Dialog.CustomColor
+        "screensaver-timeout" -> AppearanceSettingsViewState.Dialog.ScreensaverTimeout
+        else -> null
+    }, state.themeMode, state.appTheme, state.paletteStyle, state.customSeedColor, {})
     Content(
         viewState = AppearanceSettingsViewState(),
         isLanguageSupported = true,
