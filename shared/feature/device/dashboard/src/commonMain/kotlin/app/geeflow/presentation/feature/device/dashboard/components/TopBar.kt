@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
@@ -42,6 +43,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +62,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardEvent
 import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardEvent.AlarmClicked
 import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardEvent.CleaningClicked
@@ -91,6 +95,8 @@ import geeflow.shared.feature.device.dashboard.generated.resources.device_dashbo
 import org.jetbrains.compose.resources.stringResource
 import geeflow.shared.core.ui.generated.resources.Res as CoreRes
 
+private val LocalCompactHeader = staticCompositionLocalOf { false }
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun TopBar(
@@ -98,24 +104,28 @@ internal fun TopBar(
     photoFileName: String? = null,
     onEvent: (DeviceDashboardEvent) -> Unit = {},
     modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
-    FlowRow(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        GeeFlowUserAvatar(
-            photoFileName = photoFileName,
-            modifier = Modifier.size(48.dp),
-            onClick = { onEvent(UserClicked) },
-        )
-        HorizontalSpacer(8.dp)
-        DeviceTile(device, onEvent)
-        HorizontalSpacer(8.dp)
-        ActionBar(
-            device = device,
-            onEvent = onEvent,
-            modifier = Modifier.weight(1f, false),
-        )
+    CompositionLocalProvider(LocalCompactHeader provides compact) {
+        FlowRow(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            itemVerticalAlignment = Alignment.CenterVertically,
+        ) {
+            GeeFlowUserAvatar(
+                photoFileName = photoFileName,
+                modifier = Modifier.size(if (compact) 40.dp else 48.dp),
+                onClick = { onEvent(UserClicked) },
+            )
+            HorizontalSpacer(8.dp)
+            DeviceTile(device, onEvent)
+            HorizontalSpacer(8.dp)
+            ActionBar(
+                device = device,
+                onEvent = onEvent,
+                modifier = if (compact) Modifier else Modifier.weight(1f, false),
+            )
+        }
     }
 }
 
@@ -125,18 +135,19 @@ private fun ActionBar(
     onEvent: (DeviceDashboardEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val compact = LocalCompactHeader.current
     Row(
         modifier = modifier.height(IntrinsicSize.Min),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Box(Modifier.weight(1f)) {
+        Box(if (compact) Modifier else Modifier.weight(1f)) {
             ConnectionStatusButton(
                 connectionStatus = device.connectionStatus,
                 onEvent = onEvent,
                 modifier = Modifier.fillMaxHeight(),
             )
         }
-        HorizontalSpacer(16.dp)
+        HorizontalSpacer(if (compact) 8.dp else 16.dp)
         if (device.alarm) {
             ErrorButton(onClick = { onEvent(AlarmClicked) })
             HorizontalSpacer(8.dp)
@@ -182,14 +193,14 @@ private fun CleaningButton(
     modifier = modifier
         .clickable(onClick = onClick)
         .background(MaterialTheme.colorScheme.surfaceContainer)
-        .height(48.dp)
-        .padding(horizontal = 16.dp),
+        .height(if (LocalCompactHeader.current) 40.dp else 48.dp)
+        .padding(horizontal = if (LocalCompactHeader.current) 12.dp else 16.dp),
     contentAlignment = Alignment.Center,
 ) {
     Icon(
         painter = rememberVectorPainter(Icons.Filled.AutoAwesome),
         contentDescription = stringResource(Res.string.device_dashboard_clean),
-        modifier = Modifier.size(20.dp),
+        modifier = Modifier.size(if (LocalCompactHeader.current) 16.dp else 20.dp),
         tint = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
@@ -211,14 +222,14 @@ private fun ErrorButton(onClick: () -> Unit) {
             .clip(MaterialTheme.shapes.large)
             .clickable(onClick = onClick)
             .background(MaterialTheme.colorScheme.errorContainer)
-            .size(48.dp),
+            .size(if (LocalCompactHeader.current) 40.dp else 48.dp),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             painter = rememberVectorPainter(Icons.Filled.Error),
             contentDescription = stringResource(Res.string.device_dashboard_alarm),
             tint = MaterialTheme.colorScheme.onErrorContainer,
-            modifier = Modifier.size(20.dp).scale(scale),
+            modifier = Modifier.size(if (LocalCompactHeader.current) 16.dp else 20.dp).scale(scale),
         )
     }
 }
@@ -241,14 +252,14 @@ private fun SettingsButton(
                 },
             )
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .height(48.dp)
-            .padding(horizontal = 16.dp),
+            .height(if (LocalCompactHeader.current) 40.dp else 48.dp)
+            .padding(horizontal = if (LocalCompactHeader.current) 12.dp else 16.dp),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             painter = rememberVectorPainter(Icons.Filled.Tune),
             contentDescription = stringResource(CoreRes.string.common_settings),
-            modifier = Modifier.size(20.dp),
+            modifier = Modifier.size(if (LocalCompactHeader.current) 16.dp else 20.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
@@ -264,8 +275,8 @@ private fun ConnectivityButton(
     modifier = modifier
         .clickable(onClick = onClick)
         .background(MaterialTheme.colorScheme.surfaceContainer)
-        .height(48.dp)
-        .padding(horizontal = 16.dp),
+        .height(if (LocalCompactHeader.current) 40.dp else 48.dp)
+        .padding(horizontal = if (LocalCompactHeader.current) 12.dp else 16.dp),
     contentAlignment = Alignment.Center,
 ) {
     if (singleDoseGrinderConnected) {
@@ -286,7 +297,7 @@ private fun ConnectivityButton(
     }
     Icon(
         painter = rememberVectorPainter(GeeFlowIcon.DeviceHub),
-        modifier = Modifier.size(20.dp),
+        modifier = Modifier.size(if (LocalCompactHeader.current) 16.dp else 20.dp),
         contentDescription = stringResource(Res.string.device_dashboard_connected_devices),
         tint = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -324,7 +335,9 @@ private fun ConnectionStatusButton(
     )
 
     TextButton(
-        modifier = modifier.height(48.dp),
+        modifier = modifier.height(if (LocalCompactHeader.current) 40.dp else 48.dp),
+        contentPadding = if (LocalCompactHeader.current) PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+            else ButtonDefaults.TextButtonContentPadding,
         onClick = { onEvent(ConnectionButtonClicked) },
         colors = ButtonDefaults.textButtonColors(
             containerColor = containerColor,
@@ -334,13 +347,13 @@ private fun ConnectionStatusButton(
     ) {
         if (connectionStatus == Device.ConnectionStatus.Connecting || connectionStatus == Device.ConnectionStatus.Synchronizing) {
             CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(if (LocalCompactHeader.current) 16.dp else 20.dp),
                 color = contentColor,
                 strokeWidth = 2.dp,
             )
         } else {
             Icon(
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(if (LocalCompactHeader.current) 16.dp else 20.dp),
                 painter = rememberVectorPainter(
                     when (connectionStatus) {
                         Device.ConnectionStatus.Connected -> Icons.Filled.BluetoothConnected
@@ -354,10 +367,12 @@ private fun ConnectionStatusButton(
         }
         Text(
             text = text,
+            style = if (LocalCompactHeader.current) MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp)
+                else MaterialTheme.typography.labelLarge,
             maxLines = 1,
             softWrap = false,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(start = 8.dp),
+            modifier = Modifier.padding(start = if (LocalCompactHeader.current) 4.dp else 8.dp),
         )
     }
 }
@@ -372,12 +387,13 @@ internal fun DeviceTile(
         modifier = modifier
             .clip(MaterialTheme.shapes.medium)
             .clickable(onClick = { onEvent(DeviceClicked) })
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = if (LocalCompactHeader.current) 4.dp else 8.dp, vertical = 2.dp),
     ) {
         Row(modifier = Modifier.padding(start = 3.dp)) {
             Text(
                 text = device.name,
-                style = MaterialTheme.typography.titleMedium,
+                style = if (LocalCompactHeader.current) MaterialTheme.typography.titleSmall.copy(fontSize = 14.sp, lineHeight = 18.sp)
+                    else MaterialTheme.typography.titleMedium,
             )
             Icon(
                 painter = rememberVectorPainter(Icons.Filled.ArrowDropDown),
@@ -387,7 +403,7 @@ internal fun DeviceTile(
         }
         Row(
             modifier = Modifier.animateContentSize(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (LocalCompactHeader.current) 6.dp else 8.dp),
         ) {
             ParameterItem(
                 value = device.brewBoilerTemp,
@@ -418,19 +434,21 @@ private fun ParameterItem(
     Icon(
         painter = painter,
         contentDescription = null,
-        modifier = Modifier.size(16.dp),
-        tint = MaterialTheme.colorScheme.outline,
+        modifier = Modifier.size(if (LocalCompactHeader.current) 12.dp else 16.dp),
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 
     val textMeasurer = rememberTextMeasurer()
+    val style = if (LocalCompactHeader.current) MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, lineHeight = 14.sp)
+        else MaterialTheme.typography.labelLarge
     val textWidth = LocalDensity.current.run {
-        textMeasurer.measure(text = "100.0", style = MaterialTheme.typography.labelLarge).size.width.toDp()
+        textMeasurer.measure(text = "100.0", style = style).size.width.toDp()
     }
 
     Text(
         text = value ?: "  —",
-        color = MaterialTheme.colorScheme.outline,
-        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = style,
         modifier = Modifier.widthIn(min = textWidth),
     )
 }

@@ -517,7 +517,7 @@ private fun ProfileItem(
 
     GeeFlowSwipeToRevealBox(
         state = swipeToDismissBoxState,
-        modifier = modifier.fillMaxSize().clip(RoundedCornerShape(22.dp)),
+        modifier = modifier.fillMaxSize().clip(RoundedCornerShape(14.dp)),
         enableDismissFromStartToEnd = false,
         gesturesEnabled = !isDragging,
         backgroundContent = {
@@ -628,9 +628,9 @@ private fun ProfileItemContent(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(22.dp))
+            .clip(RoundedCornerShape(14.dp))
             .background(backgroundColor)
-            .border(1.dp, if (profile.selected) Color.White.copy(alpha = if (dark) 0.25f else 0.70f) else Color.Transparent, RoundedCornerShape(22.dp))
+            .border(1.dp, if (profile.selected) Color.White.copy(alpha = if (dark) 0.25f else 0.70f) else Color.Transparent, RoundedCornerShape(14.dp))
             .clickable { onProfileClick(profile.id) }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,

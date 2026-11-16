@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -154,9 +155,24 @@ internal fun BrewStatistics(
         ValueEntry(totalVolume.toDouble(), stringResource(Res.string.unit_milliliters), Volume, false),
     )
     BoxWithConstraints(modifier.fillMaxWidth()) {
-        val columns = if (maxWidth >= 560.dp) 5 else 3
+        val columns = if (maxWidth >= 500.dp) 5 else 3
         val numberHeight = if (columns == 5) 28.dp else 24.dp
-        Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+        if (columns == 5) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                listOf(entries.take(1), entries.slice(1..2), entries.takeLast(2)).forEachIndexed { index, group ->
+                    if (index > 0) VerticalDivider(
+                        modifier = Modifier.padding(horizontal = 8.dp).height(26.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.14f),
+                    )
+                    Row(Modifier.weight(group.size.toFloat())) {
+                        group.forEach { entry ->
+                            StatisticValue(entry, entry.type in visibleCharts, numberHeight,
+                                onToggle = { onToggle(entry.type) }, modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+        } else Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
             entries.chunked(columns).forEach { row ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     row.forEach { entry ->
@@ -200,8 +216,8 @@ private fun StatisticValue(
     modifier: Modifier = Modifier,
 ) {
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.1f
-    val emphasis by animateFloatAsState(if (selected) 1f else 0.56f, tween(220), label = "metricEmphasis")
-    val glow by animateFloatAsState(if (selected) 0.8f else 0.3f, tween(220), label = "metricGlow")
+    val ink = if (dark) Color(0xFFF0F0F0) else Color.Black
+    val glow by animateFloatAsState(if (selected) 0.55f else 0.18f, tween(220), label = "metricGlow")
     val value = entry.value.format()
     val description = if (entry.averaged) {
         "${stringResource(Res.string.common_avg)} $value ${entry.unit}"
@@ -220,18 +236,18 @@ private fun StatisticValue(
     ) {
         InstrumentNumber(
             text = value,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = emphasis),
-            glowColor = if (dark) Color(0xFF83B9FF) else Color(0xFF639DDF),
+            color = ink,
+            glowColor = ink,
             glowStrength = glow,
             height = numberHeight,
-            modifier = Modifier.weight(1f, fill = false).clearAndSetSemantics {},
+            modifier = Modifier.weight(1f, fill = false).alignByBaseline().clearAndSetSemantics {},
         )
         Text(
             text = entry.unit,
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
+            color = ink.copy(alpha = 0.75f),
             maxLines = 1,
-            modifier = Modifier.padding(start = 6.dp, top = 8.dp).clearAndSetSemantics {},
+            modifier = Modifier.padding(start = 6.dp).alignByBaseline().clearAndSetSemantics {},
         )
     }
 }

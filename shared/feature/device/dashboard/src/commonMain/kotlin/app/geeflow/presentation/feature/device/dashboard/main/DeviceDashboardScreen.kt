@@ -3,6 +3,8 @@ package app.geeflow.presentation.feature.device.dashboard.main
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Box
@@ -195,49 +197,40 @@ private fun ExpandedDashboard(
             .background(MaterialTheme.colorScheme.background)
             .geeFlowInsetsPadding(),
     ) {
-        val libraryWidth = (maxWidth * 0.30f).coerceIn(300.dp, 360.dp)
-        Row(Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.weight(1f).padding(start = 24.dp)) {
-                TopBar(
-                    device = viewState.device,
-                    photoFileName = viewState.user.photoFileName,
-                    onEvent = onEvent,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 20.dp, bottom = 20.dp),
-                )
+        val libraryWidth = (maxWidth * 0.24f).coerceIn(232.dp, 320.dp)
+        Column(Modifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 12.dp)) {
+            TopBar(
+                device = viewState.device,
+                photoFileName = viewState.user.photoFileName,
+                onEvent = onEvent,
+                compact = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(12.dp))
+            Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 BrewCharts(
                     model = viewState.chartModel(profileListViewState),
                     visibleCharts = viewState.visibleCharts,
                     modifier = Modifier.weight(1f),
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                ProfileList(
+                    viewState = profileListViewState,
+                    onEvent = onProfileListEvent,
+                    modifier = Modifier.width(libraryWidth).fillMaxHeight(),
+                )
+            }
+            Spacer(Modifier.height(32.dp))
+            Row(Modifier.fillMaxWidth().height(64.dp), verticalAlignment = Alignment.CenterVertically) {
                 BrewStatistics(
                     brew = viewState.brew,
                     isBrewing = viewState.device.isBrewing,
                     visibleCharts = viewState.visibleCharts,
                     onToggle = { onEvent(DeviceDashboardEvent.ToggleChartVisibility(it)) },
-                    modifier = Modifier.padding(bottom = 20.dp),
+                    modifier = Modifier.widthIn(max = 560.dp),
                 )
-            }
-            Column(
-                modifier = Modifier
-                    .width(libraryWidth)
-                    .fillMaxHeight()
-                    .padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 20.dp),
-            ) {
-                ProfileList(
-                    viewState = profileListViewState,
-                    onEvent = onProfileListEvent,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .weight(1f),
-                )
-                Spacer(Modifier.height(16.dp))
-                Row(Modifier.fillMaxWidth().height(64.dp), verticalAlignment = Alignment.CenterVertically) {
-                    BrewTime(viewState.brew.time, Modifier.weight(1f))
-                    DashboardBrewButton(viewState = viewState, onEvent = onEvent)
-                }
+                Spacer(Modifier.weight(1f))
+                BrewTime(viewState.brew.time, Modifier.padding(end = 12.dp))
+                DashboardBrewButton(viewState = viewState, onEvent = onEvent)
             }
         }
         SnackbarHost(

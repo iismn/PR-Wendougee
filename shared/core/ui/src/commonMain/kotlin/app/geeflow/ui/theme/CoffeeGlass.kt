@@ -40,8 +40,8 @@ fun Modifier.coffeeGlass(
             vibrancy()
             blur(if (prominent) 18.dp.toPx() else 10.dp.toPx())
             lens(
-                refractionHeight = if (prominent) 22.dp.toPx() else 10.dp.toPx(),
-                refractionAmount = if (prominent) 44.dp.toPx() else 18.dp.toPx(),
+                refractionHeight = if (prominent) 16.dp.toPx() else 8.dp.toPx(),
+                refractionAmount = if (prominent) 28.dp.toPx() else 14.dp.toPx(),
                 depthEffect = true,
             )
         },

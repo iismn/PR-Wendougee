@@ -8,11 +8,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.FirstBaseline
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 /** A compact instrument readout. The lit cells and decimal share one optical baseline. */
 @Composable
@@ -27,6 +30,14 @@ fun InstrumentNumber(
     val columns = (text.sumOf { if (it == '.') 2 else 6 } - 1).coerceAtLeast(1)
     Canvas(
         modifier.width(height * (columns / 7f)).height(height)
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                val pitch = min(placeable.height / 7f, placeable.width / columns.toFloat())
+                val inkBottom = (placeable.height - 7 * pitch) / 2 + 6.78f * pitch
+                layout(placeable.width, placeable.height, mapOf(FirstBaseline to inkBottom.roundToInt())) {
+                    placeable.place(0, 0)
+                }
+            }
             .semantics { contentDescription = text },
     ) {
         val pitch = min(size.height / 7, size.width / columns)
