@@ -30,7 +30,7 @@
     <string name="user_settings_appearance_dark_mode_dark">어둡게</string>
     <string name="user_settings_appearance_dark_mode_clock">시간에 맞춰 자동</string>
     <string name="user_settings_appearance_app_theme">앱 테마</string>
-    <string name="user_settings_appearance_app_theme_espresso">에스프레소</string>
+    <string name="user_settings_appearance_app_theme_espresso">글래스</string>
     <string name="user_settings_appearance_app_theme_sapphire">사파이어</string>
     <string name="user_settings_appearance_app_theme_emerald">에메랄드</string>
     <string name="user_settings_appearance_app_theme_rose">로즈</string>

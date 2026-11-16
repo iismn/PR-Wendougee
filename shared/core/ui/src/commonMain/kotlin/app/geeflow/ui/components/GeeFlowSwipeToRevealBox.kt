@@ -125,7 +125,8 @@ class SwipeToRevealBoxState {
     internal val useFlingBehavior: Boolean
         get() = ::positionalThreshold.isInitialized
 
-    internal val offset: Float
+    /** Current offset in pixels, or NaN before layout. Used to clip actions under translucent rows. */
+    val offset: Float
         get() = anchoredDraggableState.offset
 
     /**

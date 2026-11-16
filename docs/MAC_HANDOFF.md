@@ -30,4 +30,6 @@ xcodebuild -project iosApp.xcodeproj -scheme iosApp -configuration Debug -sdk ip
 
 `GeeFlow iPad UI` Actions가 같은 코드의 실제 Compose 캡처, 관련 테스트, 데스크톱 컴파일 및 iPad 시뮬레이터 빌드를 검사합니다. 캡처는 `geeflow-compose-review` 아티팩트에서 받을 수 있습니다.
 
+캡처를 옆에 띄워 비교하려면 Node.js로 `node scripts/preview-compose.cjs`를 실행하고 `http://127.0.0.1:4181`을 엽니다. Actions 아티팩트를 받았다면 `docs/screenshots`가 들어 있는 경로를 첫 인수로 전달합니다. 파일이 갱신되면 검토 창도 자동으로 갱신됩니다. 이 창은 실제 Compose에서 생성된 이미지 뷰어이며 머신을 조작하는 앱은 아닙니다.
+
 실제 iPad에서 가로 안전 영역·큰 글자·터치·회전 및 LITA 연결·온도·프로필 전송·추출·정지·저울·기록을 확인해야 합니다. 이번 변경은 UI와 appearance 설정이며 머신 프로토콜은 GeeFlow 원본을 따릅니다.

@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.geeflow.data.user.model.AppTheme
+import app.geeflow.data.user.model.ThemeMode
 import app.geeflow.navigation.Navigator
 import app.geeflow.navigation.NavigatorEffect
 import app.geeflow.platform.isFullScreenSupported
@@ -144,14 +145,16 @@ private fun AppearanceContent(
                 .fillMaxWidth()
                 .clickable { onEvent(DarkModeClicked) },
         )
-        GeeFlowNavigationListItem(
-            title = stringResource(Res.string.user_settings_appearance_app_theme),
-            subtitle = stringResource(viewState.appTheme.titleRes),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onEvent(AppThemeClicked) },
-        )
-        if (viewState.appTheme != AppTheme.SYSTEM) {
+        if (viewState.themeMode != ThemeMode.CLOCK) {
+            GeeFlowNavigationListItem(
+                title = stringResource(Res.string.user_settings_appearance_app_theme),
+                subtitle = stringResource(viewState.appTheme.titleRes),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onEvent(AppThemeClicked) },
+            )
+        }
+        if (viewState.themeMode != ThemeMode.CLOCK && viewState.appTheme != AppTheme.SYSTEM && viewState.appTheme != AppTheme.ESPRESSO) {
             GeeFlowNavigationListItem(
                 title = stringResource(Res.string.user_settings_appearance_palette_style),
                 subtitle = stringResource(viewState.paletteStyle.titleRes),
@@ -161,7 +164,7 @@ private fun AppearanceContent(
                     .clickable { onEvent(PaletteStyleClicked) },
             )
         }
-        if (viewState.appTheme == AppTheme.CUSTOM) {
+        if (viewState.themeMode != ThemeMode.CLOCK && viewState.appTheme == AppTheme.CUSTOM) {
             GeeFlowNavigationListItem(
                 title = stringResource(Res.string.user_settings_appearance_custom_color),
                 subtitle = stringResource(Res.string.user_settings_appearance_custom_color_description),

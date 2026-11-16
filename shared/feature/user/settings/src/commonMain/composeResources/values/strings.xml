@@ -36,7 +36,7 @@
     <string name="user_settings_appearance_dark_mode_light">Light</string>
     <string name="user_settings_appearance_dark_mode_dark">Dark</string>
     <string name="user_settings_appearance_app_theme">App Theme</string>
-    <string name="user_settings_appearance_app_theme_espresso">Espresso</string>
+    <string name="user_settings_appearance_app_theme_espresso">Glass</string>
     <string name="user_settings_appearance_app_theme_sapphire">Sapphire</string>
     <string name="user_settings_appearance_app_theme_emerald">Emerald</string>
     <string name="user_settings_appearance_app_theme_rose">Rose</string>
