@@ -1,6 +1,8 @@
 package app.geeflow.app.review
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +49,7 @@ val reviewScenes = listOf(
     ReviewScene("machine", "머신 설정", "머신") { DeviceSettingsDesignPreview() },
     ReviewScene("maintenance", "세척·관리 설정", "머신") { SettingsPair(machine = true, selected = 1) { MaintenanceSettingsDesignPreview() } },
     ReviewScene("welcome", "시작", "시작·연결") { IntroDesignPreview() },
+    ReviewScene("welcome-profile", "시작 · 프로필 만들기", "시작·연결") { IntroDesignPreview(formShown = true) },
     ReviewScene("users", "사용자 선택", "사용자") { UserListDesignPreview() },
     ReviewScene("about", "앱 정보", "사용자") { SettingsPair(machine = false, selected = 3) { AboutDesignPreview() } },
     ReviewScene("appearance", "화면·테마 설정", "사용자") { SettingsPair(machine = false, selected = 2) { AppearanceSettingsDesignPreview() } },
@@ -76,7 +79,7 @@ val reviewScenes = listOf(
     ReviewScene("device-rename", "머신 이름 변경", "팝업") { DeviceListDesignPreview("device-rename") },
     ReviewScene("device-warning", "기기 기능 안내", "팝업") { DeviceWarningDesignPreview() },
     ReviewScene("device-found", "기기 검색 결과", "시작·연결") { AddDeviceDesignPreview(found = true) },
-    ReviewScene("screensaver", "화면 보호기", "사용자") { app.geeflow.app.screensaver.Screensaver("09:41", {}) },
+    ReviewScene("screensaver", "화면 보호기", "사용자") { app.geeflow.app.screensaver.Screensaver(if (MaterialTheme.colorScheme.surface.luminance() < .1f) "21:41" else "09:41", {}) },
 ).sortedBy { when (it.category) { "추출" -> 0; "머신" -> 1; "사용자" -> 2; "시작·연결" -> 3; else -> 4 } }
 
 @Composable

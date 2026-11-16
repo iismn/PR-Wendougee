@@ -18,6 +18,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.geeflow.platform.rememberFormattedTime
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
 import app.geeflow.ui.theme.GeeFlowScreenPreview
@@ -28,17 +29,7 @@ internal fun Screensaver(onDismiss: () -> Unit, modifier: Modifier = Modifier) =
 
 @Composable
 internal fun Screensaver(formattedTime: String, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
-    val digits = remember(formattedTime) {
-        TimeDigitsRegex.find(formattedTime)?.value?.replace('.', ':') ?: formattedTime
-    }
-    val period = remember(formattedTime) {
-        val value = formattedTime.lowercase()
-        when {
-            value.contains("am") || value.contains("a.m.") -> "AM"
-            value.contains("pm") || value.contains("p.m.") -> "PM"
-            else -> ""
-        }
-    }
+    val time = remember(formattedTime) { parseScreensaverTime(formattedTime) }
     BoxWithConstraints(
         modifier.fillMaxSize().background(Color.Black).pointerInput(onDismiss) {
             awaitPointerEventScope {
@@ -53,11 +44,15 @@ internal fun Screensaver(formattedTime: String, onDismiss: () -> Unit, modifier:
         },
         contentAlignment = Alignment.Center,
     ) {
-        val clockWidth = minOf(maxWidth * .72f, maxHeight * 2f, 820.dp)
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            DotClock(digits, formattedTime, Modifier.width(clockWidth))
-            if (period.isNotEmpty()) Text(period, style = MaterialTheme.typography.labelMedium,
-                color = Color.White.copy(alpha = .65f))
+        val clockWidth = minOf(maxWidth * .324f, maxHeight * .87f, 336.dp)
+        Box(Modifier.width(clockWidth)) {
+            DotClock(time.digits, formattedTime, Modifier.fillMaxWidth())
+            Column(Modifier.align(Alignment.CenterStart).padding(start = 8.dp),
+                horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                val labelStyle = MaterialTheme.typography.labelSmall.copy(fontSize = 9.1.sp, lineHeight = 11.7.sp)
+                Text("AM", style = labelStyle, color = Color.White.copy(alpha = if (time.isAm) .8f else .2f))
+                Text("PM", style = labelStyle, color = Color.White.copy(alpha = if (time.isAm) .2f else .8f))
+            }
         }
     }
 }
@@ -66,13 +61,13 @@ internal fun Screensaver(formattedTime: String, onDismiss: () -> Unit, modifier:
 @Composable
 private fun DotClock(value: String, spokenTime: String, modifier: Modifier = Modifier) {
     val glyphs = remember(value) { value.mapNotNull { character ->
-        if (character == ':') Colon else character.digitToIntOrNull()?.let { Digits[it] }
+        when (character) { ':' -> Colon; '-' -> Dash; else -> character.digitToIntOrNull()?.let { Digits[it] } }
     } }
     val columns = glyphs.sumOf { it.first().length } + (glyphs.size - 1).coerceAtLeast(0)
     val aspect = (columns + 4f) / 11f
     Canvas(modifier.aspectRatio(aspect).semantics { contentDescription = spokenTime }) {
         val pitch = size.width / (columns + 4f)
-        val radius = pitch * .18f
+        val radius = pitch * .16f
         var xColumn = 2f
         glyphs.forEach { glyph ->
             glyph.forEachIndexed { row, cells -> cells.forEachIndexed { column, cell ->
@@ -107,7 +102,7 @@ private val Digits = listOf(
     listOf("01110", "10001", "10001", "01111", "00001", "00001", "01110"),
 )
 private val Colon = listOf("0", "0", "1", "0", "1", "0", "0")
-private val TimeDigitsRegex = Regex("""\d{1,2}[:.]\d{2}(?:[:.]\d{2})?""")
+private val Dash = listOf("00000", "00000", "00000", "11111", "00000", "00000", "00000")
 
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable

@@ -16,7 +16,13 @@ Profile editing and step editing share CoffeeWorkspace: the home's 20/12dp outer
 
 Quick boiler control uses the navigation dialog strategy and opens over the current screen. Brew and steam controls share one surface with no nested card fills. Each control retains its own machine-provided range and callback; interaction tests check independent routing, clamping and the disabled applying state. Existing confirm events still apply the values.
 
-The app display name is Wendougee LITA on iOS, Android and desktop. Internal namespaces and GeeFlow attribution are retained. InstrumentNumber's dot glyph renderer was removed; brew metrics use ordinary Pretendard with baseline-aligned units. The screensaver alone uses monochrome dot digits with radial white glow and no date.
+The app display name is Wendougee LITA on iOS, Android and desktop. Internal namespaces and GeeFlow attribution are retained. InstrumentNumber's dot glyph renderer was removed; brew metrics use ordinary Pretendard with baseline-aligned units. The screensaver alone uses smaller monochrome dot digits with radial white glow, tiny Pretendard AM/PM indicators to the left, and no date. The final clock size is 60% of the first resized clock (336dp landscape cap), with 9.1sp AM/PM labels at 130% of their previous size. Its 12-hour display handles midnight/noon, localized digits and Korean/English period labels.
+
+## Welcome and brand mark
+
+The full-screen welcome view centers the official Wendougee circular symbol above “Wendougee” and the localized profile-creation prompt. Tapping that prompt opens the name/agreement form in the shared dialog. Confirmation keeps the original IntroEvent and requires a name plus agreement. An interaction test covers that flow.
+
+All uses of the former drop symbol, plus iOS, Android and desktop launcher icons, now use the Wendougee circular mark. The official source and geometric SVG are retained in brand/. Day/night tinting uses the shared vector.
 
 ## Typography and appearance
 
@@ -42,7 +48,7 @@ Tapping or dragging snaps to machine-provided values. The large number opens the
 
 ## Verification
 
-The full-UI JVM catalog generates 94 images covering 47 screens/states at 1194×834pt, 2× density. The store renderer additionally covers 1024×768 landscape and phone layouts. These use production Compose components with demo fixtures and the Korean locale. `scripts/check-korean.ps1` verifies resource parity, types and placeholders.
+The full-UI JVM catalog generates 96 images covering 48 screens/states at 1194×834pt, 2× density. The store renderer additionally covers 1024×768 landscape and phone layouts. These use production Compose components with demo fixtures and the Korean locale. `scripts/check-korean.ps1` verifies resource parity, types and placeholders.
 
 The NativeReview XCTest scheme rotates an iPad simulator to landscape and captures home and temperature screens in day/night. `scripts/capture-native-ipad.sh` checks orientation and actual runtime `UIGlassEffect` classes. Native and JVM capture environments are labeled separately; `review/all-ui/manifest.json` identifies the current capture environment and timestamp. Native XCTest output is normalized using UIImage orientation before writing PNG pixels; it still must pass the landscape and runtime-material checks.
 

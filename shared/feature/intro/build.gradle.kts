@@ -17,5 +17,9 @@ kotlin {
             implementation(projects.shared.domain.user)
             implementation(libs.compose.material.icons.extended)
         }
+        jvmTest.dependencies {
+            implementation(libs.compose.uiTest)
+            implementation(compose.desktop.currentOs)
+        }
     }
 }

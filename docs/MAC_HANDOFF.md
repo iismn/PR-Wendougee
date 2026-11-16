@@ -24,9 +24,9 @@ Windows에서는 Xcode/iOS 빌드를 할 수 없습니다. 이 저장소의 CI�
 node scripts/preview-all-ui.cjs
 ```
 
-`http://127.0.0.1:4182`에서 47개 화면·상태를 선택하고 낮·밤 또는 홈과 비교합니다. 재렌더링하면 갱신됩니다. 이 창은 실제 Compose 화면을 렌더링한 이미지 갤러리입니다. JVM 이미지는 UIKit Liquid Glass 캡처가 아닙니다.
+`http://127.0.0.1:4182`에서 48개 화면·상태를 선택하고 낮·밤 또는 홈과 비교합니다. 재렌더링하면 갱신됩니다. 이 창은 실제 Compose 화면을 렌더링한 이미지 갤러리입니다. JVM 이미지는 UIKit Liquid Glass 캡처가 아닙니다.
 
-특정 화면만 다시 캡처하려면 `./gradlew :shared:app:generateAllScreens -PreviewScenes=dashboard,profile-editor,step-editor,temperature,temperature-applying,free-control,free-control-flow,screensaver`을 사용합니다. 목록은 `docs/UI-CATALOG.md`, 결과는 `docs/review/all-ui`에 있습니다.
+특정 화면만 다시 캡처하려면 `./gradlew :shared:app:generateAllScreens -PreviewScenes=dashboard,profile-editor,step-editor,temperature,temperature-applying,free-control,free-control-flow,screensaver,welcome,welcome-profile`을 사용합니다. 목록은 `docs/UI-CATALOG.md`, 결과는 `docs/review/all-ui`에 있습니다.
 
 ## 한국어와 시간 연동
 

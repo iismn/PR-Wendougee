@@ -34,7 +34,7 @@ jobs:
       - name: Render actual shared Compose screens
         run: .\gradlew.bat :shared:feature:device:dashboard:generateStoreScreenshots :shared:app:generateAllScreens --no-configuration-cache
       - name: Test appearance and dashboard behavior
-        run: .\gradlew.bat :shared:core:ui:jvmTest :shared:feature:device:dashboard:jvmTest :shared:domain:user:jvmTest :shared:domain:device:jvmTest --no-configuration-cache
+        run: .\gradlew.bat :shared:core:ui:jvmTest :shared:feature:intro:jvmTest :shared:app:jvmTest :shared:feature:device:dashboard:jvmTest :shared:domain:user:jvmTest :shared:domain:device:jvmTest --no-configuration-cache
       - name: Compile complete desktop app
         run: .\gradlew.bat :desktopApp:compileKotlin --no-configuration-cache
       - uses: actions/upload-artifact@v5
