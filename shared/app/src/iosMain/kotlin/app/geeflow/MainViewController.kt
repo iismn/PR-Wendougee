@@ -1,6 +1,7 @@
 package app.geeflow
 
 import androidx.compose.ui.window.ComposeUIViewController
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import app.geeflow.app.App
@@ -21,6 +22,7 @@ interface NativeGlassHost {
 }
 
 @Suppress("FunctionNaming")
+@OptIn(ExperimentalComposeUiApi::class)
 fun MainViewController(nativeGlassHost: NativeGlassHost, reviewScene: String = "", reviewNight: Boolean = false) =
     ComposeUIViewController(configure = { opaque = false }) {
         val materials = remember(nativeGlassHost) {
