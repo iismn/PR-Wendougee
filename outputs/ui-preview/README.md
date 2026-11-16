@@ -4,7 +4,7 @@ Open `index.html` in a browser, or use `http://127.0.0.1:4180` while the local r
 
 This is an HTML review companion, not a rendered native build. Native presentation, platform accessibility, haptics and drawing still require Xcode/device validation.
 
-The primary layout is an iPad in landscape: a single header band, full-width extraction chart, four readings in one row, stages, and a bottom action dock. Above820px the editor puts the graph and recipe fields on the left and stage controls on the right. The editable style source is `crema.css`; run `node outputs/rebuild-ui-preview.cjs` at the repository root to embed it into the offline HTML.
+The primary layout is an iPad in landscape: a single header band, dominant extraction chart, four readings in one row, numbered stages, and a bottom action dock. At1000px and wider in landscape, the existing recipe library stays visible on the right, following the user's GeeFlow reference. Above820px the editor puts the graph and recipe fields on the left and stage controls on the right. The editable style source is `crema.css`; run `node outputs/rebuild-ui-preview.cjs` at the repository root to embed it into the offline HTML.
 
 The original Crema composition is preserved:
 
@@ -13,7 +13,7 @@ The original Crema composition is preserved:
 3. Four readings: pressure, pump flow, pumped water volume and elapsed time. Wide layouts use one row; narrow layouts use two columns.
 4. Stage timeline, followed by a sticky brew/replay action zone.
 
-There is no permanent sidebar, four-tab navigation, large pressure gauge or quick recipe editor on the main screen.
+The landscape recipe column selects a saved profile and shows its Live targets immediately. This stops demo playback and leaves the machine unpaired; it does not invent telemetry or send commands. Narrow windows retain the original library sheet. The rail's arrow opens the full library with its existing editing and management actions.
 
 The profile selector opens the recipe library as a modal. Its compact vertical rows retain target/time/stage metadata, curve previews, selection, editing, sharing and deletion. Add, community and settings retain their original entry points. Recipe editing opens a separate modal with mode/preview, recipe fields, grinder settings and stages. The dial and calibrated duration ruler are confined to that editor. Preview changes persist locally; explicit Save applies them to the local library.
 
@@ -32,4 +32,4 @@ Data and controls:
 
 Auto appearance follows the browser's local clock, refreshing at least every30 seconds and on resume: Morning06–12, Day12–18, Evening18–23, Night23–06. MonitorShade's smooth05–09 cool-down and14–20 warm-up are retained. Manual phases persist locally. Only UI colors change.
 
-Validation: JavaScript syntax, recording integrity, source glyph parity and schedule boundaries were checked. Root browser review covers responsive layout, modal entry points and local interactions. Native compilation remains a separate macOS Xcode check.
+Validation: the isolated Chromium check covers1194×834(day/night),1024×768 and390×844. It checks bounds, the landscape library, recipe selection without fabricated telemetry, stable stage elements during replay, the6.1bar keyboard adjustment and cancel semantics. Generated screenshots are in the `ipad-landscape-preview` Actions artifact. Native compilation is a separate macOS Xcode check; actual iPad rendering and LITA operation still require device validation.
