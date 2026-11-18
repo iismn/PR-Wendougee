@@ -36,7 +36,15 @@ class ParseDeviceQrCodeUseCase {
             if (dataJson.isEmpty()) return null
 
             val decodedJson = decodeUrl(dataJson)
-            val qrData = json.decodeFromString<QrDeviceData>(decodedJson)
+            parseJson(decodedJson)
+        } catch (e: Exception) {
+            Logger.e(throwable = e) { "Failed to parse device QR code" }
+            null
+        }
+    }
+
+    internal fun parseJson(data: String): Device? = try {
+            val qrData = json.decodeFromString<QrDeviceData>(data)
 
             val formattedMac = formatMac(qrData.macAddress)
             val categoryModel = SupportedDevice.byCategoryCode(qrData.categoryCode)
@@ -53,11 +61,9 @@ class ParseDeviceQrCodeUseCase {
                     macAddress = formattedMac,
                 ),
             )
-        } catch (e: Exception) {
-            Logger.e(throwable = e) { "Failed to parse device QR code from URL: $url" }
+        } catch (_: Exception) {
             null
         }
-    }
 
     private fun formatMac(raw: String): String {
         val normalized = raw.replace(":", "").replace("-", "").uppercase()

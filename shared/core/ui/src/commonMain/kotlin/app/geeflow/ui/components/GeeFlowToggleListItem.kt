@@ -22,7 +22,7 @@ import kotlin.math.abs
 @Composable
 fun GeeFlowToggleListItem(
     title: String,
-    subtitle: String,
+    subtitle: String = "",
     checked: Boolean,
     onCheckedChanged: (Boolean) -> Unit,
     contentPadding: PaddingValues = PaddingValues(
@@ -49,7 +49,7 @@ fun GeeFlowToggleListItem(
 @Composable
 fun GeeFlowToggleListItem(
     title: String,
-    subtitle: String,
+    subtitle: String = "",
     checked: Boolean,
     value: String,
     onOffClick: () -> Unit,
@@ -81,7 +81,7 @@ fun GeeFlowToggleListItem(
 @Composable
 fun GeeFlowToggleListItem(
     title: String,
-    subtitle: String,
+    subtitle: String = "",
     checked: Boolean,
     value: String,
     onCheckedChanged: (Boolean) -> Unit,

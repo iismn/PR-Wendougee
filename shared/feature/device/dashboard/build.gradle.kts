@@ -24,6 +24,7 @@ kotlin {
             implementation(libs.vico.compose)
             implementation(libs.vico.compose.m3)
             implementation(libs.reorderable)
+            implementation(libs.backdrop)
             implementation(libs.kermit)
             implementation(libs.kotlinx.datetime)
         }
@@ -35,6 +36,7 @@ kotlin {
             implementation(libs.materialKolor)
         }
         jvmTest.dependencies {
+            implementation(libs.mockk)
             implementation(libs.compose.uiTest)
             implementation(compose.desktop.currentOs)
         }

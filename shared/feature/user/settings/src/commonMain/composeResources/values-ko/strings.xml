@@ -1,10 +1,13 @@
 <resources>
+    <string name="user_settings_screensaver_now">Dot 시계 지금 시작</string>
+    <string name="user_settings_screensaver_size">Dot 시계 크기</string>
+    <string name="user_settings_screensaver_size_hint">화면 보호기의 시계 크기를 조절합니다. AM/PM 간격은 유지됩니다.</string>
     <string name="user_settings_subtitle">프로필과 사용 환경 설정</string>
     <string name="user_settings_placeholder">설정할 항목을 선택해 주세요</string>
-    <string name="user_settings_change">변경</string>
-    <string name="user_settings_profile">프로필</string>
-    <string name="user_settings_profile_description">이름, 사진, 계정</string>
-    <string name="user_settings_profile_title">프로필</string>
+    <string name="user_settings_change">전환</string>
+    <string name="user_settings_profile">사용자 프로필</string>
+    <string name="user_settings_profile_description">이름과 사진 관리</string>
+    <string name="user_settings_profile_title">사용자 프로필</string>
     <string name="user_settings_profile_change_name">이름 변경</string>
     <string name="user_settings_profile_change_name_description">프로필 이름 수정</string>
     <string name="user_settings_profile_change_picture">사진 변경</string>
@@ -17,13 +20,13 @@
     <string name="user_settings_profile_delete_confirmation">프로필을 삭제할까요? 삭제 후에는 되돌릴 수 없습니다.</string>
     <string name="user_settings_profile_rename_title">이름 변경</string>
     <string name="user_settings_profile_rename_name_hint">이름</string>
-    <string name="user_settings_brewing_preferences">추출 설정</string>
-    <string name="user_settings_brewing_preferences_description">단위, 자동 연결, 레시피</string>
-    <string name="user_settings_appearance">화면</string>
-    <string name="user_settings_appearance_description">테마, 언어, 화면 유지</string>
+    <string name="user_settings_brewing_preferences">단위·자동 연결</string>
+    <string name="user_settings_brewing_preferences_description">온도 단위, 머신 자동 연결, 기본 레시피 복원</string>
+    <string name="user_settings_appearance">화면·테마</string>
+    <string name="user_settings_appearance_description">글자 크기, 화면 모드, 화면 보호기, 언어</string>
     <string name="user_settings_about">앱 정보</string>
     <string name="user_settings_about_description">약관, 개인정보, 라이선스, 버전</string>
-    <string name="user_settings_appearance_title">화면</string>
+    <string name="user_settings_appearance_title">화면·테마</string>
     <string name="user_settings_appearance_dark_mode">화면 모드</string>
     <string name="user_settings_appearance_dark_mode_system">시스템 설정</string>
     <string name="user_settings_appearance_dark_mode_light">밝게</string>
@@ -54,7 +57,7 @@
     <string name="user_settings_appearance_palette_style_neutral">차분하게</string>
     <string name="user_settings_appearance_palette_style_vibrant">선명하게</string>
     <string name="user_settings_appearance_palette_style_expressive">다채롭게</string>
-    <string name="user_settings_brewing_preferences_title">추출 설정</string>
+    <string name="user_settings_brewing_preferences_title">단위·자동 연결</string>
     <string name="user_settings_brewing_auto_connect">자동 연결</string>
     <string name="user_settings_brewing_auto_connect_description">앱으로 돌아오면 머신에 자동 연결</string>
     <string name="user_settings_brewing_temperature_unit">온도 단위</string>
@@ -75,4 +78,16 @@
     <string name="user_settings_about_version">버전</string>
     <string name="user_settings_appearance_keep_screen_on_only_while_charging">충전 중에만 유지</string>
     <string name="user_settings_appearance_keep_screen_on_only_while_charging_description">전원에 연결된 동안에만 화면 유지</string>
+    <string name="user_settings_text_size">글자 크기</string>
+    <string name="user_settings_text_size_hint">보기 편한 크기로 조절하세요. 앱 전체에 적용되며 프로필에 저장됩니다.</string>
+    <string name="user_settings_clock_schedule">시간별 테마 설정</string>
+    <string name="user_settings_clock_preview">미리보기 시간</string>
+    <string name="user_settings_clock_dawn">밝아지기 시작</string>
+    <string name="user_settings_clock_morning">아침</string>
+    <string name="user_settings_clock_midday">한낮</string>
+    <string name="user_settings_clock_sunset">해질녘</string>
+    <string name="user_settings_clock_evening">저녁</string>
+    <string name="user_settings_clock_blackout">완전한 검정</string>
+    <string name="user_settings_clock_reset">기본 시간</string>
+    <string name="user_settings_clock_time_order">앞뒤 단계 사이의 시간으로 설정해 주세요.</string>
 </resources>

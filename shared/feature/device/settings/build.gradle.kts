@@ -20,6 +20,7 @@ kotlin {
             implementation(projects.shared.core.ui)
             implementation(projects.shared.domain.device)
             implementation(projects.shared.domain.user)
+            implementation(projects.shared.feature.user.settings)
             implementation(libs.compose.material3.adaptive)
             implementation(libs.compose.material3.adaptiveLayout)
             implementation(libs.jetbrains.material3.adaptiveNavigation3)

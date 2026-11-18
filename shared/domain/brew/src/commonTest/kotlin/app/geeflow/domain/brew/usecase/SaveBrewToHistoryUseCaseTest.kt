@@ -24,6 +24,8 @@ class SaveBrewToHistoryUseCaseTest {
         val settings = object : DeviceBrewingSettingsRepository {
             override fun observe(deviceId: Long) = flowOf(DeviceBrewingSettings(treatManualAsFlush = deviceId == 1L))
             override suspend fun save(deviceId: Long, settings: DeviceBrewingSettings) = Unit
+            override fun observeManualRecipePrompt(deviceId: Long) = error("Unexpected prompt observation")
+            override suspend fun setManualRecipePrompt(deviceId: Long, enabled: Boolean) = error("Unexpected prompt change")
             override suspend fun remove(deviceId: Long) = Unit
         }
         val save = SaveBrewToHistoryUseCase(history, settings, users)

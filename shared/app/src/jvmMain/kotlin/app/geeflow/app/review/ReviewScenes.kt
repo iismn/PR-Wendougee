@@ -32,7 +32,10 @@ import app.geeflow.presentation.feature.user.settings.about.licenses.LicensesDes
 data class ReviewScene(val id: String, val title: String, val category: String, val content: @Composable () -> Unit)
 
 val reviewScenes = listOf(
+    ReviewScene("quick-scale", "저울 연결", "팝업") { DeviceDesignReviewContent("quick-scale") },
     ReviewScene("dashboard", "프로파일 홈", "추출") { DeviceDesignReviewContent("dashboard") },
+    ReviewScene("manual-active", "수동 추출 · 진행 중", "추출") { DeviceDesignReviewContent("manual-active") },
+    ReviewScene("manual-recipe", "수동 추출 · 레시피 저장", "팝업") { DeviceDesignReviewContent("manual-recipe") },
     ReviewScene("profile-editor", "프로파일 편집", "추출") { DeviceDesignReviewContent("profile-editor") },
     ReviewScene("step-editor", "단계 편집", "추출") { DeviceDesignReviewContent("step-editor") },
     ReviewScene("temperature", "빠른 온도 조절", "추출") { DeviceDesignReviewContent("temperature") },
@@ -42,7 +45,8 @@ val reviewScenes = listOf(
     ReviewScene("free-control-flow", "자유추출 · 유량", "추출") { FreeControlDesignPreview(app.geeflow.presentation.feature.device.dashboard.freecontrol.ControlMode.Flow) },
     ReviewScene("bluetooth-permission", "블루투스 권한", "팝업") { DeviceDashboardDesignPreview() },
     ReviewScene("cleaning-reminder", "세척 알림", "팝업") { MaintenanceReminderDesignPreview() },
-    ReviewScene("quick-cleaning", "빠른 세척", "머신") { ReviewSheet { QuickMaintenanceDesignPreview() } },
+    ReviewScene("quick-cleaning", "빠른 세척", "머신") { QuickMaintenanceDesignPreview() },
+    ReviewScene("quick-cleaning-running", "빠른 세척 · 진행 중", "머신") { QuickMaintenanceDesignPreview(cleaning = true) },
     ReviewScene("devices", "기기 목록", "시작·연결") { DeviceListDesignPreview() },
     ReviewScene("boilers", "보일러·추출 설정", "머신") { SettingsPair(machine = true, selected = 0) { BrewingSettingsDesignPreview() } },
     ReviewScene("connectivity", "연결 설정", "머신") { SettingsPair(machine = true, selected = 2) { ConnectivitySettingsDesignPreview() } },
@@ -51,11 +55,11 @@ val reviewScenes = listOf(
     ReviewScene("welcome", "시작", "시작·연결") { IntroDesignPreview() },
     ReviewScene("welcome-profile", "시작 · 프로필 만들기", "시작·연결") { IntroDesignPreview(formShown = true) },
     ReviewScene("users", "사용자 선택", "사용자") { UserListDesignPreview() },
-    ReviewScene("about", "앱 정보", "사용자") { SettingsPair(machine = false, selected = 3) { AboutDesignPreview() } },
-    ReviewScene("appearance", "화면·테마 설정", "사용자") { SettingsPair(machine = false, selected = 2) { AppearanceSettingsDesignPreview() } },
-    ReviewScene("preferences", "추출 환경설정", "사용자") { SettingsPair(machine = false, selected = 1) { BrewingPreferencesDesignPreview() } },
+    ReviewScene("about", "앱 정보", "사용자") { SettingsPair(machine = false, selected = 2) { AboutDesignPreview() } },
+    ReviewScene("appearance", "화면·테마 설정", "사용자") { SettingsPair(machine = false, selected = 0) { AppearanceSettingsDesignPreview() } },
+    ReviewScene("preferences", "단위·자동 연결", "사용자") { SettingsPair(machine = false, selected = 1) { BrewingPreferencesDesignPreview() } },
     ReviewScene("settings", "사용자 설정", "사용자") { UserSettingsDesignPreview() },
-    ReviewScene("user-profile", "사용자 프로필", "사용자") { SettingsPair(machine = false, selected = 0) { ProfileSettingsDesignPreview() } },
+    ReviewScene("user-profile", "사용자 프로필", "사용자") { SettingsPair(machine = false, selected = 3) { ProfileSettingsDesignPreview() } },
     ReviewScene("add-user", "사용자 추가", "사용자") { ReviewSheet { AddUserDesignPreview() } },
     ReviewScene("licenses", "오픈소스 라이선스", "사용자") { LicensesDesignPreview() },
     ReviewScene("charts", "추출 그래프", "추출") { DeviceDesignReviewContent("charts") },
@@ -80,6 +84,7 @@ val reviewScenes = listOf(
     ReviewScene("device-warning", "기기 기능 안내", "팝업") { DeviceWarningDesignPreview() },
     ReviewScene("device-found", "기기 검색 결과", "시작·연결") { AddDeviceDesignPreview(found = true) },
     ReviewScene("screensaver", "화면 보호기", "사용자") { app.geeflow.app.screensaver.Screensaver(if (MaterialTheme.colorScheme.surface.luminance() < .1f) "21:41" else "09:41", {}) },
+    ReviewScene("screensaver-large", "화면 보호기 · 최대 크기", "사용자") { app.geeflow.app.screensaver.Screensaver("21:41", {}, sizePercent = 200) },
 ).sortedBy { when (it.category) { "추출" -> 0; "머신" -> 1; "사용자" -> 2; "시작·연결" -> 3; else -> 4 } }
 
 @Composable

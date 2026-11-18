@@ -4,6 +4,14 @@
     <string name="add_device_screen_description">Connect your espresso machine to start brewing</string>
     <string name="add_device_screen_show_nearby">Show nearby devices</string>
     <string name="add_device_screen_scan_qr">Scan QR Code</string>
+    <string name="add_device_manual">Enter device code</string>
+    <string name="add_device_manual_label">Device code or Bluetooth address</string>
+    <string name="add_device_manual_hint">Paste the QR contents or enter the 12-digit Bluetooth address printed on your machine. You can also enter its advertised name, such as LITA_BA_AABBCCDDEEFF.</string>
+    <string name="add_device_manual_error">Check the QR contents or 12-digit Bluetooth address. A serial number alone cannot identify the Bluetooth device.</string>
+    <string name="add_device_manual_register">Register device</string>
+    <string name="add_device_camera_description">Scan your machine's QR code, or enter its device code directly.</string>
+    <string name="add_device_camera_open">Open camera</string>
+    <string name="add_device_camera_unavailable">The camera is unavailable. Close other camera apps and try again, or enter the device code directly.</string>
     <string name="add_device_screen_no_camera_permission">Camera permission is missing, please grant it in app settings</string>
     <string name="add_device_screen_qr_parsing_error">Could not parse device data</string>
     <string name="add_device_screen_empty">No devices found. Time to wake up your espresso machine.</string>

@@ -310,6 +310,8 @@ class AutoFlushCoordinatorTest {
         private val repository = object : DeviceBrewingSettingsRepository {
             override fun observe(deviceId: Long) = if (deviceId == 1L) settings else otherSettings
             override suspend fun save(deviceId: Long, settings: DeviceBrewingSettings) = Unit
+            override fun observeManualRecipePrompt(deviceId: Long) = error("Unexpected prompt observation")
+            override suspend fun setManualRecipePrompt(deviceId: Long, enabled: Boolean) = error("Unexpected prompt change")
             override suspend fun remove(deviceId: Long) = Unit
         }
         private val history = object : BrewHistoryRepository {

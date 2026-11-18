@@ -54,23 +54,16 @@ import geeflow.shared.core.ui.generated.resources.common_rest
 import geeflow.shared.core.ui.generated.resources.common_sec
 import geeflow.shared.core.ui.generated.resources.common_times
 import geeflow.shared.core.ui.generated.resources.maintenance_daily
-import geeflow.shared.core.ui.generated.resources.maintenance_daily_description
 import geeflow.shared.core.ui.generated.resources.maintenance_days
 import geeflow.shared.core.ui.generated.resources.maintenance_deep
-import geeflow.shared.core.ui.generated.resources.maintenance_deep_description
 import geeflow.shared.core.ui.generated.resources.maintenance_reminder
 import geeflow.shared.core.ui.generated.resources.maintenance_reminder_days
-import geeflow.shared.core.ui.generated.resources.maintenance_reminder_description
 import geeflow.shared.core.ui.generated.resources.maintenance_reminder_interval
 import geeflow.shared.feature.device.settings.generated.resources.Res
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_maintenance
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_maintenance_alarms
-import geeflow.shared.feature.device.settings.generated.resources.device_settings_maintenance_cleaning_cycle_description
-import geeflow.shared.feature.device.settings.generated.resources.device_settings_maintenance_cleaning_flush_description
-import geeflow.shared.feature.device.settings.generated.resources.device_settings_maintenance_cleaning_rest_description
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_maintenance_description
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_maintenance_water_alarm
-import geeflow.shared.feature.device.settings.generated.resources.device_settings_maintenance_water_alarm_description
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
@@ -211,23 +204,9 @@ private fun CleaningSection(
         ),
         modifier = Modifier.fillMaxWidth(),
     )
-    VerticalSpacer(8.dp)
-    Text(
-        text = stringResource(
-            if (type == CleaningType.Daily) {
-                CoreRes.string.maintenance_daily_description
-            } else {
-                CoreRes.string.maintenance_deep_description
-            },
-        ),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurface,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = GeeFlowTheme.spacing.contentHorizontal),
-    )
     VerticalSpacer(16.dp)
     GeeFlowValueListItem(
         title = stringResource(CoreRes.string.common_flush),
-        subtitle = stringResource(Res.string.device_settings_maintenance_cleaning_flush_description),
         value = "${cleaning.timeSec} ${stringResource(CoreRes.string.common_sec)}",
         items = cleaning.timeList,
         unit = stringResource(CoreRes.string.common_sec),
@@ -236,7 +215,6 @@ private fun CleaningSection(
     )
     GeeFlowValueListItem(
         title = stringResource(CoreRes.string.common_rest),
-        subtitle = stringResource(Res.string.device_settings_maintenance_cleaning_rest_description),
         value = "${cleaning.restSec} ${stringResource(CoreRes.string.common_sec)}",
         items = cleaning.restList,
         unit = stringResource(CoreRes.string.common_sec),
@@ -245,7 +223,6 @@ private fun CleaningSection(
     )
     GeeFlowValueListItem(
         title = stringResource(CoreRes.string.common_cycle),
-        subtitle = stringResource(Res.string.device_settings_maintenance_cleaning_cycle_description),
         value = "${cleaning.count} ${stringResource(CoreRes.string.common_times)}",
         items = cleaning.countList,
         unit = stringResource(CoreRes.string.common_times),
@@ -254,7 +231,6 @@ private fun CleaningSection(
     )
     GeeFlowToggleListItem(
         title = stringResource(CoreRes.string.maintenance_reminder),
-        subtitle = stringResource(CoreRes.string.maintenance_reminder_description),
         checked = cleaning.reminder.enabled,
         value = pluralStringResource(
             CoreRes.plurals.maintenance_reminder_interval,
@@ -287,7 +263,6 @@ private fun WaterAlarmSection(
     VerticalSpacer(16.dp)
     GeeFlowToggleListItem(
         title = stringResource(resource = Res.string.device_settings_maintenance_water_alarm),
-        subtitle = stringResource(Res.string.device_settings_maintenance_water_alarm_description),
         checked = waterAlarm,
         onCheckedChanged = { onEvent(WaterAlarmToggled(it)) },
         modifier = Modifier.fillMaxWidth(),

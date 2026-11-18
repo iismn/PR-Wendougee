@@ -8,6 +8,11 @@ import app.geeflow.presentation.feature.device.dashboard.quicksettings.QuickSett
 @Composable
 fun DeviceDesignReviewContent(scene: String) {
     when (scene) {
+        "quick-scale" -> app.geeflow.presentation.feature.device.dashboard.quickscale.QuickScaleDesignPreview()
+        "quick-cleaning" -> app.geeflow.presentation.feature.device.dashboard.quickmaintenance.QuickMaintenanceDesignPreview()
+        "quick-cleaning-running" -> app.geeflow.presentation.feature.device.dashboard.quickmaintenance.QuickMaintenanceDesignPreview(cleaning = true)
+        "manual-recipe" -> app.geeflow.presentation.feature.device.dashboard.main.ManualRecipeDesignPreview()
+        "manual-active" -> app.geeflow.presentation.feature.device.dashboard.main.ManualRecipeDesignPreview(active = true)
         "temperature" -> QuickSettingsReviewContent()
         "temperature-applying" -> QuickSettingsReviewContent(applying = true)
         "profile-editor" -> app.geeflow.presentation.feature.device.dashboard.profileeditor.ProfileEditorPreviewContent()

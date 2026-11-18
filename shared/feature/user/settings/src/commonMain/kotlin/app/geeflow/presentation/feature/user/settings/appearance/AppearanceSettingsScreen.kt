@@ -2,6 +2,16 @@ package app.geeflow.presentation.feature.user.settings.appearance
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.Slider
+import androidx.compose.material3.TextButton
+import app.geeflow.ui.components.LocalShowScreensaver
+import geeflow.shared.feature.user.settings.generated.resources.user_settings_screensaver_now
+import geeflow.shared.feature.user.settings.generated.resources.user_settings_screensaver_size
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.testTag
+import kotlin.math.roundToInt
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,6 +52,7 @@ import app.geeflow.presentation.feature.user.settings.appearance.AppearanceSetti
 import app.geeflow.presentation.feature.user.settings.appearance.AppearanceSettingsEvent.ScreensaverTimeoutClicked
 import app.geeflow.presentation.feature.user.settings.appearance.components.AppearanceDialogs
 import app.geeflow.ui.components.GeeFlowDetailScaffold
+import app.geeflow.ui.components.settingsDetailVerticalPadding
 import app.geeflow.ui.components.GeeFlowListItem
 import app.geeflow.ui.components.GeeFlowNavigationListItem
 import app.geeflow.ui.components.GeeFlowToggleListItem
@@ -51,24 +62,19 @@ import app.geeflow.ui.theme.GeeFlowTheme
 import geeflow.shared.feature.user.settings.generated.resources.Res
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_app_theme
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_custom_color
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_custom_color_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_dark_mode
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_full_screen
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_full_screen_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_keep_screen_on
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_keep_screen_on_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_keep_screen_on_only_while_charging
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_keep_screen_on_only_while_charging_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_language
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_language_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_palette_style
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_screensaver
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_screensaver_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_screensaver_timeout
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_screensaver_timeout_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_screensaver_unit_minutes
+import geeflow.shared.feature.user.settings.generated.resources.user_settings_clock_schedule
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_title
+import geeflow.shared.feature.user.settings.generated.resources.user_settings_text_size
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -94,6 +100,7 @@ internal fun AppearanceSettingsScreen(
         currentAppTheme = viewState.appTheme,
         currentPaletteStyle = viewState.paletteStyle,
         currentCustomSeedColor = viewState.customSeedColor,
+        clockThemeSchedule = viewState.clockThemeSchedule,
         onEvent = viewModel::handleEvent,
     )
 }
@@ -123,7 +130,7 @@ private fun Content(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(paddingValues)
-                    .padding(vertical = GeeFlowTheme.spacing.contentVertical),
+                    .padding(settingsDetailVerticalPadding(firstItemPadding = 16.dp)),
             )
         },
     )
@@ -138,6 +145,16 @@ private fun AppearanceContent(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = GeeFlowTheme.spacing.contentHorizontal, vertical = 16.dp)) {
+            var textSize by remember(viewState.textSizePercent) { mutableFloatStateOf(viewState.textSizePercent.toFloat()) }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(stringResource(Res.string.user_settings_text_size), style = MaterialTheme.typography.titleMedium)
+                Text("${textSize.roundToInt()}%", style = MaterialTheme.typography.titleMedium)
+            }
+            Slider(value = textSize, onValueChange = { textSize = it },
+                onValueChangeFinished = { onEvent(AppearanceSettingsEvent.TextSizeChanged(textSize.roundToInt())) },
+                valueRange = 100f..160f, steps = 5, modifier = Modifier.testTag("text-size-slider"))
+        }
         GeeFlowNavigationListItem(
             title = stringResource(Res.string.user_settings_appearance_dark_mode),
             subtitle = stringResource(viewState.themeMode.titleRes),
@@ -145,6 +162,13 @@ private fun AppearanceContent(
                 .fillMaxWidth()
                 .clickable { onEvent(DarkModeClicked) },
         )
+        AnimatedVisibility(viewState.themeMode == ThemeMode.CLOCK) {
+            GeeFlowNavigationListItem(
+                title = stringResource(Res.string.user_settings_clock_schedule),
+                modifier = Modifier.fillMaxWidth().testTag("clock-theme-schedule")
+                    .clickable { onEvent(AppearanceSettingsEvent.ClockScheduleClicked) },
+            )
+        }
         if (viewState.themeMode != ThemeMode.CLOCK) {
             GeeFlowNavigationListItem(
                 title = stringResource(Res.string.user_settings_appearance_app_theme),
@@ -167,7 +191,6 @@ private fun AppearanceContent(
         if (viewState.themeMode != ThemeMode.CLOCK && viewState.appTheme == AppTheme.CUSTOM) {
             GeeFlowNavigationListItem(
                 title = stringResource(Res.string.user_settings_appearance_custom_color),
-                subtitle = stringResource(Res.string.user_settings_appearance_custom_color_description),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp)
@@ -177,7 +200,6 @@ private fun AppearanceContent(
         if (isLanguageSupported) {
             GeeFlowNavigationListItem(
                 title = stringResource(Res.string.user_settings_appearance_language),
-                subtitle = stringResource(Res.string.user_settings_appearance_language_description),
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(onClick = onLanguageClicked),
@@ -186,7 +208,6 @@ private fun AppearanceContent(
         if (isFullScreenSupported) {
             GeeFlowToggleListItem(
                 title = stringResource(Res.string.user_settings_appearance_full_screen),
-                subtitle = stringResource(Res.string.user_settings_appearance_full_screen_description),
                 checked = viewState.fullScreenMode,
                 onCheckedChanged = { onEvent(FullScreenChanged(it)) },
                 modifier = Modifier.fillMaxWidth(),
@@ -195,7 +216,6 @@ private fun AppearanceContent(
         if (isKeepScreenOnSupported) {
             GeeFlowToggleListItem(
                 title = stringResource(Res.string.user_settings_appearance_keep_screen_on),
-                subtitle = stringResource(Res.string.user_settings_appearance_keep_screen_on_description),
                 checked = viewState.keepScreenOn,
                 onCheckedChanged = { onEvent(KeepScreenOnChanged(it)) },
                 modifier = Modifier.fillMaxWidth(),
@@ -205,7 +225,6 @@ private fun AppearanceContent(
             ) {
                 GeeFlowToggleListItem(
                     title = stringResource(Res.string.user_settings_appearance_keep_screen_on_only_while_charging),
-                    subtitle = stringResource(Res.string.user_settings_appearance_keep_screen_on_only_while_charging_description),
                     checked = viewState.keepScreenOnOnlyWhileCharging,
                     onCheckedChanged = { onEvent(KeepScreenOnOnlyWhileChargingChanged(it)) },
                     modifier = Modifier
@@ -215,18 +234,31 @@ private fun AppearanceContent(
             }
             GeeFlowToggleListItem(
                 title = stringResource(Res.string.user_settings_appearance_screensaver),
-                subtitle = stringResource(Res.string.user_settings_appearance_screensaver_description),
                 checked = viewState.screensaverEnabled,
                 onCheckedChanged = { onEvent(ScreensaverChanged(it)) },
                 modifier = Modifier.fillMaxWidth(),
             )
+            Column(Modifier.fillMaxWidth().padding(horizontal = GeeFlowTheme.spacing.contentHorizontal, vertical = 16.dp)) {
+                var clockSize by remember(viewState.screensaverSizePercent) { mutableFloatStateOf(viewState.screensaverSizePercent.toFloat()) }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(stringResource(Res.string.user_settings_screensaver_size), style = MaterialTheme.typography.titleMedium)
+                    Text("${clockSize.roundToInt()}%", style = MaterialTheme.typography.titleMedium)
+                }
+                Slider(value = clockSize, onValueChange = { clockSize = it }, valueRange = 60f..200f, steps = 13,
+                    onValueChangeFinished = { onEvent(AppearanceSettingsEvent.ScreensaverSizeChanged(clockSize.roundToInt())) },
+                    modifier = Modifier.testTag("screensaver-size-slider"))
+            }
+            LocalShowScreensaver.current?.let { show ->
+                TextButton(onClick = show, modifier = Modifier.testTag("show-screensaver-now")) {
+                    Text(stringResource(Res.string.user_settings_screensaver_now))
+                }
+            }
             AnimatedVisibility(
                 visible = viewState.screensaverEnabled,
             ) {
                 val unit = stringResource(Res.string.user_settings_appearance_screensaver_unit_minutes)
                 GeeFlowListItem(
                     title = stringResource(Res.string.user_settings_appearance_screensaver_timeout),
-                    subtitle = stringResource(Res.string.user_settings_appearance_screensaver_timeout_description),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 16.dp)
@@ -263,6 +295,7 @@ fun AppearanceSettingsDesignPreview(scene: String = "") {
     val state = AppearanceSettingsViewState()
     AppearanceDialogs(when (scene) {
         "theme-mode" -> AppearanceSettingsViewState.Dialog.DarkMode
+        "clock-schedule" -> AppearanceSettingsViewState.Dialog.ClockSchedule
         "theme-picker" -> AppearanceSettingsViewState.Dialog.AppTheme
         "palette-picker" -> AppearanceSettingsViewState.Dialog.PaletteStyle
         "custom-color" -> AppearanceSettingsViewState.Dialog.CustomColor

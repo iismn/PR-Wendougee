@@ -21,13 +21,15 @@ import javax.swing.SwingUtilities
 fun main(args: Array<String>) {
     Locale.setDefault(Locale.KOREAN)
     val directory = File(args.firstOrNull() ?: "docs/review/all-ui").apply { mkdirs() }
-    val filter = args.getOrNull(1)?.split(',')?.toSet()
+    val textSizePercent = args.getOrNull(2)?.toIntOrNull() ?: 120
+    val variant = if (textSizePercent == 120) "" else "-text$textSizePercent"
+    val filter = args.getOrNull(1)?.takeIf { it.isNotBlank() }?.split(',')?.toSet()
     val selected = reviewScenes.filter { filter == null || it.id in filter }
     for (screen in selected) for (phase in listOf(CoffeeDayPhase.Day, CoffeeDayPhase.Night)) {
-        val name = "${screen.id}-${if (phase.dark) "night" else "day"}.png"
+        val name = "${screen.id}$variant-${if (phase.dark) "night" else "day"}.png"
         val scene = onUiThread { ImageComposeScene(2388, 1668, Density(2f)) {
             CompositionLocalProvider(LocalInspectionMode provides true) {
-                GeeFlowTheme(darkMode = phase.dark, colorScheme = coffeeColorScheme(phase), phase = phase) {
+                GeeFlowTheme(darkMode = phase.dark, colorScheme = coffeeColorScheme(phase), phase = phase, textSizePercent = textSizePercent) {
                     DialogCaptureHost { screen.content() }
                 }
             }
@@ -53,6 +55,8 @@ fun main(args: Array<String>) {
         "generatedAt":"${java.time.Instant.now()}",
         "screens":[${reviewScenes.joinToString(",") { """{"id":"${it.id}","title":"${it.title}","category":"${it.category}"}""" }}]
     }""")
+    // Offscreen rendering can leave the AWT event thread alive after all scenes close.
+    kotlin.system.exitProcess(0)
 }
 
 private fun <T> onUiThread(action: () -> T): T {

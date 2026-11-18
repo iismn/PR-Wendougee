@@ -15,7 +15,10 @@ class SaveFreeVariableProfileUseCase(
     private val brewProfileRepository: BrewProfileRepository,
     private val getSelectedUserUseCase: GetSelectedUserUseCase,
 ) {
-    suspend operator fun invoke(session: BrewSession, name: String) {
+    suspend operator fun invoke(session: BrewSession, name: String, description: String = "") {
+        val normalizedName = name.trim()
+        require(normalizedName.isNotEmpty()) { "Recipe name must not be blank" }
+        require(!session.inProgress) { "Stop the manual extraction before saving its recipe" }
         val userId = getSelectedUserUseCase().first()?.id ?: error("no user selected")
         val recording = requireNotNull(session.recording) { "No free hand recording available" }
         recording.playbackPoints() // Validate the transport capacity before persisting.
@@ -23,8 +26,8 @@ class SaveFreeVariableProfileUseCase(
         if (target <= 0f) throw RecordingNoVolumeException()
         val profile = BrewProfile(
             userId = userId,
-            name = name,
-            description = "",
+            name = normalizedName,
+            description = description.trim(),
 
             finishCondition = Condition.Volume(target),
             program = BrewProgram.Recording(recording),

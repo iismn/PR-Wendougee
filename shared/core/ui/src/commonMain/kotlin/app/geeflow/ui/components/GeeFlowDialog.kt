@@ -20,19 +20,9 @@ fun GeeFlowDialog(
     properties: DialogProperties = DialogProperties(),
     content: @Composable () -> Unit,
 ) {
-    val capture = LocalDialogCapture.current
-    if (capture != null) {
-        CaptureDialog(capture) { GeeFlowDialogSurface(modifier, content) }
-        return
+    CoffeePopup(onDismissRequest = onDismissRequest, properties = properties) {
+        GeeFlowDialogSurface(modifier, content)
     }
-    BasicAlertDialog(
-        onDismissRequest = onDismissRequest,
-        modifier = modifier,
-        properties = properties,
-        content = {
-            GeeFlowDialogSurface(Modifier, content)
-        },
-    )
 }
 
 @Composable

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
@@ -21,10 +22,10 @@ fun DialogCaptureHost(content: @Composable () -> Unit) {
     val capture = remember { DialogCapture() }
     CompositionLocalProvider(LocalDialogCapture provides capture) {
         Box(Modifier.fillMaxSize()) {
-            content()
+            Box(Modifier.fillMaxSize().blur(if (capture.dialogs.isNotEmpty()) 18.dp else 0.dp)) { content() }
             capture.dialogs.values.lastOrNull()?.let { dialog ->
                 Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .28f)), contentAlignment = Alignment.Center) {
-                    Box(Modifier.padding(24.dp).widthIn(max = 480.dp)) { dialog() }
+                    Box(Modifier.padding(24.dp).widthIn(max = 800.dp)) { dialog() }
                 }
             }
         }

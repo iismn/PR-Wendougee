@@ -72,18 +72,14 @@ import geeflow.shared.core.ui.generated.resources.common_time
 import geeflow.shared.core.ui.generated.resources.unit_bar
 import geeflow.shared.feature.device.settings.generated.resources.Res
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_auto_flush
-import geeflow.shared.feature.device.settings.generated.resources.device_settings_auto_flush_description
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_brewing
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_brewing_boiler
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_brewing_description
+import geeflow.shared.feature.device.settings.generated.resources.device_settings_manual_recipe_prompt
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_brewing_paddle
-import geeflow.shared.feature.device.settings.generated.resources.device_settings_brewing_paddle_pressure_description
-import geeflow.shared.feature.device.settings.generated.resources.device_settings_brewing_paddle_time_description
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_brewing_pulse_heating
-import geeflow.shared.feature.device.settings.generated.resources.device_settings_brewing_pulse_heating_description
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_firmware_version
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_treat_manual_as_flush
-import geeflow.shared.feature.device.settings.generated.resources.device_settings_treat_manual_as_flush_description
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import geeflow.shared.core.ui.generated.resources.Res as CoreRes
@@ -226,7 +222,6 @@ private fun BoilerSection(
     )
     GeeFlowToggleListItem(
         title = stringResource(Res.string.device_settings_brewing_pulse_heating),
-        subtitle = stringResource(Res.string.device_settings_brewing_pulse_heating_description),
         checked = viewState.pulseHeatingEnabled,
         onCheckedChanged = { onEvent(PulseHeatingToggled(it)) },
         modifier = Modifier.fillMaxWidth(),
@@ -262,7 +257,6 @@ private fun PaddleSection(
     VerticalSpacer(16.dp)
     GeeFlowValueListItem(
         title = stringResource(CoreRes.string.common_pressure),
-        subtitle = stringResource(Res.string.device_settings_brewing_paddle_pressure_description),
         value = "${paddle.pressure} ${stringResource(CoreRes.string.unit_bar)}",
         items = paddle.pressureList,
         unit = stringResource(CoreRes.string.unit_bar),
@@ -271,7 +265,6 @@ private fun PaddleSection(
     )
     GeeFlowValueListItem(
         title = stringResource(CoreRes.string.common_time),
-        subtitle = stringResource(Res.string.device_settings_brewing_paddle_time_description),
         value = "${paddle.time} ${stringResource(CoreRes.string.common_sec)}",
         items = paddle.timeList,
         unit = stringResource(CoreRes.string.common_sec),
@@ -286,14 +279,18 @@ private fun PaddleSection(
     }
     GeeFlowToggleListItem(
         title = stringResource(Res.string.device_settings_treat_manual_as_flush),
-        subtitle = stringResource(Res.string.device_settings_treat_manual_as_flush_description),
         checked = state.treatManualAsFlush,
         onCheckedChanged = { onEvent(BrewingSettingsEvent.TreatManualAsFlushChanged(it)) },
         modifier = Modifier.fillMaxWidth(),
     )
     GeeFlowToggleListItem(
+        title = stringResource(Res.string.device_settings_manual_recipe_prompt),
+        checked = state.manualRecipePromptEnabled,
+        onCheckedChanged = { onEvent(BrewingSettingsEvent.ManualRecipePromptChanged(it)) },
+        modifier = Modifier.fillMaxWidth(),
+    )
+    GeeFlowToggleListItem(
         title = stringResource(Res.string.device_settings_auto_flush),
-        subtitle = stringResource(Res.string.device_settings_auto_flush_description),
         checked = state.autoFlushEnabled,
         value = "${state.autoFlushDelaySeconds} ${stringResource(CoreRes.string.common_sec)}",
         valueRange = MinimumDelaySeconds.toFloat()..MaximumDelaySeconds.toFloat(),

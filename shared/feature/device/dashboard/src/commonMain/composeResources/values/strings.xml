@@ -1,4 +1,8 @@
 <resources>
+    <string name="quick_maintenance_adjust_hint">Slide the ruler under the fixed center line. Drag left to increase and right to decrease. Your values apply when cleaning starts.</string>
+    <string name="quick_maintenance_info">Cleaning information</string>
+    <string name="home_delete_confirmation">Delete this profile?</string>
+    <string name="home_delete_bound">Unbind this profile from the machine before deleting it.</string>
     <string name="home_add">Add profile</string>
     <string name="home_profiles">Profiles</string>
     <string name="home_selected">Selected profile</string>
@@ -59,7 +63,7 @@
     <string name="brew_history_description">%1$s • %2$d s</string>
 
     <!-- Device Settings Quick -->
-    <string name="settings_quick_title">Quick settings</string>
+    <string name="settings_quick_title">Temperature control</string>
     <string name="settings_quick_more">More settings</string>
 
     <!-- Free Control Screen -->
@@ -195,4 +199,33 @@
     <string name="workspace_ramp">Ramp</string>
     <string name="workspace_conditions">Conditions</string>
     <string name="workspace_duration">Duration</string>
+    <string name="home_manual_pressure">Manual - Pressure</string>
+    <string name="home_manual_flow">Manual - Flow</string>
+    <string name="home_manual">Manual extraction</string>
+    <string name="home_pressure_priority">Pressure priority</string>
+    <string name="home_flow_priority">Flow priority</string>
+    <string name="home_scale">Scale settings</string>
+    <string name="home_profile_start">Brew profile</string>
+    <string name="home_manual_start">Start manual extraction</string>
+    <string name="home_mode_locked">Stop extraction to change the control mode</string>
+    <string name="home_manual_recipe_save">Save manual recipe</string>
+    <string name="home_manual_recipe_description">Description (optional)</string>
+    <string name="home_manual_recipe_no_recording">There is no extraction recording to save. Try again after an extraction.</string>
+    <string name="home_manual_recipe_invalid_recording">This extraction recording cannot be saved as a recipe.</string>
+    <string name="quick_maintenance_cleaning_time">Cleaning time</string>
+    <string name="quick_maintenance_rest_time">Rest time</string>
+    <string name="quick_maintenance_repeat_count">Repeat count</string>
+    <string name="quick_maintenance_previous">Previous setting</string>
+    <string name="quick_maintenance_next">Next setting</string>
+    <string name="quick_scale_title">Scale connection</string>
+    <string name="quick_scale_enabled">Use scale</string>
+    <string name="quick_scale_search">Search again</string>
+    <string name="quick_scale_searching">Searching for scales…</string>
+    <string name="quick_scale_disabled">Turn on scale connectivity to find nearby scales.</string>
+    <string name="quick_scale_empty">No scales found.</string>
+    <string name="quick_scale_machine_disconnected">Connect to the machine before connecting a scale.</string>
+    <string name="quick_scale_more">Accessory settings</string>
+    <string name="quick_scale_connected">Connected</string>
+    <string name="quick_scale_connecting">Connecting…</string>
+    <string name="quick_scale_error">Check the scale connection and try again.</string>
 </resources>

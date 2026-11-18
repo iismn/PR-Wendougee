@@ -6,15 +6,18 @@ import app.geeflow.core.presentation.BaseViewModel
 import app.geeflow.core.presentation.launch
 import app.geeflow.data.user.model.AppTheme
 import app.geeflow.domain.user.usecase.GetAppearanceSettingsUseCase
+import app.geeflow.domain.user.usecase.SetTextSizePercentUseCase
 import app.geeflow.domain.user.usecase.SetAppThemeUseCase
 import app.geeflow.domain.user.usecase.SetCustomSeedColorUseCase
 import app.geeflow.domain.user.usecase.SetDarkModeUseCase
+import app.geeflow.domain.user.usecase.SetClockThemeScheduleUseCase
 import app.geeflow.domain.user.usecase.SetFullScreenModeUseCase
 import app.geeflow.domain.user.usecase.SetKeepScreenOnOnlyWhileChargingUseCase
 import app.geeflow.domain.user.usecase.SetKeepScreenOnUseCase
 import app.geeflow.domain.user.usecase.SetPaletteStyleUseCase
 import app.geeflow.domain.user.usecase.SetScreensaverEnabledUseCase
 import app.geeflow.domain.user.usecase.SetScreensaverTimeoutMinutesUseCase
+import app.geeflow.domain.user.usecase.SetScreensaverSizePercentUseCase
 import app.geeflow.presentation.feature.user.settings.appearance.AppearanceSettingsEvent.AppThemeChanged
 import app.geeflow.presentation.feature.user.settings.appearance.AppearanceSettingsEvent.AppThemeClicked
 import app.geeflow.presentation.feature.user.settings.appearance.AppearanceSettingsEvent.BackClicked
@@ -38,7 +41,9 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 internal class AppearanceSettingsViewModel(
     private val getAppearanceSettings: GetAppearanceSettingsUseCase,
+    private val setTextSizePercent: SetTextSizePercentUseCase,
     private val setDarkMode: SetDarkModeUseCase,
+    private val setClockThemeSchedule: SetClockThemeScheduleUseCase,
     private val setAppTheme: SetAppThemeUseCase,
     private val setPaletteStyle: SetPaletteStyleUseCase,
     private val setCustomSeedColor: SetCustomSeedColorUseCase,
@@ -47,6 +52,7 @@ internal class AppearanceSettingsViewModel(
     private val setKeepScreenOnOnlyWhileCharging: SetKeepScreenOnOnlyWhileChargingUseCase,
     private val setScreensaverEnabled: SetScreensaverEnabledUseCase,
     private val setScreensaverTimeoutMinutes: SetScreensaverTimeoutMinutesUseCase,
+    private val setScreensaverSizePercent: SetScreensaverSizePercentUseCase,
 ) : BaseViewModel<AppearanceSettingsViewState, Unit>(AppearanceSettingsViewState()) {
 
     private var colorPickerJob: Job? = null
@@ -57,6 +63,8 @@ internal class AppearanceSettingsViewModel(
                 modify {
                     copy(
                         themeMode = settings.themeMode,
+                        clockThemeSchedule = settings.clockThemeSchedule,
+                        textSizePercent = settings.textSizePercent,
                         appTheme = settings.appTheme,
                         paletteStyle = settings.paletteStyle,
                         customSeedColor = settings.customSeedColor,
@@ -65,6 +73,7 @@ internal class AppearanceSettingsViewModel(
                         keepScreenOnOnlyWhileCharging = settings.keepScreenOnOnlyWhileCharging,
                         screensaverEnabled = settings.screensaverEnabled,
                         screensaverTimeoutMinutes = settings.screensaverTimeoutMinutes,
+                        screensaverSizePercent = settings.screensaverSizePercent,
                     )
                 }
             }
@@ -75,6 +84,13 @@ internal class AppearanceSettingsViewModel(
     fun handleEvent(event: AppearanceSettingsEvent) = when (event) {
         is BackClicked -> navigateBack()
         is DarkModeClicked -> modify { copy(dialog = AppearanceSettingsViewState.Dialog.DarkMode) }
+        is AppearanceSettingsEvent.ClockScheduleClicked -> modify {
+            copy(dialog = AppearanceSettingsViewState.Dialog.ClockSchedule)
+        }
+        is AppearanceSettingsEvent.ClockScheduleApplied -> launch {
+            setClockThemeSchedule(event.schedule)
+            modify { copy(dialog = null) }
+        }
         is AppThemeClicked -> modify { copy(dialog = AppearanceSettingsViewState.Dialog.AppTheme) }
         is PaletteStyleClicked -> modify { copy(dialog = AppearanceSettingsViewState.Dialog.PaletteStyle) }
         is CustomColorClicked -> modify { copy(dialog = AppearanceSettingsViewState.Dialog.CustomColor) }
@@ -107,10 +123,12 @@ internal class AppearanceSettingsViewModel(
                 setCustomSeedColor(event.colorArgb)
             }
         }
+        is AppearanceSettingsEvent.TextSizeChanged -> launch { setTextSizePercent(event.percent) }
         is FullScreenChanged -> launch { setFullScreenMode(event.enabled) }
         is KeepScreenOnChanged -> launch { setKeepScreenOn(event.enabled) }
         is KeepScreenOnOnlyWhileChargingChanged -> launch { setKeepScreenOnOnlyWhileCharging(event.enabled) }
         is ScreensaverChanged -> launch { setScreensaverEnabled(event.enabled) }
+        is AppearanceSettingsEvent.ScreensaverSizeChanged -> launch { setScreensaverSizePercent(event.percent) }
         is ScreensaverTimeoutClicked -> modify { copy(dialog = AppearanceSettingsViewState.Dialog.ScreensaverTimeout) }
         is ScreensaverTimeoutConfirmed -> launch {
             modify { copy(dialog = null) }

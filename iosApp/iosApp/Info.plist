@@ -50,7 +50,7 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
     <key>UIViewControllerBasedStatusBarAppearance</key>
-    <false/>
+    <true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>CFBundleLocalizations</key>

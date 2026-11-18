@@ -18,6 +18,13 @@ internal data class AddDeviceViewState(
         data class QrCodeScanner(
             override val changeMethodButtonVisible: Boolean = true,
             val scanningEnabled: Boolean = true,
+            val requestId: Int = 0,
+            val nativeError: String? = null,
+        ) : Method
+
+        data class ManualInput(
+            override val changeMethodButtonVisible: Boolean = true,
+            val invalidCode: Boolean = false,
         ) : Method
     }
 

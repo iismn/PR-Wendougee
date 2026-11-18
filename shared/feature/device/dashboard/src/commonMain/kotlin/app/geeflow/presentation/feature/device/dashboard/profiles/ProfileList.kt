@@ -113,11 +113,13 @@ internal fun ProfileList(
     viewState: ProfileListViewState,
     onEvent: (ProfileListEvent) -> Unit,
     modifier: Modifier = Modifier,
+    glassBackground: Boolean = true,
 ) {
     ProfileListContent(
         viewState = viewState,
         onEvent = onEvent,
         modifier = modifier,
+        glassBackground = glassBackground,
     )
 }
 
@@ -126,6 +128,7 @@ private fun ProfileListContent(
     viewState: ProfileListViewState,
     onEvent: (ProfileListEvent) -> Unit,
     modifier: Modifier = Modifier,
+    glassBackground: Boolean = true,
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var isSearchExpanded by remember { mutableStateOf(false) }
@@ -136,7 +139,7 @@ private fun ProfileListContent(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .coffeeGlass(MaterialTheme.shapes.large, prominent = true),
+            .then(if (glassBackground) Modifier.coffeeGlass(MaterialTheme.shapes.large, prominent = true) else Modifier),
     ) {
         AnimatedContent(
             targetState = viewState.showHistory,

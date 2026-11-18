@@ -2,12 +2,12 @@
     <string name="device_settings_title">머신 설정</string>
     <string name="device_settings_placeholder">설정할 항목을 선택해 주세요</string>
     <string name="device_settings_subtitle">추출, 세척, 주변 기기 설정</string>
-    <string name="device_settings_brewing">추출</string>
-    <string name="device_settings_brewing_description">보일러와 버튼 설정</string>
-    <string name="device_settings_maintenance">머신 관리</string>
-    <string name="device_settings_maintenance_description">세척과 수위 알림</string>
-    <string name="device_settings_connectivity">주변 기기</string>
-    <string name="device_settings_connectivity_description">저울과 그라인더 연결</string>
+    <string name="device_settings_brewing">보일러·패들</string>
+    <string name="device_settings_brewing_description">온도, 가열 방식, 자동 물 흘리기</string>
+    <string name="device_settings_maintenance">세척·수위 알림</string>
+    <string name="device_settings_maintenance_description">일상·정밀 세척 프로그램과 물 부족 알림</string>
+    <string name="device_settings_connectivity">저울·그라인더</string>
+    <string name="device_settings_connectivity_description">블루투스 기기 검색 및 연결</string>
     <string name="device_settings_maintenance_cleaning">세척</string>
     <string name="device_settings_maintenance_cleaning_flush_description">매회 물을 흘리는 시간</string>
     <string name="device_settings_maintenance_cleaning_rest_description">세척 사이의 대기 시간</string>
@@ -28,6 +28,7 @@
     <string name="device_settings_brewing_pulse_heating_description">가열 시간은 길어지지만 전력 소비 감소</string>
     <string name="device_settings_brewing_paddle_pressure_description">목표 압력</string>
     <string name="device_settings_brewing_paddle_time_description">목표 시간</string>
+    <string name="device_settings_manual_recipe_prompt">수동 추출 레시피 저장 묻기</string>
     <string name="device_settings_auto_flush">자동 물 흘리기</string>
     <string name="device_settings_auto_flush_delay">추출 후 대기 시간</string>
     <string name="device_settings_auto_flush_description">추출 후 자동으로 물 흘리기</string>
@@ -37,7 +38,7 @@
     <string name="device_settings_connectivity_single_dose_description">주변의 그라인더 검색</string>
     <string name="device_settings_connectivity_disabled_info">기기를 찾아 연결하려면 검색을 켜 주세요</string>
     <string name="device_settings_connectivity_connection_help">연결하지 못했습니다. 기기가 켜져 있고 가까이에 있는지 확인한 뒤 다시 시도해 주세요. 필요하면 커피머신을 다시 시작해 주세요.</string>
-    <string name="device_settings_connectivity_single_dose">Single Dose</string>
+    <string name="device_settings_connectivity_single_dose">스마트 그라인더</string>
     <string name="device_settings_agile_ring">Agile Ring</string>
     <string name="device_settings_agile_ring_description">조절 링을 사용합니다. 환경에 따라 간헐적인 간섭이 발생할 수 있습니다.</string>
     <string name="device_settings_firmware_version">펌웨어: %1$d</string>

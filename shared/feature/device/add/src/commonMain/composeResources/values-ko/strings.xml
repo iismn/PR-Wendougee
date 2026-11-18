@@ -3,6 +3,14 @@
     <string name="add_device_screen_description">사용할 에스프레소 머신을 연결해 주세요</string>
     <string name="add_device_screen_show_nearby">주변 기기 찾기</string>
     <string name="add_device_screen_scan_qr">QR 코드 스캔</string>
+    <string name="add_device_manual">코드 직접 입력</string>
+    <string name="add_device_manual_label">기기 코드 또는 Bluetooth 주소</string>
+    <string name="add_device_manual_hint">QR 코드의 내용을 붙여넣거나 머신에 표시된 12자리 Bluetooth 주소를 입력해 주세요. LITA_BA_AABBCCDDEEFF 같은 기기 이름도 입력할 수 있습니다.</string>
+    <string name="add_device_manual_error">QR 코드 내용이나 12자리 Bluetooth 주소를 확인해 주세요. 일반 일련번호만으로는 Bluetooth 기기를 찾을 수 없습니다.</string>
+    <string name="add_device_manual_register">기기 등록</string>
+    <string name="add_device_camera_description">머신의 QR 코드를 스캔하거나 기기 코드를 직접 입력해 주세요.</string>
+    <string name="add_device_camera_open">카메라 열기</string>
+    <string name="add_device_camera_unavailable">카메라를 사용할 수 없습니다. 다른 카메라 앱을 닫고 다시 시도하거나 기기 코드를 직접 입력해 주세요.</string>
     <string name="add_device_screen_no_camera_permission">앱 설정에서 카메라 접근을 허용해 주세요</string>
     <string name="add_device_screen_qr_parsing_error">기기 정보를 읽을 수 없습니다</string>
     <string name="add_device_screen_empty">기기를 찾지 못했습니다. 머신의 전원을 확인해 주세요.</string>

@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import app.geeflow.BuildKonfig
@@ -29,22 +30,18 @@ import app.geeflow.presentation.feature.user.settings.about.AboutEvent.PrivacyPo
 import app.geeflow.presentation.feature.user.settings.about.AboutEvent.SourceCodeClicked
 import app.geeflow.presentation.feature.user.settings.about.AboutEvent.TermsAndConditionsClicked
 import app.geeflow.ui.components.GeeFlowDetailScaffold
+import app.geeflow.ui.components.settingsDetailVerticalPadding
 import app.geeflow.ui.components.GeeFlowListItem
 import app.geeflow.ui.components.GeeFlowNavigationListItem
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
 import app.geeflow.ui.theme.GeeFlowScreenPreview
-import app.geeflow.ui.theme.GeeFlowTheme
 import co.touchlab.kermit.Logger
 import geeflow.shared.feature.user.settings.generated.resources.Res
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_about_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_about_licenses
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_about_licenses_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_about_privacy_policy
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_about_privacy_policy_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_about_source_code
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_about_source_code_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_about_terms
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_about_terms_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_about_title
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_about_version
 import kotlinx.coroutines.CancellationException
@@ -105,7 +102,7 @@ private fun Content(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(paddingValues)
-                    .padding(vertical = GeeFlowTheme.spacing.contentVertical),
+                    .padding(settingsDetailVerticalPadding(firstItemPadding = 14.dp)),
             )
         },
     )
@@ -119,28 +116,24 @@ private fun AboutContent(
     Column(modifier = modifier) {
         GeeFlowNavigationListItem(
             title = stringResource(Res.string.user_settings_about_terms),
-            subtitle = stringResource(Res.string.user_settings_about_terms_description),
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onEvent(TermsAndConditionsClicked) },
         )
         GeeFlowNavigationListItem(
             title = stringResource(Res.string.user_settings_about_privacy_policy),
-            subtitle = stringResource(Res.string.user_settings_about_privacy_policy_description),
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onEvent(PrivacyPolicyClicked) },
         )
         GeeFlowNavigationListItem(
             title = stringResource(Res.string.user_settings_about_source_code),
-            subtitle = stringResource(Res.string.user_settings_about_source_code_description),
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onEvent(SourceCodeClicked) },
         )
         GeeFlowNavigationListItem(
             title = stringResource(Res.string.user_settings_about_licenses),
-            subtitle = stringResource(Res.string.user_settings_about_licenses_description),
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onEvent(LicensesClicked) },

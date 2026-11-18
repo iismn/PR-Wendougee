@@ -10,6 +10,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
+import app.geeflow.domain.ClockThemeSchedule
+import app.geeflow.domain.ClockThemeStage
+import app.geeflow.domain.MinutesPerDay
 import app.geeflow.platform.ForegroundEffect
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -18,36 +23,97 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
 enum class CoffeeDayPhase(val dark: Boolean) {
-    Morning(false), Day(false), Evening(true), Night(true);
-
-    companion object {
-        fun atHour(hour: Int): CoffeeDayPhase {
-            require(hour in 0..23)
-            return when (hour) {
-                in 6..11 -> Morning
-                in 12..17 -> Day
-                in 18..22 -> Evening
-                else -> Night
-            }
-        }
-    }
+    Morning(false), Day(false), Evening(true), Night(true),
 }
 
-private fun localPhase() = CoffeeDayPhase.atHour(
-    Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).hour,
+/** The same ambient colors are drawn by Compose and the iOS glass host. */
+data class CoffeeAmbientColors(val base: Color, val glow: Color, val cool: Color)
+
+internal fun coffeeAmbientColors(phase: CoffeeDayPhase) = CoffeeAmbientColors(
+    base = when (phase) {
+        CoffeeDayPhase.Evening -> Color(0xFF060B18)
+        CoffeeDayPhase.Night -> Color.Black
+        else -> Color(0xFFFAFCFF)
+    },
+    glow = when (phase) {
+        CoffeeDayPhase.Morning -> Color(0x3BFF865D)
+        CoffeeDayPhase.Day -> Color(0x42FF5A36)
+        CoffeeDayPhase.Evening -> Color(0xE61A3771)
+        CoffeeDayPhase.Night -> Color(0xE60B2B68)
+    },
+    cool = if (phase.dark) Color(0xB80B142D) else Color(0xD9D8E9FF),
 )
 
+data class CoffeeClockAppearance(val phase: CoffeeDayPhase, val ambient: CoffeeAmbientColors)
+
+private val blackout = CoffeeAmbientColors(Color.Black, Color.Transparent, Color.Transparent)
+private data class AmbientAnchor(val minute: Int, val colors: CoffeeAmbientColors)
+
+private val stageColors = listOf(
+    blackout,
+    CoffeeAmbientColors(Color(0xFFD9E7D0), Color(0x9978AA77), Color(0xBFADCDB6)),
+    CoffeeAmbientColors(Color(0xFFF4F2E9), Color(0x70F2D3A0), Color(0xA7B8D3BE)),
+    CoffeeAmbientColors(Color(0xFFD6AC91), Color(0xA8F59256), Color(0x9B9B8996)),
+    coffeeAmbientColors(CoffeeDayPhase.Evening),
+    blackout,
+)
+
+/** Interpolate the palette through the selected times, including schedules crossing midnight. */
+fun coffeeClockAppearanceAt(
+    localMinute: Float,
+    schedule: ClockThemeSchedule = ClockThemeSchedule.Default,
+): CoffeeClockAppearance {
+    require(localMinute >= 0f && localMinute < MinutesPerDay)
+    val elapsed = (localMinute - schedule[ClockThemeStage.Dawn] + MinutesPerDay) % MinutesPerDay
+    val anchors = ClockThemeStage.entries.map { stage ->
+        AmbientAnchor(schedule.elapsedFromDawn(stage), stageColors[stage.ordinal])
+    }
+    val index = anchors.indexOfFirst { elapsed < it.minute }
+    if (index < 0) return CoffeeClockAppearance(CoffeeDayPhase.Night, blackout)
+    val start = anchors[index - 1]
+    val end = anchors[index]
+    val ambient = if (start.colors == end.colors || elapsed == start.minute.toFloat()) {
+        start.colors
+    } else {
+        val fraction = (elapsed - start.minute) / (end.minute - start.minute)
+        val eased = fraction * fraction * (3f - 2f * fraction)
+        CoffeeAmbientColors(
+            base = lerp(start.colors.base, end.colors.base, eased),
+            glow = fadeGlow(start.colors.glow, end.colors.glow, eased),
+            cool = fadeGlow(start.colors.cool, end.colors.cool, eased),
+        )
+    }
+    val phase = when {
+        ambient == blackout -> CoffeeDayPhase.Night
+        // Switch the controls' contrast once the backdrop itself is dim.
+        ambient.base.luminance() < 0.22f -> CoffeeDayPhase.Evening
+        elapsed < schedule.elapsedFromDawn(ClockThemeStage.Midday) -> CoffeeDayPhase.Morning
+        else -> CoffeeDayPhase.Day
+    }
+    return CoffeeClockAppearance(phase, ambient)
+}
+
+private fun fadeGlow(from: Color, to: Color, fraction: Float): Color {
+    // Keep the visible hue when the other endpoint has no glow.
+    val start = if (from.alpha == 0f) to.copy(alpha = 0f) else from
+    val end = if (to.alpha == 0f) from.copy(alpha = 0f) else to
+    return lerp(start, end, fraction)
+}
+
 @Composable
-fun rememberCoffeeDayPhase(): CoffeeDayPhase {
-    var phase by remember { mutableStateOf(localPhase()) }
-    ForegroundEffect(Unit) { phase = localPhase() }
+fun rememberCoffeeClockAppearance(schedule: ClockThemeSchedule = ClockThemeSchedule.Default): CoffeeClockAppearance {
+    var now by remember { mutableStateOf(Clock.System.now()) }
+    ForegroundEffect(Unit) { now = Clock.System.now() }
     LaunchedEffect(Unit) {
         while (isActive) {
-            phase = localPhase()
-            delay(30_000)
+            now = Clock.System.now()
+            delay(30_000L - now.toEpochMilliseconds().mod(30_000L))
         }
     }
-    return phase
+    return remember(now, schedule) {
+        val time = now.toLocalDateTime(TimeZone.currentSystemDefault())
+        coffeeClockAppearanceAt(time.hour * 60 + time.minute + time.second / 60f, schedule)
+    }
 }
 
 /** Neutral surfaces keep charts legible throughout the day. */

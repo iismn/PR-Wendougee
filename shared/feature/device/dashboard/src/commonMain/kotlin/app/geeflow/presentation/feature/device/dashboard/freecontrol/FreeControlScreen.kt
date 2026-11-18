@@ -1,5 +1,6 @@
 package app.geeflow.presentation.feature.device.dashboard.freecontrol
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -416,31 +417,22 @@ private fun RenameProfileDialog(
     onDismiss: () -> Unit,
 ) {
     val nameState = rememberTextFieldState(initialText = currentName)
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.free_control_rename_dialog_title)) },
-        text = {
+    app.geeflow.ui.components.GeeFlowDialog(onDismissRequest = onDismiss) {
+        Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(stringResource(Res.string.free_control_rename_dialog_title), style = MaterialTheme.typography.titleLarge)
             GeeFlowOutlinedTextField(
-                state = nameState,
-                lineLimits = TextFieldLineLimits.SingleLine,
+                state = nameState, lineLimits = TextFieldLineLimits.SingleLine,
                 label = { Text(stringResource(Res.string.free_control_rename_dialog_name)) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(), autoFocus = true,
             )
-        },
-        confirmButton = {
-            Button(
-                onClick = { onConfirm(nameState.text.toString()) },
-                enabled = nameState.text.isNotBlank(),
-            ) {
-                Text(stringResource(CoreRes.string.common_confirm))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onDismiss) { Text(stringResource(CoreRes.string.common_cancel)) }
+                Button(onClick = { onConfirm(nameState.text.toString()) }, enabled = nameState.text.isNotBlank()) {
+                    Text(stringResource(CoreRes.string.common_confirm))
+                }
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(CoreRes.string.common_cancel))
-            }
-        },
-    )
+        }
+    }
 }
 
 private val SliderColumnWidth = 112.dp

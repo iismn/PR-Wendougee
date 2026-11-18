@@ -26,6 +26,8 @@ import app.geeflow.presentation.feature.device.dashboard.quickmaintenance.QuickM
 import app.geeflow.presentation.feature.device.dashboard.quickmaintenance.QuickMaintenanceViewModel
 import app.geeflow.presentation.feature.device.dashboard.quicksettings.QuickSettingsScreen
 import app.geeflow.presentation.feature.device.dashboard.quicksettings.QuickSettingsViewModel
+import app.geeflow.presentation.feature.device.dashboard.quickscale.QuickScaleScreen
+import app.geeflow.presentation.feature.device.dashboard.quickscale.QuickScaleViewModel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -37,6 +39,9 @@ internal typealias Main = DeviceDashboard
 
 @Serializable
 internal data class QuickSettings(val deviceId: Long) : NavKey
+
+@Serializable
+internal data class QuickScale(val deviceId: Long) : NavKey
 
 @Serializable
 internal data class QuickMaintenance(val deviceId: Long, val type: CleaningType = CleaningType.Daily) : NavKey
@@ -65,9 +70,13 @@ internal class DeviceDashboardNavFeature : NavFeature {
             val viewModel = koinViewModel<QuickSettingsViewModel> { parametersOf(it) }
             QuickSettingsScreen(viewModel, navigator)
         }
-        entry<QuickMaintenance>(metadata = DialogSceneStrategy.dialog(DialogProperties())) {
+        entry<QuickMaintenance>(metadata = DialogSceneStrategy.dialog(DialogProperties(usePlatformDefaultWidth = false))) {
             val viewModel = koinViewModel<QuickMaintenanceViewModel> { parametersOf(it) }
             QuickMaintenanceScreen(viewModel, navigator)
+        }
+        entry<QuickScale>(metadata = DialogSceneStrategy.dialog(DialogProperties(usePlatformDefaultWidth = false))) {
+            val viewModel = koinViewModel<QuickScaleViewModel> { parametersOf(it) }
+            QuickScaleScreen(viewModel, navigator)
         }
         entry<FreeControl> {
             val viewModel = koinViewModel<FreeControlViewModel> { parametersOf(it) }
@@ -83,6 +92,7 @@ internal class DeviceDashboardNavFeature : NavFeature {
         polymorphic(NavKey::class) {
             subclass(DeviceDashboard::class, DeviceDashboard.serializer())
             subclass(QuickSettings::class, QuickSettings.serializer())
+            subclass(QuickScale::class, QuickScale.serializer())
             subclass(QuickMaintenance::class, QuickMaintenance.serializer())
             subclass(FreeControl::class, FreeControl.serializer())
             subclass(ProfileEditor::class, ProfileEditor.serializer())

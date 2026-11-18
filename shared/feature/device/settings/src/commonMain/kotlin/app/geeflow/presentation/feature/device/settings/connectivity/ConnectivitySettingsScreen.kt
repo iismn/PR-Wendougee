@@ -81,9 +81,7 @@ import geeflow.shared.feature.device.settings.generated.resources.device_setting
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_connectivity_rescan
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_connectivity_searching
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_connectivity_single_dose
-import geeflow.shared.feature.device.settings.generated.resources.device_settings_connectivity_single_dose_description
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_connectivity_smart_scale
-import geeflow.shared.feature.device.settings.generated.resources.device_settings_connectivity_smart_scale_description
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import geeflow.shared.core.ui.generated.resources.Res as CoreRes
@@ -168,13 +166,6 @@ private fun CompactContent(
         item {
             GeeFlowToggleListItem(
                 title = stringResource(Res.string.device_settings_connectivity_enable_search),
-                subtitle = stringResource(
-                    if (viewState.selectedType == ConnectivityAccessoryType.SmartScale) {
-                        Res.string.device_settings_connectivity_smart_scale_description
-                    } else {
-                        Res.string.device_settings_connectivity_single_dose_description
-                    },
-                ),
                 checked = accessory.enabled,
                 onCheckedChanged = { onEvent(SearchToggled(it)) },
                 modifier = Modifier.fillMaxWidth(),

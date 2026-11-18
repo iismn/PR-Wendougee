@@ -36,7 +36,7 @@ private val DefaultPillMinWidth = 80.dp
 @Composable
 fun GeeFlowValueListItem(
     title: String,
-    subtitle: String,
+    subtitle: String = "",
     value: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -83,7 +83,7 @@ fun GeeFlowValueListItem(
 @Composable
 fun GeeFlowValueListItem(
     title: String,
-    subtitle: String,
+    subtitle: String = "",
     value: String,
     onValueConfirmed: (String) -> Unit,
     modifier: Modifier = Modifier,

@@ -5,6 +5,9 @@ internal sealed interface AddDeviceEvent {
     data object BackClicked : AddDeviceEvent
     data object ShowNearbyDevicesClicked : AddDeviceEvent
     data object ShowQrCodeScannerClicked : AddDeviceEvent
+    data object ShowManualInputClicked : AddDeviceEvent
+    data class ManualCodeSubmitted(val data: String) : AddDeviceEvent
+    data class NativeScannerFailed(val reason: String) : AddDeviceEvent
     data class QrCodeScanned(val data: String) : AddDeviceEvent
     data class NearbyDeviceClicked(val id: String) : AddDeviceEvent
     data object Resumed : AddDeviceEvent

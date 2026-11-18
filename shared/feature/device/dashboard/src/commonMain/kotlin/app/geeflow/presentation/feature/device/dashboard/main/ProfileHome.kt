@@ -5,10 +5,25 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.AnchoredDraggableState
+import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
+import androidx.compose.foundation.gestures.DraggableAnchors
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.gestures.animateTo
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,6 +43,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -42,6 +59,29 @@ import app.geeflow.presentation.feature.device.dashboard.profiles.*
 import app.geeflow.ui.modifier.geeFlowInsetsPadding
 import app.geeflow.ui.theme.coffeeGlass
 import app.geeflow.ui.theme.coffeeSurface
+import app.geeflow.ui.theme.NativeMaterialFade
+import app.geeflow.ui.animations.NavigationEnterMillis
+import app.geeflow.ui.animations.NavigationExitMillis
+import app.geeflow.ui.components.CoffeeMotionEasing
+import app.geeflow.ui.components.GeeFlowDialog
+import app.geeflow.ui.components.CoffeeTooltip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import kotlinx.coroutines.delay
+import app.geeflow.ui.icons.GeeFlowIcon
+import app.geeflow.ui.icons.Flush
+import app.geeflow.ui.icons.Logo
+import app.geeflow.ui.icons.FlowControl
+import geeflow.shared.core.ui.generated.resources.common_cancel
+import geeflow.shared.core.ui.generated.resources.common_close
+import geeflow.shared.core.ui.generated.resources.common_delete
+import geeflow.shared.core.ui.generated.resources.common_flush
+import geeflow.shared.core.ui.generated.resources.common_hot_water
+import geeflow.shared.core.ui.generated.resources.common_start
+import geeflow.shared.core.ui.generated.resources.common_stop
+import geeflow.shared.core.ui.generated.resources.common_machine_busy
 import geeflow.shared.feature.device.dashboard.generated.resources.*
 import geeflow.shared.core.ui.generated.resources.common_brew_boiler
 import geeflow.shared.core.ui.generated.resources.common_steam_boiler
@@ -65,118 +105,110 @@ internal fun ProfileHome(
     val point = state.brew.data.maxByOrNull { it.key }?.value
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.1f
     val accent = if (dark) Color(0xFF7C9DBF) else Color(0xFF71877E)
+    var pendingDelete by remember { mutableStateOf<String?>(null) }
+    val deleteProfile = profiles.profiles.firstOrNull { it.id == pendingDelete }
+    if (deleteProfile != null) GeeFlowDialog(onDismissRequest = { pendingDelete = null }) {
+        Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(stringResource(Res.string.profile_list_delete), style = MaterialTheme.typography.titleLarge)
+            Text(deleteProfile.name, style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(if (deleteProfile.bound) Res.string.home_delete_bound else Res.string.home_delete_confirmation))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = { pendingDelete = null }) { Text(stringResource(CoreRes.string.common_cancel)) }
+                TextButton(enabled = !deleteProfile.bound, modifier = Modifier.testTag("profile-delete-confirm"), onClick = {
+                    onProfileEvent(ProfileListEvent.RemoveProfileClicked(deleteProfile.id))
+                    pendingDelete = null
+                }) { Text(stringResource(CoreRes.string.common_delete), color = MaterialTheme.colorScheme.error) }
+            }
+        }
+    }
     Box(Modifier.fillMaxSize().geeFlowInsetsPadding()) {
         BoxWithConstraints(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 12.dp)) {
-            val leftWidth = (maxWidth * .18f).coerceIn(166.dp, 220.dp)
-            val rightWidth = (maxWidth * .255f).coerceIn(250.dp, 320.dp)
+            val leftWidth = (maxWidth * .16f).coerceIn(148.dp, 190.dp)
+            val rightWidth = (maxWidth * .25f).coerceIn(250.dp, 320.dp)
             Column(Modifier.fillMaxSize()) {
                 TopBar(state.device, state.user.photoFileName, onEvent, compact = true,
                     modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp))
-                Spacer(Modifier.height(20.dp))
-                Row(Modifier.fillMaxWidth().padding(start = leftWidth + 24.dp, end = 16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                val sidePanelInset = 24.dp
+                val metricsGap = 32.dp
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(start = 12.dp, end = 12.dp, top = metricsGap, bottom = metricsGap - sidePanelInset)
+                        .testTag("home-metrics"),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
                     HomeMetric(stringResource(CoreRes.string.common_pressure), state.device.pressure ?: number(point?.pressure), "bar")
-                    HomeMetric(stringResource(Res.string.home_flow), number(point?.volumePerSecond), "ml/s")
+                    HomeMetric(stringResource(Res.string.home_flow), state.device.flowRate ?: number(point?.volumePerSecond), "ml/s")
                     HomeMetric(stringResource(CoreRes.string.common_brew_boiler), state.device.brewBoilerTemp ?: "—", "°")
                     HomeMetric(stringResource(CoreRes.string.common_steam_boiler), state.device.steamBoilerTemp ?: "—", "°")
                 }
-                Spacer(Modifier.height(26.dp))
                 Row(Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    Column(Modifier.width(leftWidth).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        PressureSummary(state.device.pressure?.toFloatOrNull() ?: point?.pressure ?: 0f, accent,
-                            onOpen = { onEvent(DeviceDashboardEvent.QuickSettingsClicked) })
+                    Column(
+                        Modifier.width(leftWidth).fillMaxHeight().padding(top = sidePanelInset),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        val gaugeHeight = (this@BoxWithConstraints.maxHeight * .19f).coerceIn(120.dp, 144.dp)
+                        MachineSummary(state.device.flowRate?.toFloatOrNull() ?: point?.volumePerSecond ?: 0f,
+                            state.manual.flowRange.maximum, stringResource(Res.string.home_flow), "ml/s", "home-flow-gauge", accent, gaugeHeight,
+                            onOpen = { onEvent(DeviceDashboardEvent.DialModeChanged(ManualPriority.Flow)) })
+                        MachineSummary(state.device.pressure?.toFloatOrNull() ?: point?.pressure ?: 0f,
+                            12f, stringResource(CoreRes.string.common_pressure), "bar", "home-pressure-gauge", accent, gaugeHeight,
+                            onOpen = { onEvent(DeviceDashboardEvent.DialModeChanged(ManualPriority.Pressure)) })
                         Column(Modifier.weight(1f).coffeeSurface(MaterialTheme.shapes.medium).padding(8.dp)) {
-                            Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                            Row(Modifier.fillMaxWidth().padding(start = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Text(stringResource(Res.string.home_profiles), style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
                                 Text(profiles.profiles.size.toString(), style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .5f))
+                                IconButton(onClick = { onProfileEvent(ProfileListEvent.AddProfileClicked) }, modifier = Modifier.size(32.dp)) {
+                                    Icon(Icons.Outlined.Add, stringResource(Res.string.home_add), Modifier.size(17.dp))
+                                }
                             }
                             LazyColumn(Modifier.weight(1f)) {
-                            items(profiles.profiles, key = { it.id }) { profile ->
-                                Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("profile-row-${profile.id}")
-                                    .clip(MaterialTheme.shapes.small)
-                                    .background(if (profile.selected) accent.copy(alpha = .13f) else Color.Transparent)
-                                    .clickable(role = Role.Button) { onProfileEvent(ProfileListEvent.ProfileSelected(profile.id)) }
-                                    .padding(start = 10.dp, end = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Text(profile.number.padStart(2, '0'), style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .5f), modifier = Modifier.width(26.dp))
-                                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        Text(profile.name, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = if (profile.selected) FontWeight.SemiBold else FontWeight.Normal)
-                                    }
-                                    if (profile.selected) IconButton(onClick = { onProfileEvent(ProfileListEvent.EditProfileClicked(profile.id)) },
-                                        modifier = Modifier.size(40.dp)) {
-                                        Icon(Icons.Outlined.Edit, stringResource(Res.string.device_dashboard_edit_profile), Modifier.size(16.dp))
-                                    } else Spacer(Modifier.width(8.dp))
+                                items(profiles.profiles, key = { it.id }) { profile ->
+                                    HomeProfileRow(profile, accent,
+                                        onSelect = { onProfileEvent(ProfileListEvent.ProfileSelected(profile.id)) },
+                                        onEdit = { onProfileEvent(ProfileListEvent.EditProfileClicked(profile.id)) },
+                                        onDelete = { pendingDelete = profile.id })
+                                    if (!profile.selected) HorizontalDivider(Modifier.padding(start = 36.dp, end = 10.dp),
+                                        thickness = .5.dp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = .06f))
                                 }
-                                if (!profile.selected) HorizontalDivider(Modifier.padding(start = 36.dp, end = 10.dp),
-                                    thickness = .5.dp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = .06f))
-                            }
                             }
                         }
                     }
                     Column(Modifier.weight(1f).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally) {
-                        FilledTonalButton(onClick = { onProfileEvent(ProfileListEvent.AddProfileClicked) },
-                            colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.onSurface,
-                                contentColor = MaterialTheme.colorScheme.surface)) {
-                            Icon(Icons.Outlined.Add, null, Modifier.size(15.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(stringResource(Res.string.home_add), style = MaterialTheme.typography.labelMedium)
-                        }
-                        if (profiles.showHistory) ProfileList(profiles, onProfileEvent,
-                            Modifier.fillMaxWidth().weight(1f).padding(vertical = 16.dp))
-                        else ProfileOrbit(profiles, selected, accent, state.device.isBrewing,
-                            state.brew.time, model.targets.keys.maxOrNull() ?: 0f, onProfileEvent, onEvent, onShowCharts,
-                            Modifier.fillMaxWidth().weight(1f))
-                        Row(Modifier.testTag("profile-home-dock").coffeeGlass(CircleShape).padding(4.dp),
-                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                            HomeIcon(Icons.Outlined.Apps, stringResource(Res.string.home_profiles), !profiles.showHistory) {
-                                if (profiles.showHistory) onProfileEvent(ProfileListEvent.HistoryClicked)
+                        Box(Modifier.fillMaxWidth().weight(1f).clipToBounds()) {
+                            val historyDuration = if (profiles.showHistory) NavigationEnterMillis else NavigationExitMillis
+                            val historyAmount = animateFloatAsState(
+                                if (profiles.showHistory) 1f else 0f,
+                                tween(historyDuration, easing = CoffeeMotionEasing),
+                                label = "history-backdrop",
+                            )
+                            Box(Modifier.fillMaxSize()
+                                .then(if (profiles.showHistory) Modifier.clearAndSetSemantics {} else Modifier)
+                                .graphicsLayer {
+                                    val radius = 9.dp.toPx() * historyAmount.value
+                                    renderEffect = if (radius > .01f) BlurEffect(radius, radius, TileMode.Clamp) else null
+                                    alpha = 1f - .12f * historyAmount.value
+                                }) {
+                                HomeManualDial(state.manual, state.brew.time, accent, onEvent, Modifier.fillMaxSize())
                             }
-                            HomeIcon(Icons.Outlined.ShowChart, stringResource(Res.string.dashboard_tab_details), onClick = onShowCharts)
-                            HomeIcon(Icons.Outlined.History, stringResource(Res.string.profile_list_show_history), profiles.showHistory) {
-                                onProfileEvent(ProfileListEvent.HistoryClicked)
-                            }
-                            HomeIcon(Icons.Outlined.Tune, stringResource(Res.string.free_control_screen_title)) { onEvent(DeviceDashboardEvent.FlowControlClicked) }
-                            HomeIcon(Icons.Outlined.Settings, stringResource(Res.string.settings_quick_title)) { onEvent(DeviceDashboardEvent.QuickSettingsClicked) }
-                            VerticalDivider(Modifier.padding(horizontal = 5.dp).height(22.dp), color = MaterialTheme.colorScheme.onSurface.copy(alpha = .12f))
-                            DashboardBrewButton(state, onEvent, glassBackground = false)
-                        }
-                    }
-                    Column(Modifier.width(rightWidth).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Column(Modifier.fillMaxWidth().weight(1f).coffeeGlass(MaterialTheme.shapes.medium, prominent = true)
-                            .background(Brush.linearGradient(if (dark) listOf(Color(0xB54D719D), Color(0x80334767), Color(0xB5162848))
-                                else listOf(Color(0xB57498A8), Color(0x806D8D9D), Color(0x4DC8DADD))), MaterialTheme.shapes.medium).padding(20.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(if (profiles.showHistory) state.brew.name else selected?.name ?: stringResource(Res.string.home_select),
-                                    style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f))
-                                if (selected != null) IconButton(onClick = { onProfileEvent(ProfileListEvent.EditProfileClicked(selected.id)) }) {
-                                    Icon(Icons.Outlined.MoreHoriz, stringResource(Res.string.device_dashboard_edit_profile), Modifier.size(20.dp))
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = profiles.showHistory,
+                                enter = fadeIn(tween(NavigationEnterMillis, easing = CoffeeMotionEasing)) +
+                                    slideInVertically(tween(NavigationEnterMillis)) { it / 32 },
+                                exit = fadeOut(tween(NavigationExitMillis, easing = CoffeeMotionEasing)) +
+                                    slideOutVertically(tween(NavigationExitMillis)) { it / 32 },
+                                modifier = Modifier.fillMaxSize(),
+                            ) {
+                                NativeMaterialFade(this, NavigationEnterMillis, NavigationExitMillis) {
+                                    HistoryOverlay(profiles, onProfileEvent)
                                 }
                             }
-                            Spacer(Modifier.height(20.dp))
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                HomeMetric(stringResource(Res.string.home_weight), number(point?.weight), "g", small = true)
-                                HomeMetric(stringResource(Res.string.home_volume), number(point?.volume), "ml", small = true)
-                            }
-                            Spacer(Modifier.height(22.dp))
-                            Text(stringResource(CoreRes.string.common_pressure), style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            HomeCurve(model, false, accent, Modifier.fillMaxWidth().weight(1f))
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text(stringResource(Res.string.home_duration), style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                BrewTime(state.brew.time)
-                            }
-                            Spacer(Modifier.height(20.dp))
-                            Text(stringResource(Res.string.home_flow), style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            HomeCurve(model, true, accent, Modifier.fillMaxWidth().weight(.65f))
                         }
+                        HomeDock(state, profiles, onEvent, onProfileEvent, onShowCharts)
                     }
+                    HomeBrewSummary(state, profiles, model, accent, dark, onProfileEvent,
+                        Modifier.width(rightWidth).fillMaxHeight().padding(top = sidePanelInset).testTag("home-brew-summary"))
                 }
             }
         }
@@ -184,7 +216,112 @@ internal fun ProfileHome(
     }
 }
 
+@Composable
+private fun HomeBrewSummary(state: DeviceDashboardViewState, profiles: ProfileListViewState, model: BrewChartModel,
+    accent: Color, dark: Boolean, onProfileEvent: (ProfileListEvent) -> Unit, modifier: Modifier) {
+    val selected = profiles.profiles.firstOrNull { it.selected }
+    val point = state.brew.data.maxByOrNull { it.key }?.value
+    Column(modifier.coffeeGlass(MaterialTheme.shapes.medium, prominent = true)
+        .background(Brush.linearGradient(if (dark) listOf(Color(0xB54D719D), Color(0x80334767), Color(0xB5162848))
+            else listOf(Color(0xB57498A8), Color(0x806D8D9D), Color(0x4DC8DADD))), MaterialTheme.shapes.medium).padding(20.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(if (profiles.showHistory) state.brew.name else selected?.name ?: stringResource(Res.string.home_select),
+                style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            if (selected != null) IconButton(onClick = { onProfileEvent(ProfileListEvent.EditProfileClicked(selected.id)) }) {
+                Icon(Icons.Outlined.MoreHoriz, stringResource(Res.string.device_dashboard_edit_profile), Modifier.size(20.dp))
+            }
+        }
+        Spacer(Modifier.height(20.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            HomeMetric(stringResource(Res.string.home_weight), number(point?.weight), "g", small = true)
+            HomeMetric(stringResource(Res.string.home_volume), number(point?.volume), "ml", small = true)
+        }
+        Spacer(Modifier.height(22.dp))
+        Text(stringResource(CoreRes.string.common_pressure), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        HomeCurve(model, false, accent, Modifier.fillMaxWidth().weight(1f))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(Res.string.home_duration), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            BrewTime(state.brew.time)
+        }
+        Spacer(Modifier.height(20.dp))
+        Text(stringResource(Res.string.home_flow), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        HomeCurve(model, true, accent, Modifier.fillMaxWidth().weight(.65f))
+    }
+}
+
 private fun number(value: Float?): String = value?.let { ((it * 10).roundToInt() / 10f).toString() } ?: "—"
+
+private enum class ProfileRowAction { Closed, Edit, Delete }
+
+@Composable
+private fun HomeProfileRow(profile: ProfileListViewState.Profile, accent: Color,
+    onSelect: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit) {
+    val distance = with(LocalDensity.current) { 52.dp.toPx() }
+    val swipe = remember(distance) { AnchoredDraggableState(ProfileRowAction.Closed, DraggableAnchors {
+        ProfileRowAction.Closed at 0f
+        ProfileRowAction.Edit at distance
+        ProfileRowAction.Delete at -distance
+    }) }
+    val scope = rememberCoroutineScope()
+    val direction by remember(swipe) { derivedStateOf { swipe.offset.compareTo(0f) } }
+    val close = { scope.launch { swipe.animateTo(ProfileRowAction.Closed, tween(180)) }; Unit }
+    Box(Modifier.fillMaxWidth().heightIn(min = 52.dp)
+        .clip(MaterialTheme.shapes.small)
+        .anchoredDraggable(swipe, Orientation.Horizontal,
+            flingBehavior = AnchoredDraggableDefaults.flingBehavior(swipe, positionalThreshold = { it * .4f }, animationSpec = tween(200)))) {
+        Box(Modifier.matchParentSize().drawWithContent {
+            val offset = swipe.offset
+            if (offset > 0f) clipRect(right = offset) { this@drawWithContent.drawContent() }
+            else if (offset < 0f) clipRect(left = size.width + offset) { this@drawWithContent.drawContent() }
+        }) {
+            if (direction > 0) Box(Modifier.align(Alignment.CenterStart).fillMaxHeight().width(52.dp)
+                .background(Color(0xFF238450)).clickable(role = Role.Button) { close(); onEdit() }
+                .testTag("profile-edit-${profile.id}"), contentAlignment = Alignment.Center) {
+                Icon(Icons.Outlined.Edit, stringResource(Res.string.device_dashboard_edit_profile), tint = Color.White, modifier = Modifier.size(20.dp))
+            }
+            if (direction < 0) Box(Modifier.align(Alignment.CenterEnd).fillMaxHeight().width(52.dp)
+                .background(MaterialTheme.colorScheme.error).clickable(role = Role.Button) { close(); onDelete() }
+                .testTag("profile-delete-${profile.id}"), contentAlignment = Alignment.Center) {
+                Icon(Icons.Outlined.Close, stringResource(Res.string.profile_list_delete), tint = MaterialTheme.colorScheme.onError, modifier = Modifier.size(20.dp))
+            }
+        }
+        Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).testTag("profile-row-${profile.id}")
+            .offset { IntOffset(swipe.offset.roundToInt(), 0) }
+            .background(if (profile.selected) accent.copy(alpha = .13f) else Color.Transparent)
+            .clickable(role = Role.Button) { if (direction == 0) onSelect() else close() }
+            .padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(profile.number.padStart(2, '0'), style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .5f), modifier = Modifier.width(26.dp))
+            Text(profile.name, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (profile.selected) FontWeight.SemiBold else FontWeight.Normal,
+                modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun HistoryOverlay(profiles: ProfileListViewState, onEvent: (ProfileListEvent) -> Unit) {
+    val dismiss = { if (profiles.showHistory) onEvent(ProfileListEvent.HistoryClicked) }
+    Box(Modifier.fillMaxSize()
+        .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = dismiss),
+        contentAlignment = Alignment.Center) {
+        Column(Modifier.fillMaxWidth(.94f).fillMaxHeight(.92f).testTag("home-history-panel")
+            .clip(MaterialTheme.shapes.large)
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = .72f), MaterialTheme.shapes.large)
+            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = {})
+            .padding(top = 4.dp)) {
+            Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(Res.string.profile_list_show_history), style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.weight(1f))
+                IconButton(onClick = dismiss, modifier = Modifier.testTag("home-history-close")) {
+                    Icon(Icons.Outlined.Close, stringResource(CoreRes.string.common_close))
+                }
+            }
+            ProfileList(profiles.copy(showHistory = true), onEvent, Modifier.fillMaxWidth().weight(1f), glassBackground = false)
+        }
+    }
+}
 
 @Composable
 private fun HomeMetric(label: String, value: String, unit: String, small: Boolean = false) {
@@ -201,111 +338,31 @@ private fun HomeMetric(label: String, value: String, unit: String, small: Boolea
 }
 
 @Composable
-private fun HomeIcon(icon: ImageVector, label: String, selected: Boolean = false, onClick: () -> Unit) {
-    IconButton(onClick, Modifier.size(42.dp).background(
-        if (selected) MaterialTheme.colorScheme.onSurface else Color.Transparent, CircleShape)) {
-        Icon(icon, label, Modifier.size(20.dp), tint = if (selected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurface)
-    }
-}
-
-@Composable
-private fun PressureSummary(pressure: Float, accent: Color, onOpen: () -> Unit) {
+private fun MachineSummary(value: Float, maxValue: Float, label: String, unit: String, tag: String,
+    accent: Color, height: androidx.compose.ui.unit.Dp, onOpen: () -> Unit) {
     val ink = MaterialTheme.colorScheme.onSurface
-    Column(Modifier.fillMaxWidth().coffeeSurface(MaterialTheme.shapes.medium).clickable(onClick = onOpen).padding(16.dp),
+    Column(Modifier.fillMaxWidth().height(height).testTag(tag).coffeeSurface(MaterialTheme.shapes.medium).clickable(onClick = onOpen).padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(stringResource(Res.string.home_machine), style = MaterialTheme.typography.labelSmall,
+        Text(label, style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.align(Alignment.Start))
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.Bottom) {
-            Text(number(pressure), fontSize = 33.sp, fontWeight = FontWeight.Light, modifier = Modifier.alignByBaseline())
-            Text("bar", fontSize = 12.sp, color = ink.copy(alpha = .5f), modifier = Modifier.padding(start = 5.dp).alignByBaseline())
+            Text(number(value), fontSize = 28.sp, fontWeight = FontWeight.Light, modifier = Modifier.alignByBaseline())
+            Text(unit, fontSize = 12.sp, color = ink.copy(alpha = .5f), modifier = Modifier.padding(start = 5.dp).alignByBaseline())
         }
-        Canvas(Modifier.fillMaxWidth().height(92.dp)) {
-            val r = size.width * .46f
+        Canvas(Modifier.fillMaxWidth().weight(1f)) {
+            val r = minOf(size.width * .46f, (size.height - 8.dp.toPx()).coerceAtLeast(1f))
             val c = Offset(size.width / 2f, size.height - 2.dp.toPx())
             drawArc(Brush.linearGradient(listOf(accent.copy(alpha = .06f), accent.copy(alpha = .6f))),
-                180f, 180f * (pressure / 12f).coerceIn(0f, 1f), true,
+                180f, 180f * (value / maxValue).coerceIn(0f, 1f), true,
                 topLeft = c - Offset(r, r), size = androidx.compose.ui.geometry.Size(r * 2, r * 2))
             for (i in 0..48) {
                 val a = (180 + i * 3.75) * PI / 180
                 val v = Offset(cos(a).toFloat(), sin(a).toFloat())
                 drawLine(ink.copy(alpha = .35f), c + v * r, c + v * (r + if (i % 8 == 0) 6.dp.toPx() else 2.dp.toPx()), .7.dp.toPx())
             }
-            val a = (180 + 180 * (pressure / 12f).coerceIn(0f, 1f)) * PI / 180
+            val a = (180 + 180 * (value / maxValue).coerceIn(0f, 1f)) * PI / 180
             drawLine(ink.copy(alpha = .6f), c, c + Offset(cos(a).toFloat(), sin(a).toFloat()) * r, .8.dp.toPx())
-        }
-    }
-}
-
-@Composable
-private fun ProfileOrbit(
-    state: ProfileListViewState, selected: ProfileListViewState.Profile?, accent: Color,
-    brewing: Boolean, seconds: Int, duration: Float,
-    onProfileEvent: (ProfileListEvent) -> Unit, onEvent: (DeviceDashboardEvent) -> Unit,
-    onShowCharts: () -> Unit, modifier: Modifier,
-) {
-    val ink = MaterialTheme.colorScheme.onSurface
-    val progress by animateFloatAsState(if (brewing && duration > 0) (seconds / duration).coerceIn(0f, 1f) else 1f, tween(450))
-    BoxWithConstraints(modifier.clipToBounds()) {
-        val diameter = minOf(maxWidth * .57f, maxHeight * .65f)
-        val radius = diameter / 2
-        val left = (maxWidth - diameter) / 2 + 8.dp
-        val top = (maxHeight - diameter) * .33f
-        val cx = left + radius
-        val cy = top + radius
-        Box(Modifier.offset(left, top).size(diameter).testTag("profile-orbit-selected").coffeeGlass(CircleShape)
-            .background(Brush.linearGradient(listOf(accent.copy(alpha = .44f), accent.copy(alpha = .12f))), CircleShape)
-            .clickable(enabled = selected != null, role = Role.Button) { selected?.let { onProfileEvent(ProfileListEvent.EditProfileClicked(it.id)) } },
-            contentAlignment = Alignment.Center) {
-            Canvas(Modifier.fillMaxSize().padding(11.dp)) {
-                val r = size.minDimension / 2f - 1.dp.toPx()
-                for (i in 0 until 120) {
-                    val a = (i * 3.0 - 90) * PI / 180
-                    val v = Offset(cos(a).toFloat(), sin(a).toFloat())
-                    drawLine(ink.copy(alpha = if (i % 10 == 0) .4f else .22f), center + v * r,
-                        center + v * (r - if (i % 10 == 0) 5.dp.toPx() else 2.dp.toPx()), .65.dp.toPx())
-                }
-                val a = (progress * 360 - 90) * PI / 180
-                val v = Offset(cos(a).toFloat(), sin(a).toFloat())
-                drawLine(ink.copy(alpha = .6f), center + v * (r - 3.dp.toPx()), center + v * (r - 40.dp.toPx()), .8.dp.toPx())
-            }
-            AnimatedContent(selected?.id, transitionSpec = { fadeIn(tween(350)) togetherWith fadeOut(tween(180)) }) { id ->
-                val profile = state.profiles.firstOrNull { it.id == id }
-                Column(Modifier.padding(36.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(stringResource(if (brewing) Res.string.home_brewing else Res.string.home_selected),
-                        style = MaterialTheme.typography.labelSmall, color = ink.copy(alpha = .5f))
-                    Text(profile?.name ?: stringResource(Res.string.home_select), fontSize = 29.sp,
-                        lineHeight = 33.sp, fontWeight = FontWeight.Light, textAlign = TextAlign.Center, maxLines = 3, overflow = TextOverflow.Ellipsis)
-                    if (brewing) Text("$seconds s", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
-        Canvas(Modifier.fillMaxSize()) {
-            val c = Offset(cx.toPx(), cy.toPx())
-            val inner = radius.toPx() + 10.dp.toPx()
-            val outer = inner + 40.dp.toPx()
-            listOf(-44f, -14f, 16f).forEach { angle ->
-                val path = Path().apply {
-                    val a = angle * PI / 180
-                    moveTo(c.x + cos(a).toFloat() * outer, c.y + sin(a).toFloat() * outer)
-                    arcTo(Rect(c - Offset(outer, outer), c + Offset(outer, outer)), angle, 28f, false)
-                    val end = (angle + 28) * PI / 180
-                    lineTo(c.x + cos(end).toFloat() * inner, c.y + sin(end).toFloat() * inner)
-                    arcTo(Rect(c - Offset(inner, inner), c + Offset(inner, inner)), angle + 28, -28f, false)
-                    close()
-                }
-                drawPath(path, accent.copy(alpha = .35f))
-            }
-        }
-        val actions = listOf(Triple(Icons.Outlined.Settings, stringResource(Res.string.settings_quick_title), { onEvent(DeviceDashboardEvent.QuickSettingsClicked) }),
-            Triple(Icons.Outlined.WaterDrop, stringResource(Res.string.free_control_screen_title), { onEvent(DeviceDashboardEvent.FlowControlClicked) }),
-            Triple(Icons.Outlined.ShowChart, stringResource(Res.string.dashboard_tab_details), onShowCharts))
-        actions.forEachIndexed { index, action ->
-            val a = (-30 + index * 30) * PI / 180
-            val r = radius + 30.dp
-            IconButton(action.third, Modifier.offset(cx + r * cos(a).toFloat() - 22.dp, cy + r * sin(a).toFloat() - 22.dp).size(44.dp)) {
-                Icon(action.first, action.second, Modifier.size(17.dp))
-            }
         }
     }
 }

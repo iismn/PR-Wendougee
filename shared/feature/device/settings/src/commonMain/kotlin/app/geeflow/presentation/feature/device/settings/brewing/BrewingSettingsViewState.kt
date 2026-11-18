@@ -10,6 +10,7 @@ data class BrewingSettingsViewState(
     val pulseHeatingEnabled: Boolean = false,
     val paddle: Paddle = Paddle(),
     val treatManualAsFlush: Boolean = true,
+    val manualRecipePromptEnabled: Boolean = true,
     val autoFlushEnabled: Boolean = false,
     val autoFlushDelaySeconds: String = DeviceBrewingSettings.DefaultDelaySeconds.toString(),
     val applyButtonLoading: Boolean = false,

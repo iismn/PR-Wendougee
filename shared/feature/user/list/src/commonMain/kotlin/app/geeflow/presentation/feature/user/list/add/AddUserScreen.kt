@@ -62,6 +62,7 @@ private fun Content(
                 lineLimits = TextFieldLineLimits.SingleLine,
                 label = { Text(stringResource(Res.string.user_list_add_profile_name_hint)) },
                 modifier = Modifier.fillMaxWidth(),
+                autoFocus = true,
             )
             VerticalSpacer(16.dp)
             GeeFlowAgreementCheckbox(

@@ -13,6 +13,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
@@ -24,11 +25,15 @@ internal val LocalCoffeeBackdrop = staticCompositionLocalOf<Backdrop?> { null }
 internal fun CoffeeBackdrop(
     phase: CoffeeDayPhase,
     modifier: Modifier = Modifier,
+    ambient: CoffeeAmbientColors = coffeeAmbientColors(phase),
     content: @Composable BoxScope.() -> Unit,
 ) {
     val nativeMaterials = LocalNativeCoffeeMaterials.current
     if (nativeMaterials != null) {
-        SideEffect { nativeMaterials.setPhase(phase.ordinal) }
+        SideEffect {
+            nativeMaterials.setPhase(phase.ordinal)
+            nativeMaterials.setAmbientColors(ambient)
+        }
         // UIKit draws the ambient layer below UIVisualEffectView. Drawing it in the
         // foreground Compose canvas would cover the native glass completely.
         CompositionLocalProvider(LocalCoffeeBackdrop provides null) {
@@ -36,36 +41,39 @@ internal fun CoffeeBackdrop(
         }
         return
     }
-    val base = animateColorAsState(coffeeColorScheme(phase).background, tween(1_200), label = "ambientBase")
-    val glow = animateColorAsState(
-        when (phase) {
-            CoffeeDayPhase.Morning -> Color(0x3BFF865D)
-            CoffeeDayPhase.Day -> Color(0x42FF5A36)
-            CoffeeDayPhase.Evening -> Color(0xE61A3771)
-            CoffeeDayPhase.Night -> Color(0xE60B2B68)
-        }, tween(1_200), label = "ambientGlow",
-    )
-    val cool = animateColorAsState(
-        if (phase.dark) Color(0xB80B142D) else Color(0xD9D8E9FF),
-        tween(1_200), label = "ambientCool",
-    )
+    val base = animateColorAsState(ambient.base, tween(1_200), label = "ambientBase")
+    val glow = animateColorAsState(ambient.glow, tween(1_200), label = "ambientGlow")
+    val cool = animateColorAsState(ambient.cool, tween(1_200), label = "ambientCool")
     val backdrop = rememberLayerBackdrop()
     CompositionLocalProvider(LocalCoffeeBackdrop provides backdrop) {
         Box(modifier) {
             Box(Modifier.matchParentSize().layerBackdrop(backdrop).drawBehind {
-                drawRect(base.value)
-                drawRect(Brush.radialGradient(
-                    colors = listOf(glow.value, Color.Transparent),
-                    center = Offset(size.width * 0.95f, size.height * 0.05f),
-                    radius = size.width * 0.82f,
-                ))
-                drawRect(Brush.radialGradient(
-                    colors = listOf(cool.value, Color.Transparent),
-                    center = Offset(size.width * 0.08f, size.height * 0.95f),
-                    radius = size.width * 0.68f,
-                ))
+                drawCoffeeAmbient(CoffeeAmbientColors(base.value, glow.value, cool.value))
             })
             content()
         }
     }
+}
+
+@Composable
+fun CoffeeAmbientPreview(
+    ambient: CoffeeAmbientColors,
+    modifier: Modifier = Modifier,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    Box(modifier.drawBehind { drawCoffeeAmbient(ambient) }, content = content)
+}
+
+private fun DrawScope.drawCoffeeAmbient(ambient: CoffeeAmbientColors) {
+    drawRect(ambient.base)
+    drawRect(Brush.radialGradient(
+        colors = listOf(ambient.glow, Color.Transparent),
+        center = Offset(size.width * .95f, size.height * .05f),
+        radius = size.width * .82f,
+    ))
+    drawRect(Brush.radialGradient(
+        colors = listOf(ambient.cool, Color.Transparent),
+        center = Offset(size.width * .08f, size.height * .95f),
+        radius = size.width * .68f,
+    ))
 }

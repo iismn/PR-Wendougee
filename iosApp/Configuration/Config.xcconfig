@@ -5,10 +5,13 @@ TEAM_ID=
 PRODUCT_NAME=GeeFlow
 BUNDLE_ID_SUFFIX_Debug=.debug
 BUNDLE_ID_SUFFIX_Release=
-PRODUCT_BUNDLE_IDENTIFIER=app.geeflow$(BUNDLE_ID_SUFFIX_$(CONFIGURATION))
+PRODUCT_BUNDLE_IDENTIFIER=com.iismn.wendougee.lita$(BUNDLE_ID_SUFFIX_$(CONFIGURATION))
 
 BUNDLE_DISPLAY_NAME_Debug=Wendougee LITA
 BUNDLE_DISPLAY_NAME_Release=Wendougee LITA
 BUNDLE_DISPLAY_NAME=$(BUNDLE_DISPLAY_NAME_$(CONFIGURATION))
 
 OTHER_LDFLAGS = $(inherited) -lsqlite3 -lz
+
+// Personal signing settings stay on this Mac.
+#include? "Local.xcconfig"

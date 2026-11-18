@@ -13,7 +13,6 @@ import app.geeflow.data.device.model.DeviceCapability.SmartScaleConnectivity
 import app.geeflow.data.device.model.DeviceCapability.SteamBoiler
 import app.geeflow.data.device.model.DeviceCapability.WaterAlarm
 import app.geeflow.domain.device.usecase.GetDeviceCapabilitiesUseCase
-import app.geeflow.domain.device.usecase.ObserveDeviceUseCase
 import app.geeflow.navigation.destination.DeviceSettings
 import app.geeflow.navigation.destination.DeviceSettings.EntryPoint
 import app.geeflow.presentation.feature.device.settings.BrewingSettings
@@ -24,11 +23,8 @@ import app.geeflow.presentation.feature.device.settings.main.DeviceSettingsEvent
 import app.geeflow.presentation.feature.device.settings.main.DeviceSettingsViewState.Item
 import geeflow.shared.feature.device.settings.generated.resources.Res
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_brewing
-import geeflow.shared.feature.device.settings.generated.resources.device_settings_brewing_description
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_connectivity
-import geeflow.shared.feature.device.settings.generated.resources.device_settings_connectivity_description
 import geeflow.shared.feature.device.settings.generated.resources.device_settings_maintenance
-import geeflow.shared.feature.device.settings.generated.resources.device_settings_maintenance_description
 import org.jetbrains.compose.resources.getString
 import org.koin.core.annotation.InjectedParam
 import org.koin.core.annotation.KoinViewModel
@@ -36,7 +32,6 @@ import org.koin.core.annotation.KoinViewModel
 @KoinViewModel
 internal class DeviceSettingsViewModel(
     @InjectedParam val args: DeviceSettings,
-    private val observeDeviceUseCase: ObserveDeviceUseCase,
     private val getDeviceCapabilitiesUseCase: GetDeviceCapabilitiesUseCase,
 ) : BaseViewModel<DeviceSettingsViewState, Unit>(DeviceSettingsViewState()) {
 
@@ -49,11 +44,6 @@ internal class DeviceSettingsViewModel(
     private val maintenanceCapabilities = setOf(CleaningMode, CleaningSettings, WaterAlarm)
 
     init {
-        launch {
-            observeDeviceUseCase(args.deviceId).collect { device ->
-                device?.let { modify { copy(deviceName = device.name) } }
-            }
-        }
         buildOptions()
 
         when (args.entryPoint) {
@@ -84,28 +74,19 @@ internal class DeviceSettingsViewModel(
 
         if (capabilities.hasBrewingCapabilities()) {
             items.add(
-                Item.Brewing(
-                    name = getString(Res.string.device_settings_brewing),
-                    description = getString(Res.string.device_settings_brewing_description),
-                ),
+                Item.Brewing(getString(Res.string.device_settings_brewing)),
             )
         }
 
         if (capabilities.hasMaintenanceCapabilities()) {
             items.add(
-                Item.Maintenance(
-                    name = getString(Res.string.device_settings_maintenance),
-                    description = getString(Res.string.device_settings_maintenance_description),
-                ),
+                Item.Maintenance(getString(Res.string.device_settings_maintenance)),
             )
         }
 
         if (capabilities.hasConnectivityCapabilities()) {
             items.add(
-                Item.Connectivity(
-                    name = getString(Res.string.device_settings_connectivity),
-                    description = getString(Res.string.device_settings_connectivity_description),
-                ),
+                Item.Connectivity(getString(Res.string.device_settings_connectivity)),
             )
         }
         modify { copy(items = items) }

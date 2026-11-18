@@ -37,6 +37,10 @@ internal fun DeviceDashboardDialog(
     onEvent: (DeviceDashboardEvent) -> Unit,
     error: DeviceError? = null,
 ) {
+    if (model is Dialog.ManualRecipe) {
+        ManualRecipeSaveDialog(model, onEvent)
+        return
+    }
     GeeFlowDialog(
         onDismissRequest = { onEvent(DeviceDashboardEvent.DialogDismissed) },
     ) {
@@ -44,6 +48,7 @@ internal fun DeviceDashboardDialog(
             is Dialog.Errors -> DeviceErrorContent(error, onClose = { onEvent(DeviceDashboardEvent.DialogDismissed) })
             is Dialog.BluetoothPermissionMissing -> BluetoothPermissionMissingDialog(onEvent)
             is Dialog.BrewDescription -> BrewDescriptionDialog(model, onEvent)
+            is Dialog.ManualRecipe -> Unit // Handled by the wider, stateful recipe popup above.
         }
     }
 }

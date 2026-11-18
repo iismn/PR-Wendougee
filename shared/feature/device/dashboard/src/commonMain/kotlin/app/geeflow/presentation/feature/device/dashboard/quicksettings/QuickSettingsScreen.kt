@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
@@ -63,7 +64,7 @@ internal fun QuickSettingsContent(
 ) = CoffeeWorkspaceTheme {
     Column(
         Modifier.testTag("quick-temperature-dialog").widthIn(max = 720.dp).fillMaxWidth()
-            .coffeeSurface(MaterialTheme.shapes.large)
+            .clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.97f))
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp, vertical = 16.dp),
     ) {
@@ -117,8 +118,8 @@ internal fun QuickSettingsReviewContent(applying: Boolean = false) {
     )) }
     Box(Modifier.fillMaxSize()) {
         DeviceDashboardPreviewContent()
-        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .28f)).padding(32.dp),
-            contentAlignment = Alignment.Center) {
+        CoffeePopup(onDismissRequest = {}, properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+            modifier = Modifier.padding(24.dp)) {
             QuickSettingsContent(state, onEvent = { event ->
                 state = when (event) {
                     is QuickSettingsEvent.BrewTempChanged -> state.copy(brewBoiler = state.brewBoiler.copy(selectedTemp = event.temp))

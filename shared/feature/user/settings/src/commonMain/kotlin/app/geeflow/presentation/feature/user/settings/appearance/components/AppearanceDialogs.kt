@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import app.geeflow.data.user.model.AppPaletteStyle
 import app.geeflow.data.user.model.AppTheme
 import app.geeflow.data.user.model.ThemeMode
+import app.geeflow.domain.ClockThemeSchedule
 import app.geeflow.platform.getThemeProvider
 import app.geeflow.presentation.feature.user.settings.appearance.AppearanceSettingsEvent
 import app.geeflow.presentation.feature.user.settings.appearance.AppearanceSettingsEvent.AppThemeChanged
@@ -63,6 +64,7 @@ internal fun AppearanceDialogs(
     currentPaletteStyle: AppPaletteStyle,
     currentCustomSeedColor: Int,
     onEvent: (AppearanceSettingsEvent) -> Unit,
+    clockThemeSchedule: ClockThemeSchedule = ClockThemeSchedule.Default,
 ) {
     when (dialog) {
         Dialog.DarkMode -> {
@@ -72,6 +74,12 @@ internal fun AppearanceDialogs(
                 onDismiss = { onEvent(DialogDismissed) },
             )
         }
+
+        Dialog.ClockSchedule -> ClockThemeScheduleDialog(
+            schedule = clockThemeSchedule,
+            onApply = { onEvent(AppearanceSettingsEvent.ClockScheduleApplied(it)) },
+            onDismiss = { onEvent(DialogDismissed) },
+        )
 
         Dialog.AppTheme -> {
             AppThemeDialog(

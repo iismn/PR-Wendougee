@@ -18,7 +18,7 @@ import app.geeflow.ui.theme.GeeFlowTheme
 @Composable
 fun GeeFlowListItem(
     title: String,
-    subtitle: String,
+    subtitle: String = "",
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(
         horizontal = GeeFlowTheme.spacing.contentHorizontal,

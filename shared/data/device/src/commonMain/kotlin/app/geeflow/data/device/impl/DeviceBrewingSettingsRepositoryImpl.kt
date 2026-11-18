@@ -28,15 +28,25 @@ class DeviceBrewingSettingsRepositoryImpl(private val dataStore: DataStore<Prefe
         }
     }
 
+    override fun observeManualRecipePrompt(deviceId: Long) = dataStore.data.map {
+        it[manualRecipePromptKey(deviceId)] ?: true
+    }
+
+    override suspend fun setManualRecipePrompt(deviceId: Long, enabled: Boolean) {
+        dataStore.edit { it[manualRecipePromptKey(deviceId)] = enabled }
+    }
+
     override suspend fun remove(deviceId: Long) {
         dataStore.edit {
             it.remove(treatManualAsFlushKey(deviceId))
             it.remove(enabledKey(deviceId))
             it.remove(delayKey(deviceId))
+            it.remove(manualRecipePromptKey(deviceId))
         }
     }
 
     private fun treatManualAsFlushKey(deviceId: Long) = booleanPreferencesKey("treat_manual_as_flush_$deviceId")
     private fun enabledKey(deviceId: Long) = booleanPreferencesKey("auto_flush_enabled_$deviceId")
+    private fun manualRecipePromptKey(deviceId: Long) = booleanPreferencesKey("manual_recipe_prompt_enabled_$deviceId")
     private fun delayKey(deviceId: Long) = intPreferencesKey("auto_flush_delay_$deviceId")
 }

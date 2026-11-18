@@ -8,6 +8,8 @@ xcuserdata
 local.properties
 .idea
 .DS_Store
+.tooling/
+iosApp/Configuration/Local.xcconfig
 captures
 .externalNativeBuild
 .cxx
@@ -30,3 +32,5 @@ app.db
 !docs/UI-CHANGES.md
 /docs/screenshots/tablet-*.png
 /docs/screenshots/phone-[0-9].png
+
+__pycache__/

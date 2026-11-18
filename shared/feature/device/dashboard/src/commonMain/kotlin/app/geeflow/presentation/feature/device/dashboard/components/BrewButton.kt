@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,10 +49,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import app.geeflow.ui.components.WaveDivider
 import app.geeflow.ui.components.CoffeeUi
+import app.geeflow.ui.components.CoffeeTooltip
 import app.geeflow.ui.icons.FlowControl
 import app.geeflow.ui.icons.Flush
 import app.geeflow.ui.icons.GeeFlowIcon
@@ -202,36 +200,15 @@ fun BrewButton(
             )
         }
 
-        activeTooltipText?.let { tooltipText ->
-            val yOffsetPx = with(density) { TooltipVerticalOffset.roundToPx() }
-            val xOffsetPx = when (activeTooltipAlignment) {
-                Alignment.TopStart -> with(density) { TooltipHorizontalOffset.roundToPx() }
-                Alignment.TopEnd -> with(density) { (-TooltipHorizontalOffset).roundToPx() }
-                else -> 0
-            }
-            Popup(
-                alignment = activeTooltipAlignment,
-                offset = IntOffset(x = xOffsetPx, y = yOffsetPx),
-                onDismissRequest = { activeTooltipText = null },
-                properties = PopupProperties(focusable = false),
-            ) {
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    shadowElevation = TooltipShadowElevation,
-                ) {
-                    Text(
-                        text = tooltipText,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(
-                            horizontal = TooltipHorizontalPadding,
-                            vertical = TooltipVerticalPadding,
-                        ),
-                    )
-                }
-            }
+        val tooltipText = activeTooltipText.orEmpty()
+        val yOffsetPx = with(density) { TooltipVerticalOffset.roundToPx() }
+        val xOffsetPx = when (activeTooltipAlignment) {
+            Alignment.TopStart -> with(density) { TooltipHorizontalOffset.roundToPx() }
+            Alignment.TopEnd -> with(density) { (-TooltipHorizontalOffset).roundToPx() }
+            else -> 0
         }
+        CoffeeTooltip(activeTooltipText != null, tooltipText, onDismiss = { activeTooltipText = null },
+            alignment = activeTooltipAlignment, offset = IntOffset(xOffsetPx, yOffsetPx))
     }
 }
 
@@ -293,6 +270,7 @@ private fun RowScope.BrewSideButton(
             .fillMaxHeight()
             .weight(1f)
             .widthIn(min = SideButtonMinWidth)
+            .clip(MaterialTheme.shapes.large)
             .combinedClickable(
                 enabled = enabled,
                 onClick = onClick,
@@ -341,9 +319,6 @@ private val SideButtonMinWidth = 64.dp
 private val ButtonHeight = 50.dp
 private val TooltipVerticalOffset = (-44).dp
 private val TooltipHorizontalOffset = 32.dp
-private val TooltipShadowElevation = 4.dp
-private val TooltipHorizontalPadding = 10.dp
-private val TooltipVerticalPadding = 6.dp
 
 @PreviewWrapper(GeeFlowPreviewWrapper::class)
 @Composable

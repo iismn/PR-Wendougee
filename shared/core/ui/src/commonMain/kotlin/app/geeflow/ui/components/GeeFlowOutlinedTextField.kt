@@ -9,7 +9,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextFieldLabelScope
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 
@@ -24,14 +34,35 @@ fun GeeFlowOutlinedTextField(
     enabled: Boolean = true,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     onKeyboardAction: KeyboardActionHandler? = null,
-) = OutlinedTextField(
+    autoFocus: Boolean = false,
+) {
+    val focusRequester = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    var focused by remember { mutableStateOf(false) }
+    LaunchedEffect(autoFocus) {
+        if (autoFocus && enabled) {
+            withFrameNanos { }
+            focusRequester.requestFocus()
+        }
+    }
+    LaunchedEffect(focused) {
+        if (focused) {
+            // Let the dialog's text input session attach before asking UIKit to show IME.
+            withFrameNanos { }
+            keyboard?.show()
+        }
+    }
+    OutlinedTextField(
     lineLimits = lineLimits,
     state = state,
-    modifier = modifier,
+    modifier = modifier.focusRequester(focusRequester).onFocusChanged { focused = it.isFocused },
     label = label,
     enabled = enabled,
     contentPadding = contentPadding,
     shape = shape,
-    keyboardOptions = keyboardOptions,
+    keyboardOptions = platformKeyboardOptions(keyboardOptions),
     onKeyboardAction = onKeyboardAction,
 )
+}
+
+internal expect fun platformKeyboardOptions(options: KeyboardOptions): KeyboardOptions

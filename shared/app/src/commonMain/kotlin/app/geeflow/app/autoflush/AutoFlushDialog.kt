@@ -24,7 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
+import app.geeflow.ui.components.CoffeePopup
 import app.geeflow.domain.device.AutoFlushCountdown
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
 import app.geeflow.ui.theme.GeeFlowScreenPreview
@@ -47,7 +47,7 @@ internal fun AutoFlushDialog(countdown: AutoFlushCountdown, onCancel: () -> Unit
             ),
         )
     }
-    Dialog(onDismissRequest = onCancel) {
+    CoffeePopup(onDismissRequest = onCancel) {
         Surface(
             onClick = onCancel,
             modifier = Modifier.size(DialogDiameter),

@@ -12,6 +12,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import app.geeflow.ui.components.CoffeeModalHost
+import app.geeflow.ui.components.LocalAppTextDensity
 import app.geeflow.ui.isWidthExpanded
 
 @Composable
@@ -19,7 +23,9 @@ fun GeeFlowTheme(
     darkMode: Boolean,
     colorScheme: ColorScheme,
     modifier: Modifier = Modifier,
+    textSizePercent: Int = 120,
     phase: CoffeeDayPhase = if (darkMode) CoffeeDayPhase.Night else CoffeeDayPhase.Day,
+    ambient: CoffeeAmbientColors? = null,
     content: @Composable () -> Unit,
 ) {
     @Composable fun tone(color: Color) = animateColorAsState(color, tween(600), label = "appearance").value
@@ -36,7 +42,11 @@ fun GeeFlowTheme(
     val spacing = if (isWidthExpanded()) expandedSpacing() else compactSpacing()
     val customColors = if (darkMode) darkCustomColors else lightCustomColors
 
+    val density = LocalDensity.current
+    val textDensity = Density(density.density, density.fontScale * textSizePercent.coerceIn(100, 160) / 100f)
     CompositionLocalProvider(
+        LocalAppTextDensity provides textDensity,
+        LocalDensity provides textDensity,
         LocalSpacing provides spacing,
         LocalColors provides customColors,
     ) {
@@ -49,8 +59,8 @@ fun GeeFlowTheme(
             ),
             typography = geeFlowTypography(),
             content = {
-                CoffeeBackdrop(phase = phase, modifier = modifier) {
-                    Surface(color = Color.Transparent, content = content)
+                CoffeeBackdrop(phase = phase, modifier = modifier, ambient = ambient ?: coffeeAmbientColors(phase)) {
+                    Surface(color = Color.Transparent) { CoffeeModalHost(content = content) }
                 }
             },
         )

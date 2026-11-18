@@ -27,10 +27,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -61,6 +57,12 @@ import app.geeflow.presentation.feature.device.dashboard.profiles.ProfileListVie
 import app.geeflow.presentation.feature.device.dashboard.profiles.ProfileListViewModelEvent.ShowSnackbar
 import app.geeflow.presentation.feature.device.dashboard.profiles.ProfileListViewState
 import app.geeflow.ui.EventsDispatcher
+import app.geeflow.ui.components.EdgeSwipeBack
+import app.geeflow.ui.theme.NativeMaterialFade
+import app.geeflow.ui.animations.SwapEnterDelayMillis
+import app.geeflow.ui.animations.SwapEnterMillis
+import app.geeflow.ui.animations.SwapExitMillis
+import app.geeflow.ui.animations.paneSwapTransition
 import app.geeflow.ui.GeeFlowInsets
 import app.geeflow.ui.isWidthExpanded
 import app.geeflow.ui.modifier.geeFlowInsetsPadding
@@ -199,22 +201,46 @@ private fun ExpandedDashboard(
     modifier: Modifier = Modifier,
 ) {
     var chartsShown by remember { mutableStateOf(false) }
-    if (chartsShown) Box(modifier.fillMaxSize()) {
-        ChartDashboard(viewState, profileListViewState, snackbarState, onEvent, onProfileListEvent)
-        IconButton(onClick = { chartsShown = false }, modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)) {
-            Icon(Icons.Outlined.Apps, stringResource(DashboardRes.string.profile_list_show_profiles))
+    EdgeSwipeBack(
+        enabled = chartsShown || profileListViewState.showHistory,
+        onBack = {
+            if (chartsShown) chartsShown = false
+            else onProfileListEvent(ProfileListEvent.HistoryClicked)
+        },
+        modifier = modifier.fillMaxSize(),
+    ) {
+        androidx.compose.animation.AnimatedContent(
+            targetState = chartsShown,
+            modifier = Modifier.fillMaxSize(),
+            transitionSpec = { paneSwapTransition(forward = targetState) },
+            label = "home-charts",
+        ) { showCharts ->
+            NativeMaterialFade(this, SwapEnterMillis, SwapExitMillis, SwapEnterDelayMillis) {
+                if (showCharts) {
+                    ChartDashboard(
+                        viewState, profileListViewState, snackbarState, onEvent, onProfileListEvent,
+                        onHome = { chartsShown = false },
+                    )
+                } else {
+                    ProfileHome(
+                        viewState, profileListViewState, snackbarState, onEvent, onProfileListEvent,
+                        onShowCharts = { chartsShown = true },
+                    )
+                }
+            }
         }
-    } else ProfileHome(viewState, profileListViewState, snackbarState, onEvent, onProfileListEvent, onShowCharts = { chartsShown = true })
+    }
 }
 
 @Composable
-private fun ChartDashboard(
+internal fun ChartDashboard(
     viewState: DeviceDashboardViewState,
     profileListViewState: ProfileListViewState,
     snackbarState: SnackbarHostState,
     onEvent: (DeviceDashboardEvent) -> Unit = {},
     onProfileListEvent: (ProfileListEvent) -> Unit,
     modifier: Modifier = Modifier,
+    onHome: () -> Unit = {},
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -228,6 +254,7 @@ private fun ChartDashboard(
                 photoFileName = viewState.user.photoFileName,
                 onEvent = onEvent,
                 compact = true,
+                onHome = onHome,
                 modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).padding(start = 6.dp),
             )
             Spacer(Modifier.height(12.dp))
@@ -413,5 +440,6 @@ internal fun DashboardChartsDesignPreview(history: Boolean = false) {
         ProfileListViewState.HistoryBrew("2", "Blooming Espresso", "35 s · 42.0 g"),
         ProfileListViewState.HistoryBrew("3", "Gentle & Sweet", "32 s · 36.0 g"),
     ))
-    ChartDashboard(getMockDeviceDashboardViewState(), profiles, remember { SnackbarHostState() }, onProfileListEvent = {})
+    if (history) ProfileHome(getMockDeviceDashboardViewState(), profiles, remember { SnackbarHostState() }, {}, {}, {})
+    else ChartDashboard(getMockDeviceDashboardViewState(), profiles, remember { SnackbarHostState() }, onProfileListEvent = {})
 }

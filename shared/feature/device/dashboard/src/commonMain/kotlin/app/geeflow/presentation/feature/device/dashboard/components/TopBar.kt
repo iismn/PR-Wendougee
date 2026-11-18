@@ -4,12 +4,16 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,13 +26,13 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.MonitorWeight
+import geeflow.shared.feature.device.dashboard.generated.resources.profile_list_show_profiles
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BluetoothAudio
 import androidx.compose.material.icons.filled.BluetoothConnected
@@ -58,6 +62,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewWrapper
@@ -66,20 +71,21 @@ import androidx.compose.ui.unit.sp
 import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardEvent
 import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardEvent.AlarmClicked
 import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardEvent.CleaningClicked
-import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardEvent.ConnectedDevicesClicked
 import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardEvent.ConnectionButtonClicked
 import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardEvent.DeviceClicked
 import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardEvent.QuickSettingsClicked
 import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardEvent.QuickSettingsLongPressed
+import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardEvent.ScaleClicked
 import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardEvent.UserClicked
 import app.geeflow.presentation.feature.device.dashboard.main.DeviceDashboardViewState.Device
+import app.geeflow.ui.components.CoffeeMotionEasing
 import app.geeflow.ui.components.GeeFlowUserAvatar
 import app.geeflow.ui.components.HorizontalSpacer
-import app.geeflow.ui.icons.DeviceHub
 import app.geeflow.ui.icons.GeeFlowIcon
 import app.geeflow.ui.icons.Pressure
 import app.geeflow.ui.icons.Steam
 import app.geeflow.ui.icons.Temperature
+import app.geeflow.ui.icons.Logo
 import app.geeflow.ui.theme.GeeFlowComponentPreview
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
 import app.geeflow.ui.theme.coffeeGlass
@@ -88,11 +94,11 @@ import geeflow.shared.feature.device.dashboard.generated.resources.Res
 import geeflow.shared.feature.device.dashboard.generated.resources.device_dashboard_alarm
 import geeflow.shared.feature.device.dashboard.generated.resources.device_dashboard_clean
 import geeflow.shared.feature.device.dashboard.generated.resources.device_dashboard_connected
-import geeflow.shared.feature.device.dashboard.generated.resources.device_dashboard_connected_devices
 import geeflow.shared.feature.device.dashboard.generated.resources.device_dashboard_connecting
 import geeflow.shared.feature.device.dashboard.generated.resources.device_dashboard_disconnected
 import geeflow.shared.feature.device.dashboard.generated.resources.device_dashboard_syncing
 import geeflow.shared.feature.device.dashboard.generated.resources.device_dashboard_toggle_steam_boiler
+import geeflow.shared.feature.device.dashboard.generated.resources.quick_scale_title
 import org.jetbrains.compose.resources.stringResource
 import geeflow.shared.core.ui.generated.resources.Res as CoreRes
 
@@ -106,8 +112,21 @@ internal fun TopBar(
     onEvent: (DeviceDashboardEvent) -> Unit = {},
     modifier: Modifier = Modifier,
     compact: Boolean = false,
+    onHome: (() -> Unit)? = null,
 ) {
     CompositionLocalProvider(LocalCompactHeader provides compact) {
+        if (compact) {
+            Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(36.dp).testTag("home-header-logo").clip(CircleShape).headerClickable { onEvent(UserClicked) }, contentAlignment = Alignment.Center) {
+                    Icon(rememberVectorPainter(GeeFlowIcon.Logo), stringResource(CoreRes.string.common_settings),
+                        Modifier.size(30.dp), tint = MaterialTheme.colorScheme.onSurface)
+                }
+                HorizontalSpacer(8.dp)
+                Box(Modifier.weight(1f)) { DeviceTile(device, onEvent) }
+                HorizontalSpacer(8.dp)
+                ActionBar(device, onEvent, onHome = onHome)
+            }
+        } else {
         FlowRow(
             modifier = modifier,
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -127,6 +146,7 @@ internal fun TopBar(
                 modifier = if (compact) Modifier else Modifier.weight(1f, false),
             )
         }
+        }
     }
 }
 
@@ -135,55 +155,57 @@ private fun ActionBar(
     device: Device,
     onEvent: (DeviceDashboardEvent) -> Unit,
     modifier: Modifier = Modifier,
+    onHome: (() -> Unit)? = null,
 ) {
     val compact = LocalCompactHeader.current
-    Row(
-        modifier = modifier.height(IntrinsicSize.Min),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Box(if (compact) Modifier else Modifier.weight(1f)) {
-            ConnectionStatusButton(
-                connectionStatus = device.connectionStatus,
-                onEvent = onEvent,
-                modifier = Modifier.fillMaxHeight(),
-            )
-        }
-        HorizontalSpacer(if (compact) 8.dp else 16.dp)
+    Row(modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically) {
         if (device.alarm) {
             ErrorButton(onClick = { onEvent(AlarmClicked) })
             HorizontalSpacer(8.dp)
         }
-        Row(
-            modifier = Modifier.width(IntrinsicSize.Max).coffeeGlass(MaterialTheme.shapes.large),
-        ) {
-            CleaningButton(
-                onClick = { onEvent(CleaningClicked) },
-                modifier = Modifier.clip(
-                    MaterialTheme.shapes.large.copy(
-                        topEnd = CornerSize(0.dp),
-                        bottomEnd = CornerSize(0.dp),
-                    ),
-                ),
-            )
-            VerticalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-            ConnectivityButton(
-                smartScaleConnected = device.smartScaleConnected,
-                singleDoseGrinderConnected = device.singleDoseGrinderConnected,
-                onClick = { onEvent(ConnectedDevicesClicked) },
-            )
-            VerticalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-            SettingsButton(
-                onClick = { onEvent(QuickSettingsClicked) },
-                onLongClick = { onEvent(QuickSettingsLongPressed) },
-                modifier = Modifier.clip(
-                    MaterialTheme.shapes.large.copy(
-                        topStart = CornerSize(0.dp),
-                        bottomStart = CornerSize(0.dp),
-                    ),
-                ),
-            )
+        Row(Modifier.testTag("home-header-actions").coffeeGlass(MaterialTheme.shapes.large).clip(MaterialTheme.shapes.large)) {
+            SettingsButton(onClick = { onEvent(QuickSettingsClicked) }, onLongClick = { onEvent(QuickSettingsLongPressed) })
+            VerticalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = .08f))
+            CleaningButton(onClick = { onEvent(CleaningClicked) })
+            VerticalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = .08f))
+            ConnectivityButton(device.smartScaleConnected, device.singleDoseGrinderConnected,
+                onClick = { onEvent(ScaleClicked) })
+            if (compact) {
+                VerticalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = .08f))
+                ConnectionStatusButton(device.connectionStatus, onEvent, Modifier.fillMaxHeight(), grouped = true)
+                if (onHome != null) {
+                    VerticalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = .08f))
+                    Box(Modifier.testTag("home-header-home").headerClickable(onHome)
+                        .height(44.dp).widthIn(min = 44.dp).padding(horizontal = 10.dp),
+                        contentAlignment = Alignment.Center) {
+                        Icon(Icons.Outlined.Apps, stringResource(Res.string.profile_list_show_profiles),
+                            Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+        if (!compact) {
+            HorizontalSpacer(16.dp)
+            ConnectionStatusButton(device.connectionStatus, onEvent, Modifier.fillMaxHeight())
         }
     }
+}
+
+/** Keep the glass group fixed while its individual control gives immediate press feedback. */
+@Composable
+private fun Modifier.headerPress(interactionSource: MutableInteractionSource): Modifier {
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (pressed) .96f else 1f,
+        tween(if (pressed) 90 else 180, easing = CoffeeMotionEasing), label = "header-button-press")
+    return scale(scale)
+}
+
+@Composable
+private fun Modifier.headerClickable(onClick: () -> Unit): Modifier {
+    val interactionSource = remember { MutableInteractionSource() }
+    return headerPress(interactionSource).clickable(interactionSource = interactionSource,
+        indication = LocalIndication.current, onClick = onClick)
 }
 
 @Composable
@@ -192,7 +214,8 @@ private fun CleaningButton(
     modifier: Modifier = Modifier,
 ) = Box(
     modifier = modifier
-        .clickable(onClick = onClick)
+        .testTag("home-header-cleaning")
+        .headerClickable(onClick = onClick)
         .height(if (LocalCompactHeader.current) 44.dp else 48.dp)
         .widthIn(min = 44.dp)
         .padding(horizontal = if (LocalCompactHeader.current) 10.dp else 16.dp),
@@ -221,7 +244,7 @@ private fun ErrorButton(onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .clip(MaterialTheme.shapes.large)
-            .clickable(onClick = onClick)
+            .headerClickable(onClick = onClick)
             .background(MaterialTheme.colorScheme.errorContainer)
             .size(if (LocalCompactHeader.current) 44.dp else 48.dp),
         contentAlignment = Alignment.Center,
@@ -242,9 +265,14 @@ private fun SettingsButton(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
+            .testTag("home-header-boiler")
+            .headerPress(interactionSource)
             .combinedClickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
                 onClick = onClick,
                 onLongClickLabel = stringResource(Res.string.device_dashboard_toggle_steam_boiler),
                 onLongClick = {
@@ -274,7 +302,8 @@ private fun ConnectivityButton(
     modifier: Modifier = Modifier,
 ) = Box(
     modifier = modifier
-        .clickable(onClick = onClick)
+        .testTag("home-header-peripherals")
+        .headerClickable(onClick = onClick)
         .height(if (LocalCompactHeader.current) 44.dp else 48.dp)
         .widthIn(min = 44.dp)
         .padding(horizontal = if (LocalCompactHeader.current) 10.dp else 16.dp),
@@ -297,9 +326,9 @@ private fun ConnectivityButton(
         )
     }
     Icon(
-        painter = rememberVectorPainter(GeeFlowIcon.DeviceHub),
+        imageVector = Icons.Outlined.MonitorWeight,
         modifier = Modifier.size(if (LocalCompactHeader.current) 16.dp else 20.dp),
-        contentDescription = stringResource(Res.string.device_dashboard_connected_devices),
+        contentDescription = stringResource(Res.string.quick_scale_title),
         tint = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
@@ -309,6 +338,7 @@ private fun ConnectionStatusButton(
     connectionStatus: Device.ConnectionStatus,
     onEvent: (DeviceDashboardEvent) -> Unit,
     modifier: Modifier = Modifier,
+    grouped: Boolean = false,
 ) {
     val containerColor by animateColorAsState(
         when (connectionStatus) {
@@ -335,8 +365,11 @@ private fun ConnectionStatusButton(
         },
     )
 
+    val interactionSource = remember { MutableInteractionSource() }
     TextButton(
-        modifier = modifier.height(if (LocalCompactHeader.current) 44.dp else 48.dp),
+        modifier = modifier.testTag("home-header-connection").headerPress(interactionSource)
+            .height(if (LocalCompactHeader.current) 44.dp else 48.dp),
+        interactionSource = interactionSource,
         contentPadding = if (LocalCompactHeader.current) PaddingValues(horizontal = 8.dp, vertical = 6.dp)
             else ButtonDefaults.TextButtonContentPadding,
         onClick = { onEvent(ConnectionButtonClicked) },
@@ -344,7 +377,7 @@ private fun ConnectionStatusButton(
             containerColor = containerColor,
             contentColor = contentColor,
         ),
-        shape = MaterialTheme.shapes.large,
+        shape = if (grouped) RoundedCornerShape(0.dp) else MaterialTheme.shapes.large,
     ) {
         if (connectionStatus == Device.ConnectionStatus.Connecting || connectionStatus == Device.ConnectionStatus.Synchronizing) {
             CircularProgressIndicator(
@@ -384,40 +417,25 @@ internal fun DeviceTile(
     onEvent: (DeviceDashboardEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .clip(MaterialTheme.shapes.medium)
-            .clickable(onClick = { onEvent(DeviceClicked) })
-            .padding(horizontal = if (LocalCompactHeader.current) 4.dp else 8.dp, vertical = 2.dp),
-    ) {
-        Row(modifier = Modifier.padding(start = 3.dp)) {
-            Text(
-                text = device.name,
-                style = if (LocalCompactHeader.current) MaterialTheme.typography.titleSmall.copy(fontSize = 13.sp, lineHeight = 18.sp)
-                    else MaterialTheme.typography.titleMedium,
-            )
-            Icon(
-                painter = rememberVectorPainter(Icons.Filled.ArrowDropDown),
-                tint = MaterialTheme.colorScheme.outline,
-                contentDescription = null,
-            )
+    val compact = LocalCompactHeader.current
+    val tileModifier = modifier.testTag("home-header-machine")
+        .clip(MaterialTheme.shapes.medium).headerClickable { onEvent(DeviceClicked) }
+    if (compact) {
+        Row(tileModifier.height(36.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(device.name, modifier = Modifier.testTag("home-header-machine-name"),
+                style = MaterialTheme.typography.titleSmall.copy(fontSize = 13.sp, lineHeight = 18.sp),
+                maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis)
         }
-        Row(
-            modifier = Modifier.animateContentSize(),
-            horizontalArrangement = Arrangement.spacedBy(if (LocalCompactHeader.current) 4.dp else 8.dp),
-        ) {
-            ParameterItem(
-                value = device.brewBoilerTemp,
-                painter = rememberVectorPainter(GeeFlowIcon.Temperature),
-            )
-            ParameterItem(
-                value = device.steamBoilerTemp,
-                painter = rememberVectorPainter(GeeFlowIcon.Steam),
-            )
-            ParameterItem(
-                value = device.pressure,
-                painter = rememberVectorPainter(GeeFlowIcon.Pressure),
-            )
+    } else {
+        Column(tileModifier.padding(horizontal = 8.dp, vertical = 2.dp)) {
+            Row(Modifier.padding(start = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(device.name, modifier = Modifier.testTag("home-header-machine-name"), style = MaterialTheme.typography.titleMedium)
+            }
+            Row(Modifier.animateContentSize(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ParameterItem(device.brewBoilerTemp, rememberVectorPainter(GeeFlowIcon.Temperature))
+                ParameterItem(device.steamBoilerTemp, rememberVectorPainter(GeeFlowIcon.Steam))
+                ParameterItem(device.pressure, rememberVectorPainter(GeeFlowIcon.Pressure))
+            }
         }
     }
 }

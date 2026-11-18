@@ -1,12 +1,14 @@
 package app.geeflow.presentation.feature.device.add
 
 import androidx.compose.animation.AnimatedContent
+import app.geeflow.ui.animations.ForwardTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +16,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -39,6 +48,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -53,14 +65,18 @@ import app.geeflow.presentation.feature.device.add.AddDeviceEvent.ShowQrCodeScan
 import app.geeflow.presentation.feature.device.add.AddDeviceViewModelEvent.ShowSnackbar
 import app.geeflow.presentation.feature.device.add.AddDeviceViewState.Method.NearbyDevices
 import app.geeflow.presentation.feature.device.add.AddDeviceViewState.Method.QrCodeScanner
+import app.geeflow.presentation.feature.device.add.AddDeviceViewState.Method.ManualInput
 import app.geeflow.ui.EventsDispatcher
 import app.geeflow.ui.components.GeeFlowScaffold
 import app.geeflow.ui.components.VerticalSpacer
+import app.geeflow.ui.components.GeeFlowOutlinedTextField
+import app.geeflow.ui.components.LocalNativeDeviceScanner
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
 import app.geeflow.ui.theme.GeeFlowScreenPreview
 import app.geeflow.ui.theme.GeeFlowTheme
 import app.geeflow.ui.theme.isPreview
 import geeflow.shared.core.ui.generated.resources.common_open_settings
+import geeflow.shared.core.ui.generated.resources.common_close
 import geeflow.shared.core.ui.generated.resources.permission_bluetooth_missing
 import geeflow.shared.feature.device.add.generated.resources.Res
 import geeflow.shared.feature.device.add.generated.resources.add_device_demo
@@ -70,6 +86,13 @@ import geeflow.shared.feature.device.add.generated.resources.add_device_screen_n
 import geeflow.shared.feature.device.add.generated.resources.add_device_screen_scan_qr
 import geeflow.shared.feature.device.add.generated.resources.add_device_screen_show_nearby
 import geeflow.shared.feature.device.add.generated.resources.add_device_screen_title
+import geeflow.shared.feature.device.add.generated.resources.add_device_manual
+import geeflow.shared.feature.device.add.generated.resources.add_device_manual_label
+import geeflow.shared.feature.device.add.generated.resources.add_device_manual_hint
+import geeflow.shared.feature.device.add.generated.resources.add_device_manual_error
+import geeflow.shared.feature.device.add.generated.resources.add_device_manual_register
+import geeflow.shared.feature.device.add.generated.resources.add_device_camera_description
+import geeflow.shared.feature.device.add.generated.resources.add_device_camera_open
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.publicvalue.multiplatform.qrcode.CameraPosition
@@ -128,12 +151,7 @@ private fun AddDeviceContent(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         scrollBehavior = scrollBehavior,
         floatingActionButton = {
-            if (viewState.method.changeMethodButtonVisible) {
-                FloatingActionButton(
-                    viewState = viewState,
-                    onEvent = onEvent,
-                )
-            }
+            FloatingActionButton(viewState = viewState, onEvent = onEvent)
         },
         floatingActionButtonPosition = FabPosition.Center,
         content = {
@@ -161,9 +179,11 @@ private fun Content(
     val modifier = Modifier
 
     AnimatedContent(
-        modifier = Modifier.fillMaxSize(),
         targetState = viewState.method,
         contentKey = { it::class },
+        modifier = Modifier.fillMaxSize(),
+        transitionSpec = { ForwardTransition },
+        label = "device-add-method",
     ) { method ->
         when (method) {
             is NearbyDevices -> NearbyDevicesList(
@@ -178,6 +198,7 @@ private fun Content(
                 onEvent = onEvent,
                 contentPadding = contentPadding,
             )
+            is ManualInput -> ManualCodeInput(method, onEvent, contentPadding)
         }
     }
 }
@@ -187,24 +208,51 @@ private fun FloatingActionButton(
     viewState: AddDeviceViewState,
     onEvent: (AddDeviceEvent) -> Unit,
     modifier: Modifier = Modifier,
-) = FloatingActionButton(
-    modifier = modifier,
-    onClick = {
-        when (viewState.method) {
-            is NearbyDevices -> onEvent(ShowQrCodeScannerClicked)
-            is QrCodeScanner -> onEvent(ShowNearbyDevicesClicked)
-        }
-    },
 ) {
-    Text(
-        text = stringResource(
-            when (viewState.method) {
-                is NearbyDevices -> Res.string.add_device_screen_scan_qr
-                is QrCodeScanner -> Res.string.add_device_screen_show_nearby
-            },
-        ),
-        modifier = Modifier.padding(horizontal = 24.dp),
-    )
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (viewState.method !is NearbyDevices) {
+            OutlinedButton(onClick = { onEvent(ShowNearbyDevicesClicked) }) {
+                Text(stringResource(Res.string.add_device_screen_show_nearby))
+            }
+        }
+        if (viewState.method.changeMethodButtonVisible && viewState.method !is QrCodeScanner) {
+            Button(onClick = { onEvent(ShowQrCodeScannerClicked) }) {
+                Text(stringResource(Res.string.add_device_screen_scan_qr))
+            }
+        }
+        if (viewState.method !is ManualInput) {
+            OutlinedButton(onClick = { onEvent(AddDeviceEvent.ShowManualInputClicked) },
+                modifier = Modifier.testTag("device-manual-entry")) {
+                Text(stringResource(Res.string.add_device_manual))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ManualCodeInput(model: ManualInput, onEvent: (AddDeviceEvent) -> Unit, contentPadding: PaddingValues) {
+    val code = rememberTextFieldState()
+    val submit = { if (code.text.isNotBlank()) onEvent(AddDeviceEvent.ManualCodeSubmitted(code.text.toString())) }
+    Box(Modifier.fillMaxSize().padding(contentPadding).padding(24.dp).imePadding(), contentAlignment = Alignment.Center) {
+        Column(Modifier.widthIn(max = 560.dp).fillMaxWidth().verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(stringResource(Res.string.add_device_manual), style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(Res.string.add_device_manual_hint), style = MaterialTheme.typography.bodyMedium)
+            GeeFlowOutlinedTextField(
+                state = code,
+                modifier = Modifier.fillMaxWidth().testTag("device-manual-code"),
+                label = { Text(stringResource(Res.string.add_device_manual_label)) },
+                lineLimits = TextFieldLineLimits.SingleLine,
+                keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, keyboardType = KeyboardType.Ascii, imeAction = ImeAction.Done),
+                onKeyboardAction = { submit() },
+                autoFocus = true,
+            )
+            if (model.invalidCode) Text(stringResource(Res.string.add_device_manual_error), color = MaterialTheme.colorScheme.error)
+            Button(onClick = submit, enabled = code.text.isNotBlank(), modifier = Modifier.align(Alignment.End).testTag("device-manual-register")) {
+                Text(stringResource(Res.string.add_device_manual_register))
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -279,6 +327,27 @@ private fun Scanner(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues,
 ) {
+    val nativeScanner = LocalNativeDeviceScanner.current
+    if (nativeScanner != null && !isPreview) {
+        val title = stringResource(Res.string.add_device_screen_scan_qr)
+        val closeTitle = stringResource(UiRes.string.common_close)
+        LaunchedEffect(nativeScanner, model.requestId) {
+            nativeScanner.scanDeviceCode(title, closeTitle,
+                onScanned = { onEvent(QrCodeScanned(it)) },
+                onClosed = { onEvent(ShowNearbyDevicesClicked) },
+                onError = { onEvent(AddDeviceEvent.NativeScannerFailed(it)) })
+        }
+        Column(Modifier.fillMaxSize().padding(contentPadding).padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text(model.nativeError ?: stringResource(Res.string.add_device_camera_description), textAlign = TextAlign.Center)
+            VerticalSpacer(16.dp)
+            Button(onClick = { onEvent(ShowQrCodeScannerClicked) }) { Text(stringResource(Res.string.add_device_camera_open)) }
+            if (model.nativeError != null) {
+                OutlinedButton(onClick = { onEvent(AddDeviceEvent.OpenSystemSettingsClicked) }) { Text(stringResource(UiRes.string.common_open_settings)) }
+            }
+        }
+        return
+    }
     val shape = MaterialTheme.shapes.extraLarge
     val scannerModifier = modifier
         .fillMaxHeight()

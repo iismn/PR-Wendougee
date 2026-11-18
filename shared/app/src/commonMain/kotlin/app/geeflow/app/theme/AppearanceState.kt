@@ -10,6 +10,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import app.geeflow.data.user.model.AppPaletteStyle
 import app.geeflow.data.user.model.AppTheme
+import app.geeflow.domain.ClockThemeSchedule
 import app.geeflow.domain.user.model.AppearanceSettings
 import app.geeflow.domain.user.usecase.GetAppearanceSettingsUseCase
 import org.koin.compose.koinInject
@@ -46,10 +47,16 @@ private val AppearanceSettingsSaver = listSaver<AppearanceSettings, Any>(
             it.screensaverEnabled,
             it.screensaverTimeoutMinutes,
             it.keepScreenOnOnlyWhileCharging,
+            it.textSizePercent,
+            it.screensaverSizePercent,
+            it.clockThemeSchedule.encode(),
         )
     },
     restore = {
         AppearanceSettings(
+            clockThemeSchedule = ClockThemeSchedule.decode(it.getOrNull(11) as? String),
+            screensaverSizePercent = it.getOrNull(10) as? Int ?: 100,
+            textSizePercent = it.getOrNull(9) as? Int ?: 120,
             themeMode = UserThemeMode.valueOf(it[0] as String),
             appTheme = AppTheme.valueOf(it[1] as String),
             paletteStyle = AppPaletteStyle.valueOf(it[2] as String),

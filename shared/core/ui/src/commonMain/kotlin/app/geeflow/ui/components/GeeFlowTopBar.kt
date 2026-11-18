@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.geeflow.ui.GeeFlowInsets
 import geeflow.shared.core.ui.generated.resources.Res
@@ -29,11 +30,17 @@ fun GeeFlowTopBar(
     windowInsets: WindowInsets = GeeFlowInsets.top,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     modifier: Modifier = Modifier,
+    horizontalPadding: Dp = 12.dp,
+    titleVerticalPadding: Dp = 20.dp,
 ) {
     SideEffect {
         scrollBehavior?.state?.let { it.heightOffsetLimit = 0f; it.heightOffset = 0f }
     }
-    BoxWithConstraints(modifier.windowInsetsPadding(windowInsets).padding(12.dp)) {
+    val frameVerticalPadding = 12.dp
+    val textVerticalPadding = (titleVerticalPadding - frameVerticalPadding).coerceAtLeast(0.dp)
+    BoxWithConstraints(
+        modifier.windowInsetsPadding(windowInsets).padding(horizontal = horizontalPadding, vertical = frameVerticalPadding),
+    ) {
         val navigation: @Composable () -> Unit = {
             if (navIconPainter != null) IconButton(onClick = navIconClick) {
                 Icon(navIconPainter, navIconContentDescription, Modifier.size(20.dp))
@@ -48,15 +55,15 @@ fun GeeFlowTopBar(
                 )
             }
         }
-        if (maxWidth < 260.dp) {
+        if (maxWidth < 260.dp && navIconPainter != null) {
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 navigation()
-                Box(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) { heading() }
+                Box(Modifier.padding(horizontal = 12.dp, vertical = textVerticalPadding)) { heading() }
             }
         } else {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 navigation()
-                Box(Modifier.weight(1f).padding(vertical = 8.dp)) { heading() }
+                Box(Modifier.weight(1f).padding(vertical = textVerticalPadding)) { heading() }
             }
         }
     }

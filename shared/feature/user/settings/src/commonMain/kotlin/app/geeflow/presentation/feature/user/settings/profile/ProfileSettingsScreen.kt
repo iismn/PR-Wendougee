@@ -17,6 +17,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.geeflow.navigation.Navigator
@@ -30,20 +31,16 @@ import app.geeflow.presentation.feature.user.settings.profile.ProfileSettingsEve
 import app.geeflow.presentation.feature.user.settings.profile.ProfileSettingsViewModelEvent.OpenPhotoPicker
 import app.geeflow.ui.EventsDispatcher
 import app.geeflow.ui.components.GeeFlowDetailScaffold
+import app.geeflow.ui.components.settingsDetailVerticalPadding
 import app.geeflow.ui.components.GeeFlowNavigationListItem
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
 import app.geeflow.ui.theme.GeeFlowScreenPreview
-import app.geeflow.ui.theme.GeeFlowTheme
 import geeflow.shared.feature.user.settings.generated.resources.Res
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_profile_change_name
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_profile_change_name_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_profile_change_picture
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_profile_change_picture_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_profile_delete
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_profile_delete_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_profile_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_profile_remove_picture
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_profile_remove_picture_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_profile_title
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
@@ -103,7 +100,7 @@ private fun Content(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(paddingValues)
-                    .padding(vertical = GeeFlowTheme.spacing.contentVertical),
+                    .padding(settingsDetailVerticalPadding(firstItemPadding = 14.dp)),
             )
         },
     )
@@ -118,14 +115,12 @@ private fun SettingsContent(
     Column(modifier = modifier) {
         GeeFlowNavigationListItem(
             title = stringResource(Res.string.user_settings_profile_change_name),
-            subtitle = stringResource(Res.string.user_settings_profile_change_name_description),
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onEvent(RenameClicked) },
         )
         GeeFlowNavigationListItem(
             title = stringResource(Res.string.user_settings_profile_change_picture),
-            subtitle = stringResource(Res.string.user_settings_profile_change_picture_description),
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onEvent(ChangePictureClicked) },
@@ -133,7 +128,6 @@ private fun SettingsContent(
         if (viewState.photoFileName != null) {
             GeeFlowNavigationListItem(
                 title = stringResource(Res.string.user_settings_profile_remove_picture),
-                subtitle = stringResource(Res.string.user_settings_profile_remove_picture_description),
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onEvent(RemovePhotoClicked) },
@@ -142,7 +136,6 @@ private fun SettingsContent(
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.error) {
             GeeFlowNavigationListItem(
                 title = stringResource(Res.string.user_settings_profile_delete),
-                subtitle = stringResource(Res.string.user_settings_profile_delete_description),
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onEvent(DeleteClicked) },

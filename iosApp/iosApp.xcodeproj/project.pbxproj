@@ -6,9 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		AB010000000000000000000C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9FBC363A8A7B181A2FEC6B10 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 66BEFB25841DD565889A375C;
+			remoteInfo = iosApp;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
-		AB0100000000000000000002 /* NativeReviewUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NativeReviewUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F893992B8AF5847B1E1B269 /* GeeFlow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GeeFlow.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB0100000000000000000002 /* NativeReviewUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NativeReviewUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -22,7 +32,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		AB0100000000000000000003 /* NativeReviewUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = NativeReviewUITests; sourceTree = "<group>"; };
 		2EA573787A8E66F5A3604B2F /* iosApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -36,10 +45,21 @@
 			path = Configuration;
 			sourceTree = "<group>";
 		};
+		AB0100000000000000000003 /* NativeReviewUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = NativeReviewUITests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		AB0100000000000000000004 /* Test frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AB0100000000000000000004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CA4D6FEAD50D15CC56B4638C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -72,18 +92,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		AB0100000000000000000001 /* NativeReviewUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = AB0100000000000000000008;
-			buildPhases = (AB0100000000000000000005, AB0100000000000000000004, AB0100000000000000000006);
-			buildRules = ();
-			dependencies = (AB010000000000000000000B);
-			fileSystemSynchronizedGroups = (AB0100000000000000000003);
-			name = NativeReviewUITests;
-			productName = NativeReviewUITests;
-			productReference = AB0100000000000000000002;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 		66BEFB25841DD565889A375C /* iosApp */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = EF42F3281F836DA30F6663E9 /* Build configuration list for PBXNativeTarget "iosApp" */;
@@ -107,6 +115,27 @@
 			productReference = 6F893992B8AF5847B1E1B269 /* GeeFlow.app */;
 			productType = "com.apple.product-type.application";
 		};
+		AB0100000000000000000001 /* NativeReviewUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AB0100000000000000000008 /* Build configuration list for PBXNativeTarget "NativeReviewUITests" */;
+			buildPhases = (
+				AB0100000000000000000005 /* Sources */,
+				AB0100000000000000000004 /* Frameworks */,
+				AB0100000000000000000006 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AB010000000000000000000B /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AB0100000000000000000003 /* NativeReviewUITests */,
+			);
+			name = NativeReviewUITests;
+			productName = NativeReviewUITests;
+			productReference = AB0100000000000000000002 /* NativeReviewUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -117,9 +146,12 @@
 				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
-					AB0100000000000000000001 = {CreatedOnToolsVersion = 26.0; TestTargetID = 66BEFB25841DD565889A375C; };
 					66BEFB25841DD565889A375C = {
 						CreatedOnToolsVersion = 16.2;
+					};
+					AB0100000000000000000001 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = 66BEFB25841DD565889A375C;
 					};
 				};
 			};
@@ -161,8 +193,14 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		AB0100000000000000000006 /* Test resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 		2832C51BC46E2B8E3F9DEA36 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB0100000000000000000006 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -189,13 +227,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\n./gradlew :shared:app:embedAndSignAppleFrameworkForXcode\n";
+			shellScript = "exec /bin/bash \"$SRCROOT/../scripts/build-kotlin-ios.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		AB0100000000000000000005 /* Test sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 		8423140A15A9552A8A3716C0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB0100000000000000000005 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -204,35 +248,15 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		AB010000000000000000000B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 66BEFB25841DD565889A375C /* iosApp */;
+			targetProxy = AB010000000000000000000C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		AB0100000000000000000009 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				GENERATE_INFOPLIST_FILE = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = app.geeflow.NativeReviewUITests;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = iosApp;
-				CODE_SIGN_STYLE = Automatic;
-				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks");
-			};
-			name = Debug;
-		};
-		AB010000000000000000000A /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				GENERATE_INFOPLIST_FILE = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = app.geeflow.NativeReviewUITests;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = iosApp;
-				CODE_SIGN_STYLE = Automatic;
-				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks", "@loader_path/Frameworks");
-			};
-			name = Release;
-		};
 		074F6E5219A2759BB390AF9F /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReferenceAnchor = 377161635A28F7BBB833DC6D /* Configuration */;
@@ -291,6 +315,42 @@
 			};
 			name = Release;
 		};
+		AB0100000000000000000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.geeflow.NativeReviewUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = iosApp;
+			};
+			name = Debug;
+		};
+		AB010000000000000000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.geeflow.NativeReviewUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = iosApp;
+			};
+			name = Release;
+		};
 		C35F7E7AFFE76A18A80BE818 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -300,7 +360,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = 6YSU8C88CY;
+				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
@@ -328,7 +388,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
-				DEVELOPMENT_TEAM = 6YSU8C88CY;
+				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
@@ -415,7 +475,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		AB0100000000000000000008 = {isa = XCConfigurationList; buildConfigurations = (AB0100000000000000000009, AB010000000000000000000A); defaultConfigurationIsVisible = 0; defaultConfigurationName = Debug; };
 		1A164F5F1632F8BA49A13DB7 /* Build configuration list for PBXProject "iosApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -424,6 +483,15 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		AB0100000000000000000008 /* Build configuration list for PBXNativeTarget "NativeReviewUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB0100000000000000000009 /* Debug */,
+				AB010000000000000000000A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
 		EF42F3281F836DA30F6663E9 /* Build configuration list for PBXNativeTarget "iosApp" */ = {
 			isa = XCConfigurationList;
@@ -435,13 +503,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin PBXContainerItemProxy section */
-		AB010000000000000000000C = {isa = PBXContainerItemProxy; containerPortal = 9FBC363A8A7B181A2FEC6B10; proxyType = 1; remoteGlobalIDString = 66BEFB25841DD565889A375C; remoteInfo = iosApp; };
-/* End PBXContainerItemProxy section */
-/* Begin PBXTargetDependency section */
-		AB010000000000000000000B = {isa = PBXTargetDependency; target = 66BEFB25841DD565889A375C; targetProxy = AB010000000000000000000C; };
-/* End PBXTargetDependency section */
 	};
 	rootObject = 9FBC363A8A7B181A2FEC6B10 /* Project object */;
 }

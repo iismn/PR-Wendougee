@@ -10,6 +10,7 @@ compose.resources {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            api(projects.shared.core.domain)
             implementation(libs.backdrop)
             implementation(libs.compose.material3.adaptive)
             implementation(libs.jetbrains.material3.adaptiveNavigation3)

@@ -43,6 +43,7 @@ kotlin {
     sourceSets {
         jvmTest.dependencies {
             implementation(libs.mockk)
+            implementation(libs.compose.uiTest)
         }
         commonMain.dependencies {
             api(projects.shared.core.commerce)
@@ -117,5 +118,6 @@ tasks.register<JavaExec>("generateAllScreens") {
     classpath = files(reviewCompilation.output.allOutputs, reviewCompilation.runtimeDependencyFiles)
     mainClass.set("app.geeflow.app.review.AllScreensGeneratorKt")
     args(rootProject.layout.projectDirectory.dir("docs/review/all-ui").asFile.absolutePath)
-    providers.gradleProperty("reviewScenes").orNull?.let { args(it) }
+    args(providers.gradleProperty("reviewScenes").getOrElse(""))
+    args(providers.gradleProperty("reviewTextSize").getOrElse("120"))
 }

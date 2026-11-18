@@ -12,6 +12,7 @@ import app.geeflow.data.device.model.SupportedDevice
 import app.geeflow.data.device.model.supportedDevice
 import app.geeflow.domain.device.usecase.AddDeviceUseCase
 import app.geeflow.domain.device.usecase.ParseDeviceQrCodeUseCase
+import app.geeflow.domain.device.usecase.ParseDeviceCodeUseCase
 import app.geeflow.navigation.NavEvent
 import app.geeflow.navigation.destination.DeviceDashboard
 import app.geeflow.platform.permissions.DeniedException
@@ -32,6 +33,8 @@ import app.geeflow.presentation.feature.device.add.AddDeviceViewState.Method.Nea
 import app.geeflow.presentation.feature.device.add.AddDeviceViewState.Method.QrCodeScanner
 import geeflow.shared.feature.device.add.generated.resources.Res
 import geeflow.shared.feature.device.add.generated.resources.add_device_screen_qr_parsing_error
+import geeflow.shared.feature.device.add.generated.resources.add_device_screen_no_camera_permission
+import geeflow.shared.feature.device.add.generated.resources.add_device_camera_unavailable
 import org.jetbrains.compose.resources.getString
 import org.koin.core.annotation.InjectedParam
 import org.koin.core.annotation.KoinViewModel
@@ -42,8 +45,10 @@ internal class AddDeviceViewModel(
     @InjectedParam val permissionsController: PermissionsController,
     private val addDeviceUseCase: AddDeviceUseCase,
     private val parseDeviceQrCodeUseCase: ParseDeviceQrCodeUseCase,
+    private val parseDeviceCodeUseCase: ParseDeviceCodeUseCase,
     private val nearbyDevicesController: NearbyDevicesController,
 ) : BaseViewModel<AddDeviceViewState, AddDeviceViewModelEvent>(AddDeviceViewState(platform.getMethod())) {
+    private var scannerRequest = 0
 
     init {
         if (viewState.value.method is NearbyDevices) startScanning()
@@ -73,7 +78,31 @@ internal class AddDeviceViewModel(
         }
 
         is ShowQrCodeScannerClicked -> {
-            modify { copy(method = QrCodeScanner()) }
+            nearbyDevicesController.stopScanning()
+            modify { copy(method = QrCodeScanner(requestId = ++scannerRequest)) }
+        }
+        is AddDeviceEvent.NativeScannerFailed -> {
+            launch {
+                val message = getString(if (event.reason == "camera-permission") Res.string.add_device_screen_no_camera_permission else Res.string.add_device_camera_unavailable)
+                val method = viewState.value.method as? QrCodeScanner
+                if (method != null) modify { copy(method = method.copy(nativeError = message)) }
+            }
+            Unit
+        }
+
+        is AddDeviceEvent.ShowManualInputClicked -> {
+            nearbyDevicesController.stopScanning()
+            modify { copy(method = AddDeviceViewState.Method.ManualInput(viewState.value.method.changeMethodButtonVisible)) }
+        }
+        is AddDeviceEvent.ManualCodeSubmitted -> {
+            val device = parseDeviceCodeUseCase(event.data)
+            if (device == null) {
+                val method = viewState.value.method as? AddDeviceViewState.Method.ManualInput
+                if (method != null) modify { copy(method = method.copy(invalidCode = true)) }
+            } else {
+                handleDeviceSelected(device)
+            }
+            Unit
         }
 
         is QrCodeScanned -> parseQrCode(event.data)
@@ -163,7 +192,10 @@ internal class AddDeviceViewModel(
             handleDeviceSelected(device)
         } else {
             launch {
-                emitEvent(ShowSnackbar(getString(Res.string.add_device_screen_qr_parsing_error)))
+                val message = getString(Res.string.add_device_screen_qr_parsing_error)
+                val method = viewState.value.method as? QrCodeScanner
+                if (method != null) modify { copy(method = method.copy(nativeError = message)) }
+                emitEvent(ShowSnackbar(message))
             }
         }
     }

@@ -83,6 +83,7 @@ private fun Form(onEvent: (IntroEvent) -> Unit) {
             lineLimits = TextFieldLineLimits.SingleLine,
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
             onKeyboardAction = { confirm() },
+            autoFocus = true,
             label = { Text(stringResource(UiRes.string.common_user_name)) },
         )
         GeeFlowAgreementCheckbox(checked = agreed, onCheckedChange = { agreed = it },

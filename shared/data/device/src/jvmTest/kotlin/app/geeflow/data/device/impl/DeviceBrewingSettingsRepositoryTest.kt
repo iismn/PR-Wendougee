@@ -61,6 +61,8 @@ class DeviceBrewingSettingsRepositoryTest {
                 ),
             )
             assertEquals(DeviceBrewingSettings(), first.observe(1).first())
+            assertEquals(true, first.observeManualRecipePrompt(1).first())
+            first.setManualRecipePrompt(1, false)
             first.save(1, DeviceBrewingSettings(treatManualAsFlush = false, autoFlushEnabled = true, autoFlushDelaySeconds = 15))
             first.save(2, DeviceBrewingSettings(treatManualAsFlush = false, autoFlushEnabled = true, autoFlushDelaySeconds = 30))
             firstJob.cancelAndJoin()
@@ -73,7 +75,10 @@ class DeviceBrewingSettingsRepositoryTest {
             )
             assertEquals(DeviceBrewingSettings(false, true, 15), second.observe(1).first())
             assertEquals(DeviceBrewingSettings(false, true, 30), second.observe(2).first())
+            assertEquals(false, second.observeManualRecipePrompt(1).first())
+            assertEquals(true, second.observeManualRecipePrompt(2).first())
             second.remove(1)
+            assertEquals(true, second.observeManualRecipePrompt(1).first())
             assertEquals(DeviceBrewingSettings(), second.observe(1).first())
             assertEquals(DeviceBrewingSettings(false, true, 30), second.observe(2).first())
         } finally {

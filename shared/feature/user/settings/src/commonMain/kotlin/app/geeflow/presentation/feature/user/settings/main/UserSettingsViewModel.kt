@@ -1,5 +1,7 @@
 package app.geeflow.presentation.feature.user.settings.main
 
+import androidx.navigation3.runtime.NavKey
+
 import app.geeflow.core.presentation.BaseViewModel
 import app.geeflow.core.presentation.launch
 import app.geeflow.domain.user.usecase.GetSelectedUserUseCase
@@ -15,13 +17,9 @@ import app.geeflow.presentation.feature.user.settings.main.UserSettingsEvent.Ite
 import app.geeflow.presentation.feature.user.settings.main.UserSettingsViewState.Item
 import geeflow.shared.feature.user.settings.generated.resources.Res
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_about
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_about_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_appearance_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_brewing_preferences
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_brewing_preferences_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_profile
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_profile_description
 import org.jetbrains.compose.resources.getString
 import org.koin.core.annotation.KoinViewModel
 
@@ -39,11 +37,11 @@ internal class UserSettingsViewModel(
         }
     }
 
-    fun handleEvent(event: UserSettingsEvent) = when (event) {
-        BackClicked -> popTo(UserSettings, inclusive = true)
+    fun handleEvent(event: UserSettingsEvent, settingsRoot: NavKey = UserSettings) = when (event) {
+        BackClicked -> popTo(settingsRoot, inclusive = true)
         ChangeUserClicked -> navigateTo(UserList)
         is ItemClicked -> {
-            popTo(UserSettings, false)
+            popTo(settingsRoot, false)
             when (event.item) {
                 is Item.Profile -> navigateTo(ProfileSettings)
                 is Item.BrewingPreferences -> navigateTo(BrewingPreferencesSettings)
@@ -55,22 +53,10 @@ internal class UserSettingsViewModel(
 
     private fun buildItems() = launch {
         val items = listOf(
-            Item.Profile(
-                name = getString(Res.string.user_settings_profile),
-                description = getString(Res.string.user_settings_profile_description),
-            ),
-            Item.BrewingPreferences(
-                name = getString(Res.string.user_settings_brewing_preferences),
-                description = getString(Res.string.user_settings_brewing_preferences_description),
-            ),
-            Item.AppearanceDisplay(
-                name = getString(Res.string.user_settings_appearance),
-                description = getString(Res.string.user_settings_appearance_description),
-            ),
-            Item.About(
-                name = getString(Res.string.user_settings_about),
-                description = getString(Res.string.user_settings_about_description),
-            ),
+            Item.AppearanceDisplay(getString(Res.string.user_settings_appearance)),
+            Item.BrewingPreferences(getString(Res.string.user_settings_brewing_preferences)),
+            Item.About(getString(Res.string.user_settings_about)),
+            Item.Profile(getString(Res.string.user_settings_profile)),
         )
         modify { copy(items = items) }
     }

@@ -85,6 +85,7 @@ fun getMockDeviceDashboardViewState(): DeviceDashboardViewState {
     }
 
     return DeviceDashboardViewState(
+        manual = HomeManualState(ready = true, connected = true, flowSupported = true, pressure = 6f, flow = 3.5f),
         user = User(id = "1", name = "Barista Pro"),
         device = Device(
             id = 0L,

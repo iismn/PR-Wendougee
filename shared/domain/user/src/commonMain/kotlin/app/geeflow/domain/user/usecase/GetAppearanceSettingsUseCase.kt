@@ -21,16 +21,22 @@ class GetAppearanceSettingsUseCase(
         .flatMapLatest { userId ->
             combine(
                 combine(
-                    repository.darkMode(userId),
+                    combine(repository.darkMode(userId), repository.clockThemeSchedule(userId)) { mode, schedule ->
+                        mode to schedule
+                    },
                     repository.appTheme(userId),
                     repository.paletteStyle(userId),
                     repository.customSeedColor(userId),
-                ) { darkMode, appTheme, paletteStyle, customSeedColor ->
+                    combine(repository.textSizePercent(userId), repository.screensaverSizePercent(userId)) { text, clock -> text to clock },
+                ) { theme, appTheme, paletteStyle, customSeedColor, scales ->
                     AppearanceSettings(
-                        themeMode = darkMode,
+                        themeMode = theme.first,
+                        clockThemeSchedule = theme.second,
                         appTheme = appTheme,
                         paletteStyle = paletteStyle,
                         customSeedColor = customSeedColor,
+                        textSizePercent = scales.first,
+                        screensaverSizePercent = scales.second,
                     )
                 },
                 combine(

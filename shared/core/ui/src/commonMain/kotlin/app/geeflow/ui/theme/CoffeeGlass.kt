@@ -68,7 +68,7 @@ fun Modifier.coffeeGlass(
         effects = {
             vibrancy()
             blur(if (prominent) 28.dp.toPx() else 18.dp.toPx())
-            lens(
+            if (shape !is NativeMaterialShape) lens(
                 refractionHeight = 3.dp.toPx(),
                 refractionAmount = (5 + 2 * illumination).dp.toPx(),
                 depthEffect = false,

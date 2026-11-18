@@ -81,6 +81,7 @@ private fun RenameDialog(
                 lineLimits = TextFieldLineLimits.SingleLine,
                 label = { Text(stringResource(Res.string.user_settings_profile_rename_name_hint)) },
                 modifier = Modifier.fillMaxWidth(),
+                autoFocus = true,
             )
             VerticalSpacer(24.dp)
             Button(

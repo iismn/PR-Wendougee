@@ -61,6 +61,11 @@ internal class BrewingSettingsViewModel(
 
     init {
         loadMachineState()
+        launch {
+            observeDeviceBrewingSettings.manualRecipePrompt(arguments.deviceId).collect { enabled ->
+                modify { copy(manualRecipePromptEnabled = enabled) }
+            }
+        }
     }
 
     private fun loadMachineState() {
@@ -202,6 +207,14 @@ internal class BrewingSettingsViewModel(
         is BrewingSettingsEvent.TreatManualAsFlushChanged -> {
             deviceBrewingSettingsEdited = true
             modify { copy(treatManualAsFlush = event.enabled).withApplyVisible() }
+        }
+        is BrewingSettingsEvent.ManualRecipePromptChanged -> launchCatching(
+            onError = { error ->
+                Logger.e(error) { "Error while saving the manual recipe prompt preference" }
+                launch { emitEvent(ShowSnackbar(getString(Res.string.error_generic))) }
+            },
+        ) {
+            saveDeviceBrewingSettings.setManualRecipePrompt(arguments.deviceId, event.enabled)
         }
         is BrewingSettingsEvent.AgileRingToggled -> {
             if (viewState.value.agileRingEnabled != null) {

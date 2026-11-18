@@ -13,6 +13,7 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.PreviewWrapper
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.geeflow.navigation.Navigator
@@ -23,18 +24,16 @@ import app.geeflow.presentation.feature.user.settings.brewing.BrewingPreferences
 import app.geeflow.presentation.feature.user.settings.brewing.BrewingPreferencesEvent.TemperatureUnitClicked
 import app.geeflow.presentation.feature.user.settings.brewing.components.BrewingPreferencesDialogs
 import app.geeflow.ui.components.GeeFlowDetailScaffold
+import app.geeflow.ui.components.settingsDetailVerticalPadding
 import app.geeflow.ui.components.GeeFlowNavigationListItem
 import app.geeflow.ui.components.GeeFlowToggleListItem
 import app.geeflow.ui.theme.GeeFlowPreviewWrapper
 import app.geeflow.ui.theme.GeeFlowScreenPreview
-import app.geeflow.ui.theme.GeeFlowTheme
 import geeflow.shared.feature.user.settings.generated.resources.Res
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_brewing_auto_connect
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_brewing_auto_connect_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_brewing_preferences_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_brewing_preferences_title
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_brewing_restore_default_profiles
-import geeflow.shared.feature.user.settings.generated.resources.user_settings_brewing_restore_default_profiles_description
 import geeflow.shared.feature.user.settings.generated.resources.user_settings_brewing_temperature_unit
 import org.jetbrains.compose.resources.stringResource
 
@@ -80,7 +79,7 @@ private fun Content(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(paddingValues)
-                    .padding(vertical = GeeFlowTheme.spacing.contentVertical),
+                    .padding(settingsDetailVerticalPadding(firstItemPadding = 16.dp)),
             )
         },
     )
@@ -95,7 +94,6 @@ private fun BrewingContent(
     Column(modifier = modifier) {
         GeeFlowToggleListItem(
             title = stringResource(Res.string.user_settings_brewing_auto_connect),
-            subtitle = stringResource(Res.string.user_settings_brewing_auto_connect_description),
             checked = viewState.autoConnect,
             onCheckedChanged = { onEvent(AutoConnectChanged(it)) },
             modifier = Modifier.fillMaxWidth(),
@@ -109,7 +107,6 @@ private fun BrewingContent(
         )
         GeeFlowNavigationListItem(
             title = stringResource(Res.string.user_settings_brewing_restore_default_profiles),
-            subtitle = stringResource(Res.string.user_settings_brewing_restore_default_profiles_description),
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { onEvent(RestoreDefaultProfilesClicked) },

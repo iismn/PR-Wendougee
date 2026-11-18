@@ -23,9 +23,7 @@ import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationDidBecomeActiveNotification
 import platform.UIKit.UIApplicationOpenSettingsURLString
 import platform.UIKit.UIApplicationState
-import platform.UIKit.UIStatusBarAnimation
 import platform.UIKit.UIUserInterfaceStyle
-import platform.UIKit.setStatusBarHidden
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -62,10 +60,9 @@ actual fun KeepScreenOnEffect(enabled: Boolean) {
 
 @Composable
 actual fun FullScreenEffect(enabled: Boolean) {
-    UIApplication.sharedApplication.setStatusBarHidden(
-        hidden = enabled,
-        withAnimation = UIStatusBarAnimation.UIStatusBarAnimationSlide,
-    )
+    val systemUi = LocalNativeSystemUi.current
+    LaunchedEffect(systemUi, enabled) { systemUi?.setFullScreen(enabled) }
+    ForegroundEffect(systemUi ?: Unit) { systemUi?.setFullScreen(enabled) }
 }
 
 @Composable

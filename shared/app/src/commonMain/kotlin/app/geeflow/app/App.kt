@@ -17,7 +17,7 @@ import app.geeflow.platform.isKeepScreenOnSupported
 import app.geeflow.platform.rememberIsConnectedToPower
 import app.geeflow.ui.theme.GeeFlowTheme
 import app.geeflow.ui.theme.CoffeeDayPhase
-import app.geeflow.ui.theme.rememberCoffeeDayPhase
+import app.geeflow.ui.theme.rememberCoffeeClockAppearance
 import app.geeflow.ui.theme.coffeeColorScheme
 import app.geeflow.ui.theme.ThemeMode
 import coil3.ImageLoader
@@ -37,21 +37,25 @@ fun App(closeApp: () -> Unit) {
 
     KoinApplication(koinConfiguration<GeeFlowApp>()) {
         val appearance by rememberAppearanceSettings()
-        val phase = rememberCoffeeDayPhase()
+        val clockAppearance = if (appearance.themeMode == UserThemeMode.CLOCK) {
+            rememberCoffeeClockAppearance(appearance.clockThemeSchedule)
+        } else null
         val darkMode = when (appearance.themeMode) {
-            UserThemeMode.CLOCK -> phase.dark
+            UserThemeMode.CLOCK -> clockAppearance?.phase?.dark == true
             UserThemeMode.SYSTEM -> isSystemInDarkTheme()
             UserThemeMode.LIGHT -> false
             UserThemeMode.DARK -> true
         }
 
+        val phase = clockAppearance?.phase ?: if (darkMode) CoffeeDayPhase.Night else CoffeeDayPhase.Day
         GeeFlowTheme(
             darkMode = darkMode,
-            colorScheme = if (appearance.themeMode == UserThemeMode.CLOCK) coffeeColorScheme(phase)
+            textSizePercent = appearance.textSizePercent,
+            colorScheme = if (clockAppearance != null) coffeeColorScheme(phase)
                 else rememberAppColorScheme(appearance, darkMode),
             modifier = Modifier.fillMaxSize(),
-            phase = if (appearance.themeMode == UserThemeMode.CLOCK) phase
-                else if (darkMode) CoffeeDayPhase.Night else CoffeeDayPhase.Day,
+            phase = phase,
+            ambient = clockAppearance?.ambient,
         ) {
             ThemeModeEffect(if (appearance.themeMode == UserThemeMode.CLOCK) {
                 if (darkMode) ThemeMode.Dark else ThemeMode.Light
@@ -60,12 +64,14 @@ fun App(closeApp: () -> Unit) {
             ScreensaverContainer(
                 enabled = appearance.screensaverEnabled && isKeepScreenOnSupported,
                 timeoutMinutes = appearance.screensaverTimeoutMinutes,
+                clockSizePercent = appearance.screensaverSizePercent,
             ) {
                 RootNavigation(closeApp)
             }
             val connectedToPower = rememberIsConnectedToPower()
             ProfileExecutionEffect(
-                appearance.keepScreenOn && (!appearance.keepScreenOnOnlyWhileCharging || connectedToPower),
+                appearance.screensaverEnabled ||
+                    (appearance.keepScreenOn && (!appearance.keepScreenOnOnlyWhileCharging || connectedToPower)),
             )
             AutoFlushHost()
         }

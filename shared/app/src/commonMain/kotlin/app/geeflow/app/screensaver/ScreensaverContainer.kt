@@ -12,6 +12,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.CompositionLocalProvider
+import app.geeflow.ui.components.LocalShowScreensaver
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
@@ -22,34 +24,37 @@ import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
+import kotlin.time.Duration
 
 @Composable
 internal fun ScreensaverContainer(
     enabled: Boolean,
     timeoutMinutes: Int,
+    clockSizePercent: Int = 100,
     modifier: Modifier = Modifier,
+    timeout: Duration = timeoutMinutes.coerceAtLeast(1).minutes,
+    timeSource: TimeSource = TimeSource.Monotonic,
     content: @Composable () -> Unit,
 ) {
     var isScreensaverVisible by remember { mutableStateOf(false) }
-    var lastInteraction by remember { mutableStateOf(TimeSource.Monotonic.markNow()) }
+    var lastInteraction by remember(timeSource) { mutableStateOf(timeSource.markNow()) }
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(lifecycle) {
+    DisposableEffect(lifecycle, timeSource) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                lastInteraction = TimeSource.Monotonic.markNow()
+                lastInteraction = timeSource.markNow()
             }
         }
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer) }
     }
 
-    LaunchedEffect(enabled, timeoutMinutes) {
+    LaunchedEffect(enabled, timeout, timeSource) {
         if (!enabled) {
             isScreensaverVisible = false
             return@LaunchedEffect
         }
-        val timeout = timeoutMinutes.minutes
         while (true) {
             delay(1.seconds)
             if (!isScreensaverVisible && lastInteraction.elapsedNow() >= timeout) {
@@ -62,17 +67,20 @@ internal fun ScreensaverContainer(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(enabled) {
+                .pointerInput(enabled, timeSource) {
                     if (!enabled) return@pointerInput
                     awaitPointerEventScope {
                         while (true) {
-                            awaitPointerEvent(PointerEventPass.Initial)
-                            lastInteraction = TimeSource.Monotonic.markNow()
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            // Mouse/stylus hover and telemetry-driven redraws are not user activity.
+                            if (event.changes.any { it.pressed || it.previousPressed }) {
+                                lastInteraction = timeSource.markNow()
+                            }
                         }
                     }
                 },
         ) {
-            content()
+            CompositionLocalProvider(LocalShowScreensaver provides { isScreensaverVisible = true }) { content() }
         }
 
         AnimatedVisibility(
@@ -81,8 +89,9 @@ internal fun ScreensaverContainer(
             exit = fadeOut(),
         ) {
             Screensaver(
+                sizePercent = clockSizePercent,
                 onDismiss = {
-                    lastInteraction = TimeSource.Monotonic.markNow()
+                    lastInteraction = timeSource.markNow()
                     isScreensaverVisible = false
                 },
             )

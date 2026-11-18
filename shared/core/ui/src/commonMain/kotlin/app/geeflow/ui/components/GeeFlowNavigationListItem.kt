@@ -18,7 +18,7 @@ import app.geeflow.ui.theme.disabled
 @Composable
 fun GeeFlowNavigationListItem(
     title: String,
-    subtitle: String,
+    subtitle: String = "",
     enabled: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(
         horizontal = GeeFlowTheme.spacing.contentHorizontal,

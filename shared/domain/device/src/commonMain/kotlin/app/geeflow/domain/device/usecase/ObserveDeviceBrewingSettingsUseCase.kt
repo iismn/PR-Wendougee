@@ -6,4 +6,6 @@ import org.koin.core.annotation.Factory
 @Factory
 class ObserveDeviceBrewingSettingsUseCase(private val repository: DeviceBrewingSettingsRepository) {
     operator fun invoke(deviceId: Long) = repository.observe(deviceId)
+
+    fun manualRecipePrompt(deviceId: Long) = repository.observeManualRecipePrompt(deviceId)
 }

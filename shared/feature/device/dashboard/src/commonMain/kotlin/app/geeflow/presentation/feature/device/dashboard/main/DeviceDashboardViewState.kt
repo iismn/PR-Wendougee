@@ -1,5 +1,6 @@
 package app.geeflow.presentation.feature.device.dashboard.main
 
+import app.geeflow.data.user.model.HomeDockAction
 import app.geeflow.data.brew.model.BrewProgram
 import app.geeflow.data.brew.model.PhaseTransition
 import app.geeflow.data.device.model.DeviceError
@@ -18,6 +19,8 @@ data class DeviceDashboardViewState(
     ),
     val hotWaterSupported: Boolean = false,
     val brewButtonState: BrewButtonState = BrewButtonState.Idle,
+    val dockOrder: List<HomeDockAction> = HomeDockAction.defaultOrder,
+    val manual: HomeManualState = HomeManualState(),
 ) {
     enum class DashboardChartType {
         Pressure,
@@ -54,6 +57,7 @@ data class DeviceDashboardViewState(
         val brewBoilerTemp: String? = null,
         val steamBoilerTemp: String? = null,
         val pressure: String? = null,
+        val flowRate: String? = null,
         val connectionStatus: ConnectionStatus = ConnectionStatus.Disconnected,
         val brewStatus: BrewStatus = BrewStatus.Idle,
         val dispensingHotWater: Boolean = false,
@@ -79,6 +83,13 @@ data class DeviceDashboardViewState(
     }
 
     sealed interface Dialog {
+        data class ManualRecipe(
+            val name: String = "",
+            val description: String = "",
+            val saving: Boolean = false,
+            val errorMessage: String? = null,
+            val canSave: Boolean = true,
+        ) : Dialog
         data object Errors : Dialog
         object BluetoothPermissionMissing : Dialog
 
